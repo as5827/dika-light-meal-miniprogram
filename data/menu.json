@@ -1,0 +1,529 @@
+{
+  "categories": [
+    {
+      "id": "c1",
+      "name": "招牌沙拉"
+    },
+    {
+      "id": "c2",
+      "name": "能量碗"
+    },
+    {
+      "id": "c3",
+      "name": "轻食主食"
+    },
+    {
+      "id": "c4",
+      "name": "低卡热食"
+    },
+    {
+      "id": "c5",
+      "name": "汤品"
+    },
+    {
+      "id": "c6",
+      "name": "冷压果汁"
+    },
+    {
+      "id": "c7",
+      "name": "轻盈甜点"
+    },
+    {
+      "id": "c8",
+      "name": "加料"
+    }
+  ],
+  "dishes": [
+    {
+      "id": "d1",
+      "cat": "c1",
+      "name": "鸡胸肉藜麦沙拉",
+      "desc": "嫩煎鸡胸 · 藜麦 · 混合生菜",
+      "price": 3200,
+      "calorie": 320,
+      "image": "",
+      "emoji": "🥗",
+      "stock": 20,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d2",
+      "cat": "c1",
+      "name": "烟熏三文鱼沙拉",
+      "desc": "烟熏三文鱼 · 牛油果 · 芝麻菜",
+      "price": 4200,
+      "calorie": 380,
+      "image": "",
+      "emoji": "🐟",
+      "stock": 12,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d3",
+      "cat": "c1",
+      "name": "牛油果鲜虾沙拉",
+      "desc": "鲜虾 · 牛油果 · 小番茄",
+      "price": 3800,
+      "calorie": 350,
+      "image": "",
+      "emoji": "🦐",
+      "stock": 15,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d4",
+      "cat": "c1",
+      "name": "田园缤纷蔬菜沙拉",
+      "desc": "八种时蔬 · 油醋汁",
+      "price": 2200,
+      "calorie": 180,
+      "image": "",
+      "emoji": "🥬",
+      "stock": 0,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d5",
+      "cat": "c2",
+      "name": "牛油果藜麦能量碗",
+      "desc": "藜麦 · 牛油果 · 鹰嘴豆 · 时蔬",
+      "price": 3600,
+      "calorie": 450,
+      "image": "",
+      "emoji": "🥑",
+      "stock": 18,
+      "tags": [
+        "素食"
+      ],
+      "specs": [
+        {
+          "id": "s1",
+          "name": "酱汁",
+          "required": true,
+          "options": [
+            {
+              "id": "o1",
+              "name": "油醋汁",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o2",
+              "name": "芝麻酱",
+              "deltaPrice": 100
+            },
+            {
+              "id": "o3",
+              "name": "和风汁",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o4",
+              "name": "不加酱",
+              "deltaPrice": 0
+            }
+          ]
+        },
+        {
+          "id": "s2",
+          "name": "份量",
+          "required": true,
+          "options": [
+            {
+              "id": "o5",
+              "name": "标准",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o6",
+              "name": "加量",
+              "deltaPrice": 600
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "cat": "c2",
+      "name": "照烧鸡腿糙米碗",
+      "desc": "去皮鸡腿 · 糙米 · 西兰花",
+      "price": 3400,
+      "calorie": 520,
+      "image": "",
+      "emoji": "🍱",
+      "stock": 22,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d7",
+      "cat": "c2",
+      "name": "三文鱼牛油果碗",
+      "desc": "生食三文鱼 · 牛油果 · 糙米",
+      "price": 4600,
+      "calorie": 480,
+      "image": "",
+      "emoji": "🍣",
+      "stock": 8,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d8",
+      "cat": "c2",
+      "name": "低卡鸡胸意面碗",
+      "desc": "全麦意面 · 鸡胸 · 番茄",
+      "price": 3000,
+      "calorie": 420,
+      "image": "",
+      "emoji": "🍝",
+      "stock": 0,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d9",
+      "cat": "c3",
+      "name": "全麦鸡胸三明治",
+      "desc": "全麦吐司 · 鸡胸 · 生菜",
+      "price": 2600,
+      "calorie": 380,
+      "image": "",
+      "emoji": "🥪",
+      "stock": 25,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d10",
+      "cat": "c3",
+      "name": "金枪鱼全麦卷",
+      "desc": "全麦饼 · 金枪鱼 · 紫甘蓝",
+      "price": 2800,
+      "calorie": 340,
+      "image": "",
+      "emoji": "🌯",
+      "stock": 20,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d11",
+      "cat": "c3",
+      "name": "牛油果贝果",
+      "desc": "全麦贝果 · 牛油果泥 · 溏心蛋",
+      "price": 3000,
+      "calorie": 410,
+      "image": "",
+      "emoji": "🥯",
+      "stock": 14,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d12",
+      "cat": "c3",
+      "name": "藜麦时蔬卷",
+      "desc": "藜麦 · 烤时蔬 · 鹰嘴豆泥",
+      "price": 2400,
+      "calorie": 290,
+      "image": "",
+      "emoji": "🥙",
+      "stock": 0,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d13",
+      "cat": "c4",
+      "name": "香煎鸡胸配时蔬",
+      "desc": "低温慢煎 · 芦笋 · 小番茄",
+      "price": 3600,
+      "calorie": 330,
+      "image": "",
+      "emoji": "🍗",
+      "stock": 16,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d14",
+      "cat": "c4",
+      "name": "黑椒牛柳糙米饭",
+      "desc": "澳洲牛柳 · 黑椒 · 糙米",
+      "price": 4200,
+      "calorie": 480,
+      "image": "",
+      "emoji": "🥩",
+      "stock": 10,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d15",
+      "cat": "c4",
+      "name": "清蒸龙利鱼",
+      "desc": "龙利鱼 · 姜丝 · 西兰花",
+      "price": 3800,
+      "calorie": 260,
+      "image": "",
+      "emoji": "🐠",
+      "stock": 12,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d16",
+      "cat": "c4",
+      "name": "番茄龙利鱼意面",
+      "desc": "全麦意面 · 番茄 · 龙利鱼",
+      "price": 3400,
+      "calorie": 390,
+      "image": "",
+      "emoji": "🍅",
+      "stock": 15,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d17",
+      "cat": "c5",
+      "name": "奶油南瓜浓汤",
+      "desc": "贝贝南瓜 · 淡奶油",
+      "price": 1800,
+      "calorie": 180,
+      "image": "",
+      "emoji": "🎃",
+      "stock": 30,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d18",
+      "cat": "c5",
+      "name": "番茄时蔬汤",
+      "desc": "番茄 · 西芹 · 洋葱",
+      "price": 1500,
+      "calorie": 90,
+      "image": "",
+      "emoji": "🥣",
+      "stock": 35,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d19",
+      "cat": "c5",
+      "name": "玉米鸡茸浓汤",
+      "desc": "甜玉米 · 鸡茸",
+      "price": 1600,
+      "calorie": 160,
+      "image": "",
+      "emoji": "🌽",
+      "stock": 28,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d20",
+      "cat": "c6",
+      "name": "绿野仙踪冷压汁",
+      "desc": "羽衣甘蓝 · 青苹果 · 黄瓜",
+      "price": 2600,
+      "calorie": 110,
+      "image": "",
+      "emoji": "🥤",
+      "stock": 40,
+      "tags": [
+        "素食"
+      ],
+      "specs": [
+        {
+          "id": "s3",
+          "name": "冰量",
+          "required": true,
+          "options": [
+            {
+              "id": "o7",
+              "name": "常温",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o8",
+              "name": "少冰",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o9",
+              "name": "多冰",
+              "deltaPrice": 0
+            }
+          ]
+        },
+        {
+          "id": "s4",
+          "name": "甜度",
+          "required": true,
+          "options": [
+            {
+              "id": "o10",
+              "name": "无糖",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o11",
+              "name": "微糖",
+              "deltaPrice": 0
+            },
+            {
+              "id": "o12",
+              "name": "标准糖",
+              "deltaPrice": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d21",
+      "cat": "c6",
+      "name": "巴西莓抗氧化果昔",
+      "desc": "巴西莓 · 蓝莓 · 香蕉",
+      "price": 3200,
+      "calorie": 180,
+      "image": "",
+      "emoji": "🫐",
+      "stock": 25,
+      "tags": [
+        "素食",
+        "新品"
+      ]
+    },
+    {
+      "id": "d22",
+      "cat": "c6",
+      "name": "柠檬薄荷气泡水",
+      "desc": "鲜柠檬 · 薄荷 · 气泡水",
+      "price": 1800,
+      "calorie": 45,
+      "image": "",
+      "emoji": "🍋",
+      "stock": 50,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d23",
+      "cat": "c7",
+      "name": "希腊酸奶莓果杯",
+      "desc": "无糖希腊酸奶 · 混合莓果",
+      "price": 2400,
+      "calorie": 210,
+      "image": "",
+      "emoji": "🍓",
+      "stock": 18,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d24",
+      "cat": "c7",
+      "name": "燕麦可可能量球",
+      "desc": "燕麦 · 可可 · 椰枣",
+      "price": 1600,
+      "calorie": 160,
+      "image": "",
+      "emoji": "🍫",
+      "stock": 0,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d25",
+      "cat": "c7",
+      "name": "抹茶豆腐慕斯",
+      "desc": "嫩豆腐 · 抹茶 · 少量蜂蜜",
+      "price": 2200,
+      "calorie": 190,
+      "image": "",
+      "emoji": "🍵",
+      "stock": 12,
+      "tags": [
+        "素食",
+        "新品"
+      ]
+    },
+    {
+      "id": "d26",
+      "cat": "c8",
+      "name": "额外鸡胸肉",
+      "desc": "80g 嫩煎鸡胸",
+      "price": 1000,
+      "calorie": 120,
+      "image": "",
+      "emoji": "🍖",
+      "stock": 30,
+      "tags": [
+        "高蛋白"
+      ]
+    },
+    {
+      "id": "d27",
+      "cat": "c8",
+      "name": "牛油果半颗",
+      "desc": "新鲜牛油果",
+      "price": 1200,
+      "calorie": 160,
+      "image": "",
+      "emoji": "🥑",
+      "stock": 25,
+      "tags": [
+        "素食"
+      ]
+    },
+    {
+      "id": "d28",
+      "cat": "c8",
+      "name": "溏心蛋",
+      "desc": "一颗溏心蛋",
+      "price": 500,
+      "calorie": 70,
+      "image": "",
+      "emoji": "🥚",
+      "stock": 40,
+      "tags": [
+        "高蛋白"
+      ]
+    }
+  ],
+  "fees": {
+    "deliveryFee": 500,
+    "packFee": 200,
+    "freeDeliveryThreshold": 5800
+  }
+}

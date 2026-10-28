@@ -243,3 +243,20 @@
   align-items: center;
   justify-content: center;
 }
+
+/* ===== AI 定制入口 ===== */
+.plan-entry {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  margin: 16rpx 24rpx 0;
+  padding: 18rpx 22rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(135deg, #EAF7F0, #F6FBF8);
+  border: 1rpx solid #CBE7D8;
+}
+.plan-icon { font-size: 34rpx; margin-right: 16rpx; }
+.plan-text { flex: 1; }
+.plan-title { font-size: 26rpx; font-weight: 700; color: var(--brand-deep); }
+.plan-sub { margin-top: 4rpx; font-size: 20rpx; color: var(--ink-3); }
+.plan-arrow { font-size: 32rpx; color: var(--brand); }

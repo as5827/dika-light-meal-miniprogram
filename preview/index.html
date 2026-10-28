@@ -753,6 +753,89 @@
   }
   .submit-btn:disabled { background: var(--ink-4); }
 
+  /* ========== AI 定制入口 ========== */
+  .plan-entry {
+    margin: 12px 14px 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #EAF7F0, #F6FBF8);
+    border: 1px solid #CBE7D8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .plan-entry-icon { font-size: 22px; }
+  .plan-entry-main { flex: 1; }
+  .plan-entry-title { font-size: 14px; font-weight: 700; color: #14532D; }
+  .plan-entry-sub { font-size: 11px; color: #6B7280; margin-top: 2px; }
+  .plan-entry-arrow { color: #22A06B; font-size: 20px; }
+
+  /* ========== AI 定制套餐页 ========== */
+  .plan-header {
+    background: var(--brand-deep);
+    color: #fff;
+    padding: 40px 16px 22px;
+    flex-shrink: 0;
+  }
+  .plan-header-title { font-size: 21px; font-weight: 700; }
+  .plan-header-sub { font-size: 11px; color: rgba(255,255,255,.68); margin-top: 6px; }
+  .plan-body { flex: 1; overflow-y: auto; padding: 14px; }
+  .plan-card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+  .plan-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 1px solid #F6F7F6;
+  }
+  .plan-row:last-of-type { border-bottom: none; }
+  .plan-row > label:first-child { width: 58px; font-size: 13px; color: #4B5563; flex-shrink: 0; }
+  .plan-row input[type="number"] {
+    flex: 1; border: 1px solid #EDEDED; border-radius: 9px;
+    padding: 8px 10px; font-size: 14px; outline: none; font-family: inherit; min-width: 0;
+  }
+  .plan-row input[type="number"]:focus { border-color: #22A06B; }
+  .plan-unit { font-size: 12px; color: #9CA3AF; width: 26px; }
+  .plan-select {
+    flex: 1; border: 1px solid #EDEDED; border-radius: 9px; padding: 8px 10px;
+    font-size: 13px; font-family: inherit; background: #fff; outline: none;
+  }
+  .plan-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #4B5563; white-space: nowrap; }
+  .seg { display: flex; gap: 8px; flex: 1; }
+  .seg-item {
+    flex: 1; text-align: center; padding: 8px 0; border-radius: 9px;
+    border: 1px solid #EDEDED; font-size: 13px; color: #4B5563; cursor: pointer;
+  }
+  .seg-item.active { background: #EAF7F0; border-color: #22A06B; color: #166534; font-weight: 600; }
+  .plan-submit {
+    width: 100%; margin-top: 14px; padding: 12px; border: none; border-radius: 999px;
+    background: #22A06B; color: #fff; font-size: 15px; font-weight: 600;
+    font-family: inherit; cursor: pointer;
+  }
+  .plan-submit:disabled { background: #C9E5D8; }
+  .plan-hint { text-align: center; font-size: 11px; color: #9CA3AF; margin-top: 8px; }
+  .plan-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .metric { text-align: center; }
+  .metric .k { font-size: 11px; color: #9CA3AF; }
+  .metric .v { font-size: 14px; font-weight: 700; color: #166534; margin-top: 3px; }
+  .plan-block-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+  .plan-item {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 9px 0; border-bottom: 1px solid #F6F7F6; font-size: 13px;
+  }
+  .plan-item-name { flex: 1; font-weight: 600; }
+  .plan-item-meta { font-size: 11px; color: #9CA3AF; }
+  .plan-item-price { font-weight: 600; width: 62px; text-align: right; }
+  .plan-total { margin-top: 12px; font-size: 13px; color: #374151; line-height: 1.9; }
+  .plan-match { font-size: 12px; }
+  .plan-match.good { color: #22A06B; }
+  .plan-match.warn { color: #D97706; }
+  .plan-warn { font-size: 11px; color: #D97706; }
+  .plan-reason { font-size: 13px; color: #4B5563; line-height: 1.85; }
+  .plan-actions { display: flex; gap: 10px; margin-bottom: 30px; }
+  .plan-ghost {
+    flex: 1; padding: 12px; border-radius: 999px; border: 1px solid #D1D5DB;
+    background: #fff; color: #4B5563; font-size: 14px; font-family: inherit; cursor: pointer;
+  }
+  .plan-actions .plan-submit { flex: 1.4; margin-top: 0; }
+
   /* ========== 订单跟踪页 ========== */
   .tracking-header {
     background: var(--brand-deep);
@@ -947,6 +1030,15 @@
       </div>
     </div>
 
+    <div class="plan-entry" id="planEntry">
+      <div class="plan-entry-icon">🎯</div>
+      <div class="plan-entry-main">
+        <div class="plan-entry-title">AI 定制减脂套餐</div>
+        <div class="plan-entry-sub">按身高体重与目标，算出这一餐吃什么</div>
+      </div>
+      <div class="plan-entry-arrow">›</div>
+    </div>
+
     <div class="notice">
       <span>今日特惠：满 ¥58 减配送费，满 ¥88 送希腊酸奶杯</span>
     </div>
@@ -966,6 +1058,64 @@
         <div class="tip" id="cartCalorie">共 0 kcal</div>
       </div>
       <div class="checkout-btn" id="checkoutBtn">去结算</div>
+    </div>
+  </div>
+
+  <!-- ===== AI 定制套餐页 ===== -->
+  <div class="page" id="pagePlan">
+    <div class="plan-header">
+      <div class="nav-back" id="planBack">‹</div>
+      <div class="plan-header-title">AI 定制减脂套餐</div>
+      <div class="plan-header-sub">营养学模型 + 组合搜索，结果可解释</div>
+    </div>
+
+    <div class="plan-body">
+      <div class="plan-card" id="planForm">
+        <div class="plan-row">
+          <label>性别</label>
+          <div class="seg" id="segGender">
+            <div class="seg-item active" data-value="female">女</div>
+            <div class="seg-item" data-value="male">男</div>
+          </div>
+        </div>
+        <div class="plan-row"><label>年龄</label><input id="inAge" type="number" value="26" min="14" max="80"><span class="plan-unit">岁</span></div>
+        <div class="plan-row"><label>身高</label><input id="inHeight" type="number" value="165" min="140" max="210"><span class="plan-unit">cm</span></div>
+        <div class="plan-row"><label>体重</label><input id="inWeight" type="number" value="58" min="35" max="150"><span class="plan-unit">kg</span></div>
+        <div class="plan-row">
+          <label>活动量</label>
+          <select id="inActivity" class="plan-select"></select>
+        </div>
+        <div class="plan-row">
+          <label>目标</label>
+          <div class="seg" id="segGoal"></div>
+        </div>
+        <div class="plan-row">
+          <label>偏好</label>
+          <label class="plan-check"><input type="checkbox" id="inVeg"> 只要素食</label>
+        </div>
+        <div class="plan-row"><label>预算</label><input id="inBudget" type="number" placeholder="不填则不限" min="0"><span class="plan-unit">元</span></div>
+        <button class="plan-submit" id="planSubmit">生成套餐</button>
+        <div class="plan-hint">蛋白数据为估算值，结果仅用于点餐参考</div>
+      </div>
+
+      <div id="planResult" style="display:none">
+        <div class="plan-card">
+          <div class="plan-metrics" id="planMetrics"></div>
+        </div>
+        <div class="plan-card">
+          <div class="plan-block-title">推荐组合</div>
+          <div id="planItems"></div>
+          <div class="plan-total" id="planTotal"></div>
+        </div>
+        <div class="plan-card">
+          <div class="plan-block-title">为什么是这套</div>
+          <div class="plan-reason" id="planReason"></div>
+        </div>
+        <div class="plan-actions">
+          <button class="plan-ghost" id="planAgain">重新测算</button>
+          <button class="plan-submit" id="planAddCart">加入购物车</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1589,6 +1739,134 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
   showPage('Confirm');
 });
 document.getElementById('confirmBack').addEventListener('click', () => showPage('Menu'));
+/* ========== AI 定制套餐 ========== */
+let planOptions = null;
+let planData = null;
+const planForm = { gender: 'female', goal: 'cut' };
+
+async function openPlan() {
+  showPage('Plan');
+  try {
+    if (!planOptions) {
+      const res = await fetch('/api/recommend/options', { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok || json.code !== 0) throw new Error(json.message || '选项加载失败');
+      planOptions = json.data;
+    }
+    const sel = document.getElementById('inActivity');
+    if (!sel.options.length) {
+      sel.innerHTML = planOptions.activities
+        .map((o) => `<option value="${o.value}">${esc(o.label)}</option>`)
+        .join('');
+    }
+    const goalWrap = document.getElementById('segGoal');
+    if (!goalWrap.children.length) {
+      goalWrap.innerHTML = planOptions.goals
+        .map((g) => `<div class="seg-item ${g.value === planForm.goal ? 'active' : ''}" data-value="${g.value}">${esc(g.label)}</div>`)
+        .join('');
+    }
+  } catch (e) {
+    showToast(e.message || '选项加载失败');
+  }
+}
+
+function renderPlan(data) {
+  document.getElementById('planForm').style.display = 'none';
+  document.getElementById('planResult').style.display = '';
+
+  document.getElementById('planMetrics').innerHTML = [
+    ['基础代谢', data.profile.bmr + ' kcal'],
+    ['日常消耗', data.profile.tdee + ' kcal'],
+    ['每日目标', data.profile.targetCalorie + ' kcal'],
+    ['蛋白目标', data.profile.proteinTarget + ' g'],
+    ['本餐预算', data.meal.targetCalorie + ' kcal'],
+    ['蛋白预算', data.meal.targetProtein + ' g']
+  ].map(([k, v]) => `<div class="metric"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  document.getElementById('planItems').innerHTML = data.items.map((i) => `
+    <div class="plan-item">
+      <div class="plan-item-name">${esc(i.name)}</div>
+      <div class="plan-item-meta">${i.calorie} kcal · 蛋白 ${i.protein} g</div>
+      <div class="plan-item-price">¥${fenToYuan(i.price)}</div>
+    </div>`).join('');
+
+  const diff = data.match.calorieDiffPct;
+  document.getElementById('planTotal').innerHTML = `
+    <div>合计 <b>${data.totals.calorie} kcal</b> · 蛋白 <b>${data.totals.protein} g</b> · ¥${fenToYuan(data.totals.price)}</div>
+    <div class="plan-match ${Math.abs(diff) <= 10 ? 'good' : 'warn'}">热量偏差 ${diff > 0 ? '+' : ''}${diff}% · 蛋白达成 ${data.match.proteinPct}%</div>
+    ${data.budgetRelaxed ? '<div class="plan-warn">预算内没有合适组合，已自动放宽</div>' : ''}`;
+
+  document.getElementById('planReason').textContent = data.aiReason || data.reason;
+}
+
+async function submitPlan() {
+  const btn = document.getElementById('planSubmit');
+  if (btn.disabled) return;
+  const payload = {
+    profile: {
+      gender: planForm.gender,
+      age: Number(document.getElementById('inAge').value),
+      height: Number(document.getElementById('inHeight').value),
+      weight: Number(document.getElementById('inWeight').value),
+      activity: document.getElementById('inActivity').value,
+      goal: planForm.goal
+    },
+    vegetarian: document.getElementById('inVeg').checked,
+    budget: document.getElementById('inBudget').value
+      ? Math.round(Number(document.getElementById('inBudget').value) * 100)
+      : 0
+  };
+  btn.disabled = true;
+  btn.textContent = '计算中…';
+  try {
+    const res = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '推荐失败');
+    planData = json.data;
+    renderPlan(planData);
+  } catch (e) {
+    showToast(e.message || '推荐失败');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '生成套餐';
+  }
+}
+
+function addPlanToCart() {
+  if (!planData) return;
+  planData.items.forEach((i) => {
+    addToCart({ id: i.id, name: i.name, price: i.price, calorie: i.calorie }, [], 1, null);
+  });
+  showToast('套餐已加入购物车');
+  showPage('Menu');
+}
+
+document.getElementById('planEntry').addEventListener('click', () => { void openPlan(); });
+document.getElementById('planBack').addEventListener('click', () => showPage('Menu'));
+document.getElementById('planSubmit').addEventListener('click', () => { void submitPlan(); });
+document.getElementById('planAgain').addEventListener('click', () => {
+  document.getElementById('planResult').style.display = 'none';
+  document.getElementById('planForm').style.display = '';
+});
+document.getElementById('planAddCart').addEventListener('click', addPlanToCart);
+
+document.getElementById('segGender').addEventListener('click', (e) => {
+  const el = e.target.closest('.seg-item');
+  if (!el) return;
+  planForm.gender = el.dataset.value;
+  el.parentNode.querySelectorAll('.seg-item').forEach((x) => x.classList.toggle('active', x === el));
+});
+document.getElementById('segGoal').addEventListener('click', (e) => {
+  const el = e.target.closest('.seg-item');
+  if (!el) return;
+  planForm.goal = el.dataset.value;
+  el.parentNode.querySelectorAll('.seg-item').forEach((x) => x.classList.toggle('active', x === el));
+});
+
 /* ========== 提交订单 & 订单跟踪 ========== */
 const TRACK_STEPS = ['已提交', '已接单', '制作中', '已完成'];
 const TRACK_STEP_INDEX = { pending: 1, accepted: 2, done: 3, canceled: -1 };

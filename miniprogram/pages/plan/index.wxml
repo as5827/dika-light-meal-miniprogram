@@ -1,0 +1,104 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-title">AI 定制减脂套餐</view>
+    <view class="hero-sub">营养学模型 + 组合搜索，结果可解释</view>
+  </view>
+
+  <view wx:if="{{error}}" class="state">{{error}}</view>
+
+  <block wx:elif="{{result}}">
+    <view class="card">
+      <view class="metrics">
+        <view wx:for="{{result.metrics}}" wx:key="k" class="metric">
+          <view class="m-k">{{item.k}}</view>
+          <view class="m-v">{{item.v}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">推荐组合</view>
+      <view wx:for="{{result.items}}" wx:key="name" class="item">
+        <view class="item-name">{{item.name}}</view>
+        <view class="item-meta">{{item.meta}}</view>
+        <view class="item-price">{{item.priceText}}</view>
+      </view>
+      <view class="total-line">{{result.totalLine}}</view>
+      <view class="match {{result.matchGood ? 'good' : 'warn'}}">{{result.matchLine}}</view>
+      <view wx:if="{{result.warn}}" class="warn">{{result.warn}}</view>
+    </view>
+
+    <view class="card">
+      <view class="block-title">为什么是这套</view>
+      <view class="reason">{{result.reason}}</view>
+    </view>
+
+    <view class="actions">
+      <view class="ghost" bindtap="onAgain">重新测算</view>
+      <view class="primary" bindtap="onAddCart">加入购物车</view>
+    </view>
+  </block>
+
+  <block wx:elif="{{ready}}">
+    <view class="card">
+      <view class="row">
+        <text class="label">性别</text>
+        <view class="seg">
+          <view wx:for="{{genders}}" wx:key="value"
+                class="seg-item {{gender === item.value ? 'on' : ''}}"
+                data-value="{{item.value}}" bindtap="onGender">{{item.label}}</view>
+        </view>
+      </view>
+
+      <view class="row">
+        <text class="label">年龄</text>
+        <input class="input" type="number" value="{{age}}" data-field="age" bindinput="onInput" />
+        <text class="unit">岁</text>
+      </view>
+      <view class="row">
+        <text class="label">身高</text>
+        <input class="input" type="number" value="{{height}}" data-field="height" bindinput="onInput" />
+        <text class="unit">cm</text>
+      </view>
+      <view class="row">
+        <text class="label">体重</text>
+        <input class="input" type="number" value="{{weight}}" data-field="weight" bindinput="onInput" />
+        <text class="unit">kg</text>
+      </view>
+
+      <view class="row">
+        <text class="label">活动量</text>
+        <picker class="picker" mode="selector" range="{{activities}}" range-key="label"
+                value="{{activityIndex}}" bindchange="onActivityChange">
+          <view class="picker-value">{{activities[activityIndex].label}}</view>
+        </picker>
+      </view>
+
+      <view class="row">
+        <text class="label">目标</text>
+        <picker class="picker" mode="selector" range="{{goals}}" range-key="label"
+                value="{{goalIndex}}" bindchange="onGoalChange">
+          <view class="picker-value">{{goals[goalIndex].label}}</view>
+        </picker>
+      </view>
+
+      <view class="row">
+        <text class="label">只要素食</text>
+        <switch checked="{{vegetarian}}" color="#22A06B" bindchange="onVeg" />
+      </view>
+
+      <view class="row">
+        <text class="label">预算</text>
+        <input class="input" type="number" placeholder="不填则不限" value="{{budget}}" data-field="budget" bindinput="onInput" />
+        <text class="unit">元</text>
+      </view>
+
+      <view class="submit {{submitting ? 'disabled' : ''}}" bindtap="onSubmit">
+        {{submitting ? '计算中…' : '生成套餐'}}
+      </view>
+      <view class="hint">蛋白数据为估算值，结果仅用于点餐参考</view>
+    </view>
+  </block>
+
+  <view wx:else class="state">选项加载中…</view>
+</view>

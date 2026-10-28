@@ -237,5 +237,9 @@ Page({
   goConfirm() {
     if (cartStore.total().count === 0) return;
     wx.navigateTo({ url: '/pages/confirm/index' });
+  },
+
+  goPlan() {
+    wx.navigateTo({ url: '/pages/plan/index' });
   }
 });

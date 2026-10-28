@@ -100,6 +100,50 @@ export interface OrderDetail {
   updatedAt: string;
 }
 
+/* ---------- 推荐引擎 ---------- */
+
+export interface RecommendOption {
+  value: string;
+  label: string;
+}
+
+export interface RecommendOptions {
+  genders: RecommendOption[];
+  activities: RecommendOption[];
+  goals: RecommendOption[];
+  mealRatio: number;
+}
+
+export interface ProfileInput {
+  gender: string;
+  age: number;
+  height: number;
+  weight: number;
+  activity: string;
+  goal: string;
+}
+
+export interface PlanItem {
+  id: string;
+  name: string;
+  cat: string;
+  calorie: number;
+  protein: number;
+  price: number;
+}
+
+export interface PlanResult {
+  profile: ProfileInput & { bmr: number; tdee: number; targetCalorie: number; proteinTarget: number };
+  meal: { targetCalorie: number; targetProtein: number; ratio: number };
+  items: PlanItem[];
+  totals: { calorie: number; protein: number; price: number };
+  match: { calorieDiffPct: number; proteinPct: number };
+  budgetRelaxed: boolean;
+  vegetarian: boolean;
+  reason: string;
+  aiReason?: string;
+}
+
 interface ApiResponse<T> {
   code: number;
   message?: string;
@@ -141,5 +185,14 @@ export const api = {
   }): Promise<OrderSummary> => request<OrderSummary>('POST', '/api/orders', payload),
 
   order: (id: string): Promise<OrderDetail> =>
-    request<OrderDetail>('GET', '/api/orders/' + encodeURIComponent(id))
+    request<OrderDetail>('GET', '/api/orders/' + encodeURIComponent(id)),
+
+  recommendOptions: (): Promise<RecommendOptions> =>
+    request<RecommendOptions>('GET', '/api/recommend/options'),
+
+  recommend: (payload: {
+    profile: ProfileInput;
+    vegetarian: boolean;
+    budget: number;
+  }): Promise<PlanResult> => request<PlanResult>('POST', '/api/recommend', payload)
 };

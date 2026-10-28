@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/menu/index",
+    "pages/plan/index",
     "pages/confirm/index",
     "pages/tracking/index"
   ],

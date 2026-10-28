@@ -1,0 +1,31 @@
+[
+  {
+    "id": "20261028120304-4821",
+    "status": "pending",
+    "items": [
+      {
+        "dishId": "d1",
+        "name": "鸡胸肉藜麦沙拉",
+        "specDesc": "份量:加大",
+        "unitPrice": 3200,
+        "qty": 2,
+        "calorie": 320,
+        "amount": 6400
+      }
+    ],
+    "address": {
+      "name": "张三",
+      "phone": "13800000000",
+      "building": "3 号楼",
+      "room": "502"
+    },
+    "remark": "少冰",
+    "subtotal": 6400,
+    "deliveryFee": 0,
+    "packFee": 200,
+    "total": 6600,
+    "totalCalorie": 640,
+    "createdAt": "2026-10-28T04:03:04.000Z",
+    "updatedAt": "2026-10-28T04:03:04.000Z"
+  }
+]

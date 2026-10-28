@@ -5,6 +5,7 @@ package-lock.json
 # 运行时产物
 uploads/*
 !uploads/.gitkeep
+data/orders.json
 *.tmp
 *.log
 

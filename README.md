@@ -2,7 +2,14 @@
 
 > 低卡轻食点餐系统 —— 2026 第九届传智杯全国大学生数智创新与 AI 应用大赛「AI 创新应用挑战赛」（个人赛）参赛作品
 
-一套面向轻食门店的**点餐 + 后台管理**最小可用闭环：顾客端 H5 完成选餐、规格选择、购物车、地址与结算下单；商家端后台完成菜品价格 / 库存 / 热量 / 图片的维护，并接单、完成订单。服务端为零第三方依赖的原生 Node HTTP 服务，数据以 JSON 文件持久化。
+**一套后端，两个前端。**
+
+- `miniprogram/` —— **生产端**：微信原生小程序（TypeScript），真正打算上架、给顾客用的那一套
+- `preview/` —— **展示端**：H5 版式，双击就能在浏览器里点，给评审 / 演示 / 网页分享用，免安装
+- `admin/` —— 商家后台：改菜品、接单、完成订单
+- `server/` —— 两端共用的后端：零第三方依赖的原生 Node HTTP 服务，JSON 文件持久化
+
+两端**接口完全一致**（同一套 `/api/*`，见第六节），所以业务逻辑只写一遍；展示端牺牲了一点原生体验（无微信登录、无支付），换来的是"评委打开链接就能用、不用装小程序"。上架所需的事项见[第四节](#四小程序端生产端运行与上架)。
 
 | 顾客端点餐页 | 订单跟踪（状态由服务端驱动） |
 |---|---|
@@ -44,8 +51,9 @@
 
 | 层 | 选型 | 说明 |
 |---|---|---|
-| 服务端 | Node.js 原生 `http` / `fs` / `path` | **零第三方依赖**，无 `package.json`，`node server/server.js` 即启动 |
-| 顾客端 | 原生 HTML + CSS + JS（单文件） | 无框架、无构建，`preview/index.html` 直出 |
+| 服务端 | Node.js 原生 `http` / `fs` / `path` | **零第三方依赖**，根目录无 `package.json`，`node server/server.js` 即启动 |
+| 生产端 | 微信原生小程序 + TypeScript（strict） | `miniprogram/`，不用 uni-app / Taro；运行时依赖 0，仅 2 个类型/编译开发依赖 |
+| 展示端 | 原生 HTML + CSS + JS（单文件） | 无框架、无构建，`preview/index.html` 直出，双击即可看 |
 | 后台 | 原生 HTML + CSS + JS（单文件） | `admin/index.html` |
 | 数据 | `data/menu.json`、`data/orders.json` | 原子写：先写 `.tmp` 再 `rename`；订单文件运行时自动创建 |
 | 静态资源 | `uploads/` | 上传图片本地落盘 |
@@ -60,6 +68,17 @@
 dika-light-meal-miniprogram/
 ├── admin/
 │   └── index.html        # 商家后台（菜品管理 + 订单管理）
+├── miniprogram/          # 生产端：微信小程序（TypeScript，运行时零依赖）
+│   ├── app.json / app.ts / app.wxss
+│   ├── pages/
+│   │   ├── menu/         # 点餐页：类目、菜品、规格弹层、购物车
+│   │   ├── confirm/      # 确认订单：地址、费用、提交
+│   │   └── tracking/     # 订单跟踪：状态 + 事件时间轴（5 秒轮询）
+│   ├── services/         # config.ts（后端地址）+ api.ts（唯一数据出口）
+│   ├── store/cart.ts     # 购物车单例（模块级，页面 onShow 同步）
+│   ├── utils/format.ts
+│   ├── project.config.json
+│   └── tsconfig.json
 ├── data/
 │   ├── menu.json         # 菜单数据（8 类目 / 28 菜品 / 规格组 / 计费规则）
 │   └── orders.example.json  # 订单结构示例（运行时生成 data/orders.json，已 gitignore）
@@ -86,7 +105,61 @@ dika-light-meal-miniprogram/
 
 ---
 
-## 四、10 分钟极速复现指南
+## 四、小程序端（生产端）：运行与上架
+
+`miniprogram/` 是真正要上架的那一套；`preview/` 与 `admin/` 是网页端展示与运营。两者共用同一个后端与同一套接口，业务逻辑只写一遍。
+
+### 1. 技术选型
+
+| 项 | 选型 | 理由 |
+|---|---|---|
+| 运行容器 | 微信原生小程序 | 不用 uni-app / Taro：本项目只有 3 个页面，跨端框架的编译产物体积与调试成本反而更高 |
+| 语言 | TypeScript（strict） | 由开发者工具原生编译（`project.config.json` 里 `useCompilerPlugins: ["typescript"]`），无需额外构建脚本 |
+| 视图 | WXML + WXSS，750rpx 基准 | 与展示端共用同一套 CSS 变量色板，视觉一致 |
+| 状态 | 模块级购物车单例 | 状态只有「一车商品」，用不到 mobx；页面 `onShow` 主动 `syncCart()` |
+| 网络 | `wx.request`，统一封装 | 全部收口在 `services/api.ts`，页面不直接拼 URL |
+| 持久化 | `wx.setStorageSync` | 只存收货地址，避免动辄上云 |
+
+### 2. 本地运行
+
+```bash
+# 1) 先起后端（仓库根目录）
+node server/server.js
+
+# 2) 装类型依赖（只影响 IDE 提示与 tsc，不影响小程序运行）
+cd miniprogram && npm install
+
+# 3) 类型检查（当前 0 error）
+npx tsc --noEmit
+```
+
+用**微信开发者工具**「导入项目」，目录选 `miniprogram/`（不是仓库根目录），AppID 可先用测试号。
+
+> ⚠️ 必做：详情 → 本地设置 → 勾选「不校验合法域名、web-view、TLS 版本以及 HTTPS 证书」，否则 `http://localhost:3000` 会被拦截。
+
+### 3. 页面与接口映射
+
+| 小程序页面 | 对应 Web 页面 | 接口 |
+|---|---|---|
+| `pages/menu/index` | `preview/index.html` | `GET /api/menu` |
+| `pages/confirm/index` | 结算页 | `GET /api/menu`（计费规则）、`POST /api/orders` |
+| `pages/tracking/index` | 跟踪页 | `GET /api/orders/:id`（5 秒轮询） |
+
+### 4. 上架前必须处理的事
+
+| # | 事项 | 说明 |
+|---|---|---|
+| 1 | 后端换成 **HTTPS 域名** | 小程序不允许 http 请求；改 `miniprogram/services/config.ts`，并在 mp 后台「开发管理 → 服务器域名」加入 request 白名单 |
+| 2 | 域名 **ICP 备案** | 境内服务器未备案无法加入白名单 |
+| 3 | 小程序 **类目资质** | 餐饮 / 食品类目通常需《食品经营许可证》；纯工具类可免，但「点餐」大概率被要求餐饮类目 |
+| 4 | **微信登录**（建议） | 当前顾客以「订单号」为凭证，未接 `wx.login`；上架版建议用 code2session 绑定 openid，订单才真正属于某个用户 |
+| 5 | **微信支付**（如需在线收款） | 需商户号与支付回调；当前下单不涉及支付，属线下结算 |
+| 6 | **隐私协议** | 用到手机号与地址，须在小程序后台配置《用户隐私保护指引》 |
+
+> 结论：**代码层面具备上架条件**（原生小程序、运行时零依赖、无违规能力调用）；真正卡点是第 1–3 项的账号与资质准备，以及第 4–5 项要不要接登录和支付。
+
+---
+## 五、Web 展示端：10 分钟复现
 
 ### 1. 环境要求
 
@@ -165,7 +238,7 @@ dika轻食 server running at http://localhost:3000
 
 ---
 
-## 五、API 说明
+## 六、API 说明
 
 服务端统一响应体：`{ code: 0, data: ... }`，异常时 `{ code: <http 码>, message: "..." }`。
 
@@ -189,7 +262,7 @@ dika轻食 server running at http://localhost:3000
 
 ---
 
-## 六、数据模型
+## 七、数据模型
 
 `data/menu.json`：
 
@@ -210,7 +283,7 @@ dika轻食 server running at http://localhost:3000
       "tags": ["高蛋白"],
       "specs": [                // 可选规格组（部分菜品有）
         { "id": "g1", "name": "份量", "required": true,
-          "options": [ { "id": "o1", "name": "标准", "delta": 0 } ] }
+          "options": [ { "id": "o1", "name": "标准", "deltaPrice": 0 } ] }
       ]
     }
   ],
@@ -253,11 +326,11 @@ dika轻食 server running at http://localhost:3000
 
 ---
 
-## 七、已知限制与后续规划
+## 八、已知限制与后续规划
 
 | # | 现状 | 规划 |
 |---|---|---|
-| 1 | 仓库名含 `miniprogram`，但当前主体为 **H5 版式**，尚无微信小程序工程（`app.json` / `*.wxml`） | 迁移为小程序端，或更名为 web 版并保留 H5 |
+| 1 | 小程序端已实现菜单 / 下单 / 跟踪三页，但**未接微信登录与微信支付**，顾客以「订单号」为凭证 | 接 `wx.login` 绑定 openid、接微信支付商户号 |
 | 2 | 订单已完成状态闭环，但**无支付、无退款、无配送状态回传**，`done` 由商家手动点击 | 接支付与配送回调，状态由外部事件驱动 |
 | 3 | 下单扣库存是 `read → 改 → write`，多请求并发时存在**竞态窗口**（单机演示可接受） | 加文件锁，或换 SQLite / 数据库事务 |
 | 4 | 会话存在**进程内存**里，重启即全部登出；Cookie 未加 `Secure`（本地 http 环境） | 换持久化会话存储，HTTPS 下补 `Secure` |
@@ -267,13 +340,13 @@ dika轻食 server running at http://localhost:3000
 
 ---
 
-## 八、比赛提交对照（AI 创新应用挑战赛 · 个人赛）
+## 九、比赛提交对照（AI 创新应用挑战赛 · 个人赛）
 
 | 赛项要求 | 当前状态 |
 |---|---|
 | GitHub/Gitee 公开仓库 + 细粒度 Git 历史（禁一次性提交） | ✅ 仓库已建立，按模块拆分提交 |
 | AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 已归档 3 条：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md) |
-| README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第四节 |
+| README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第五节 |
 | 演示视频 MP4 1080p，5–8 分钟，含 ≥2 分钟 AI 协同复现 | ⬜ 待录制 |
 | 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ✅ 17 页：[docs/tech-doc.pdf](docs/tech-doc.pdf)，源文件 [tech-doc.html](docs/tech-doc.html) |
 
@@ -281,6 +354,6 @@ dika轻食 server running at http://localhost:3000
 
 ---
 
-## 九、许可
+## 十、许可
 
 仅用于赛事评审与学习交流，作者保留权利。

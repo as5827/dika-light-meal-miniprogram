@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const recommender = require('./recommender');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_FILE = path.join(ROOT, 'data', 'menu.json');
@@ -260,6 +261,58 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       sendJson(res, 500, { code: 500, message: '读取菜单失败' });
     }
+    return;
+  }
+
+  // 推荐引擎的可选项（性别 / 活动量 / 目标），前端据此渲染表单，两端保持一致
+  if (req.method === 'GET' && url.startsWith('/api/recommend/options')) {
+    sendJson(res, 200, { code: 0, data: recommender.options() });
+    return;
+  }
+
+  // 个性化减脂套餐推荐
+  if (req.method === 'POST' && url.startsWith('/api/recommend')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 16 * 1024));
+    } catch (e) {
+      const tooLarge = e.message === 'BODY_TOO_LARGE';
+      sendJson(res, tooLarge ? 413 : 400, {
+        code: tooLarge ? 413 : 400,
+        message: tooLarge ? '请求内容过大' : '请求体不是合法 JSON'
+      });
+      return;
+    }
+
+    const profile = recommender.normalizeProfile(payload.profile || payload);
+    if (!profile) {
+      sendJson(res, 400, { code: 400, message: '请填写有效的年龄、身高与体重' });
+      return;
+    }
+
+    let menu;
+    try {
+      menu = readMenu();
+    } catch (e) {
+      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      return;
+    }
+
+    const plan = recommender.recommend(menu, profile, {
+      vegetarian: payload.vegetarian,
+      budget: payload.budget
+    });
+    if (!plan) {
+      sendJson(res, 409, { code: 409, message: '当前菜单里没有可推荐的组合（可能都已估清）' });
+      return;
+    }
+
+    if (payload.useAI) {
+      const aiReason = await recommender.enhanceReason(plan.reason, process.env);
+      if (aiReason) plan.aiReason = aiReason;
+    }
+
+    sendJson(res, 200, { code: 0, data: plan });
     return;
   }
 

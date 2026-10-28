@@ -1,0 +1,15 @@
+# 统一换行符：仓库内一律 LF，检出时由 Git 按平台转换
+* text=auto eol=lf
+
+# Windows 脚本保留 CRLF，Shell 脚本强制 LF（否则 Linux/macOS 无法执行）
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.sh   text eol=lf
+
+# 二进制资源不做换行符转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary
+*.ico  binary

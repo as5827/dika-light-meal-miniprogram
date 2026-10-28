@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dika轻食 · 商品后台</title>
+<style>
+  :root {
+    --brand: #22A06B;
+    --brand-dark: #163A2A;
+    --brand-soft: #EAF7F0;
+    --bg: #F5F8F6;
+    --card: #FFFFFF;
+    --ink-1: #1A1A1A;
+    --ink-2: #595959;
+    --ink-3: #8C8C8C;
+    --ink-4: #BFBFBF;
+    --line: #EDEDED;
+    --danger: #D9363E;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink-1);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    background: var(--brand-dark);
+    color: #fff;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header .logo { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+  header .sub { font-size: 13px; color: rgba(255,255,255,.62); }
+  header .links { margin-left: auto; display: flex; gap: 10px; }
+  header .links a {
+    color: #fff; text-decoration: none; font-size: 13px;
+    border: 1px solid rgba(255,255,255,.28); padding: 7px 14px; border-radius: 999px;
+  }
+  header .links a:hover { background: rgba(255,255,255,.12); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 22px 24px 60px; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 16px;
+  }
+  .search {
+    flex: 1; min-width: 220px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 10px 16px; font-size: 14px; outline: none;
+  }
+  .search:focus { border-color: var(--brand); }
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .chip {
+    padding: 8px 15px; border-radius: 999px; font-size: 13px; cursor: pointer;
+    background: var(--card); border: 1px solid var(--line); color: var(--ink-2);
+    user-select: none;
+  }
+  .chip.active { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+
+  .stat-row { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .stat {
+    background: var(--card); border-radius: var(--radius-md); padding: 14px 20px;
+    border: 1px solid var(--line); min-width: 140px;
+  }
+  .stat .k { font-size: 12px; color: var(--ink-3); margin-bottom: 6px; }
+  .stat .v { font-size: 22px; font-weight: 700; color: var(--brand); }
+
+  .group-title {
+    font-size: 15px; font-weight: 700; margin: 26px 0 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .group-title::before {
+    content: ''; width: 4px; height: 15px; background: var(--brand); border-radius: 2px;
+  }
+  .group-title .count { font-size: 12px; color: var(--ink-3); font-weight: 400; }
+
+  .row {
+    background: var(--card); border-radius: var(--radius-lg); border: 1px solid var(--line);
+    padding: 14px 16px; display: flex; gap: 16px; align-items: center; margin-bottom: 10px;
+    transition: box-shadow .18s;
+  }
+  .row.dirty { border-color: #FFD9A8; background: #FFFCF6; }
+  .row:hover { box-shadow: 0 4px 18px rgba(22,58,42,.07); }
+
+  .thumb {
+    width: 76px; height: 76px; border-radius: 12px; flex: 0 0 76px;
+    background: linear-gradient(135deg, #EAF3EC, #D8EADF);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; cursor: pointer; overflow: hidden; position: relative;
+    border: 1px dashed transparent;
+  }
+  .thumb:hover { border-color: var(--brand); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .mask {
+    position: absolute; inset: 0; background: rgba(22,58,42,.62); color: #fff;
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .18s;
+  }
+  .thumb:hover .mask { opacity: 1; }
+
+  .main { flex: 1; min-width: 0; }
+  .name-line { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .name {
+    font-size: 15px; font-weight: 600; border: none; outline: none; background: transparent;
+    padding: 2px 0; width: 100%; max-width: 300px; color: var(--ink-1);
+  }
+  .name:focus { border-bottom: 1px solid var(--brand); }
+  .desc {
+    font-size: 12px; color: var(--ink-3); width: 100%; border: none; outline: none;
+    background: transparent; padding: 2px 0;
+  }
+  .desc:focus { border-bottom: 1px solid var(--brand); }
+
+  .fields { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+  .field { display: flex; align-items: center; gap: 6px; }
+  .field label { font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+  .field input {
+    width: 74px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 13px; outline: none; font-family: inherit; text-align: right;
+  }
+  .field input:focus { border-color: var(--brand); }
+  .field .suffix { font-size: 12px; color: var(--ink-3); }
+
+  .actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+  .btn {
+    border: none; border-radius: 9px; padding: 9px 18px; font-size: 13px; cursor: pointer;
+    font-family: inherit; transition: .16s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--brand); color: #fff; font-weight: 600; }
+  .btn-primary:hover { background: #1B8A5B; }
+  .btn-primary:disabled { background: #C9E5D8; cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent; color: var(--ink-3); border: 1px solid var(--line); padding: 8px 14px;
+  }
+  .btn-ghost:hover { color: var(--ink-2); border-color: var(--ink-4); }
+
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); }
+  .tag.out { background: #FDECEC; color: var(--danger); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 40px; transform: translate(-50%, 20px);
+    background: var(--brand-dark); color: #fff; padding: 12px 24px; border-radius: 999px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: .25s; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.err { background: var(--danger); }
+
+  .state { text-align: center; padding: 80px 20px; color: var(--ink-3); font-size: 14px; }
+  .state button { margin-top: 14px; }
+
+  @media (max-width: 620px) {
+    .row { flex-wrap: wrap; }
+    .actions { flex-direction: row; width: 100%; justify-content: flex-end; }
+    header { padding: 14px 16px; }
+    .wrap { padding: 16px 14px 50px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">dika轻食 · 商品后台</div>
+    <div class="sub">改价格、换图片，保存后点餐页立即生效</div>
+  </div>
+  <div class="links">
+    <a href="/preview/index.html" target="_blank">查看点餐页</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="搜索菜品名称">
+    <button class="btn btn-ghost" id="refreshBtn">刷新数据</button>
+  </div>
+  <div class="cat-chips" id="catChips"></div>
+
+  <div id="listWrap"></div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+<div class="toast" id="toast"></div>
+
+<script>
+let MENU = { categories: [], dishes: [], fees: {} };
+let activeCat = 'all';
+let keyword = '';
+let pendingDishId = null;
+
+const yuan = (fen) => (fen / 100).toFixed(2);
+const toFen = (str) => Math.round(parseFloat(str || '0') * 100);
+
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+async function loadMenu() {
+  const wrap = document.getElementById('listWrap');
+  wrap.innerHTML = '<div class="state">加载中…</div>';
+  try {
+    const res = await fetch('/api/menu', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    MENU = json.data;
+    renderAll();
+  } catch (e) {
+    wrap.innerHTML = '<div class="state">菜单加载失败<br><button class="btn btn-primary" onclick="loadMenu()">重试</button></div>';
+  }
+}
+
+function renderAll() {
+  renderStats();
+  renderChips();
+  renderList();
+}
+
+function renderStats() {
+  const total = MENU.dishes.length;
+  const out = MENU.dishes.filter((d) => d.stock <= 0).length;
+  const withImg = MENU.dishes.filter((d) => d.image).length;
+  const avg = total ? Math.round(MENU.dishes.reduce((s, d) => s + d.price, 0) / total) : 0;
+  document.getElementById('statRow').innerHTML = [
+    ['商品总数', total + ' 个'],
+    ['已估清', out + ' 个'],
+    ['已配图', withImg + ' / ' + total],
+    ['客单均价', '¥' + yuan(avg)]
+  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+}
+
+function renderChips() {
+  const chips = [{ id: 'all', name: '全部' }].concat(MENU.categories);
+  document.getElementById('catChips').innerHTML = chips.map((c) => {
+    const n = c.id === 'all' ? MENU.dishes.length : MENU.dishes.filter((d) => d.cat === c.id).length;
+    return `<div class="chip ${activeCat === c.id ? 'active' : ''}" data-id="${c.id}">${c.name} ${n}</div>`;
+  }).join('');
+  document.querySelectorAll('#catChips .chip').forEach((el) => {
+    el.addEventListener('click', () => { activeCat = el.dataset.id; renderChips(); renderList(); });
+  });
+}
+
+function renderList() {
+  const wrap = document.getElementById('listWrap');
+  const groups = MENU.categories.filter((c) => activeCat === 'all' || c.id === activeCat);
+  let html = '';
+  let shown = 0;
+  groups.forEach((cat) => {
+    const dishes = MENU.dishes.filter((d) => {
+      if (d.cat !== cat.id) return false;
+      if (keyword && !d.name.toLowerCase().includes(keyword.toLowerCase())) return false;
+      return true;
+    });
+    if (!dishes.length) return;
+    shown += dishes.length;
+    html += `<div class="group-title">${cat.name}<span class="count">${dishes.length} 个</span></div>`;
+    html += dishes.map(rowHTML).join('');
+  });
+  wrap.innerHTML = shown ? html : '<div class="state">没有匹配的菜品</div>';
+  bindRows();
+}
+
+function rowHTML(d) {
+  const out = d.stock <= 0;
+  const img = d.image
+    ? `<img src="${d.image}" alt="">`
+    : (d.emoji || '🥗');
+  return `
+  <div class="row" data-id="${d.id}">
+    <div class="thumb" data-act="upload" title="点击更换图片">
+      ${img}<div class="mask">更换图片</div>
+    </div>
+    <div class="main">
+      <div class="name-line">
+        <input class="name" data-field="name" value="${d.name}">
+        ${out ? '<span class="tag out">已估清</span>' : (d.tags || []).map((t) => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      <input class="desc" data-field="desc" value="${d.desc || ''}" placeholder="商品描述">
+      <div class="fields">
+        <div class="field"><label>售价</label><input data-field="price" type="number" step="0.01" min="0" value="${yuan(d.price)}"><span class="suffix">元</span></div>
+        <div class="field"><label>热量</label><input data-field="calorie" type="number" step="1" min="0" value="${d.calorie}"><span class="suffix">kcal</span></div>
+        <div class="field"><label>库存</label><input data-field="stock" type="number" step="1" min="0" value="${d.stock}"><span class="suffix">份</span></div>
+        <div class="field"><label>图片地址</label><input data-field="image" style="width:180px;text-align:left" value="${d.image || ''}" placeholder="https:// 或 /uploads/..."></div>
+        <div class="field"><label>ID</label><span class="suffix">${d.id}</span></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" data-act="save" disabled>保存</button>
+      <button class="btn btn-ghost" data-act="removeImg" style="${d.image ? '' : 'display:none'}">移除图片</button>
+    </div>
+  </div>`;
+}
+
+function bindRows() {
+  document.querySelectorAll('.row').forEach((row) => {
+    const id = row.dataset.id;
+    const saveBtn = row.querySelector('[data-act="save"]');
+
+    const markDirty = () => {
+      row.classList.add('dirty');
+      saveBtn.disabled = false;
+    };
+
+    row.querySelectorAll('input[data-field]').forEach((input) => {
+      input.addEventListener('input', markDirty);
+    });
+
+    row.querySelector('[data-act="upload"]').addEventListener('click', () => {
+      pendingDishId = id;
+      document.getElementById('fileInput').click();
+    });
+
+    const removeBtn = row.querySelector('[data-act="removeImg"]');
+    removeBtn.addEventListener('click', () => {
+      row.querySelector('[data-field="image"]').value = '';
+      row.querySelector('.thumb').innerHTML = '<div class="mask">更换图片</div>';
+      removeBtn.style.display = 'none';
+      markDirty();
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const dish = MENU.dishes.find((d) => d.id === id);
+      const priceYuan = row.querySelector('[data-field="price"]').value;
+      const payload = {
+        name: row.querySelector('[data-field="name"]').value.trim(),
+        desc: row.querySelector('[data-field="desc"]').value.trim(),
+        price: toFen(priceYuan),
+        calorie: parseInt(row.querySelector('[data-field="calorie"]').value, 10),
+        stock: parseInt(row.querySelector('[data-field="stock"]').value, 10),
+        image: row.querySelector('[data-field="image"]').value.trim()
+      };
+      if (!payload.name) { toast('菜名不能为空', true); return; }
+      if (!Number.isInteger(payload.price) || payload.price < 0) { toast('价格填写有误', true); return; }
+      if (!Number.isInteger(payload.calorie) || payload.calorie < 0) { toast('热量填写有误', true); return; }
+      if (!Number.isInteger(payload.stock) || payload.stock < 0) { toast('库存填写有误', true); return; }
+      saveBtn.disabled = true;
+      saveBtn.textContent = '保存中…';
+      try {
+        const res = await fetch('/api/dishes/' + encodeURIComponent(id), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!res.ok || json.code !== 0) throw new Error(json.message || '保存失败');
+        Object.assign(dish, json.data);
+        row.classList.remove('dirty');
+        row.querySelector('[data-field="image"]').value = dish.image || '';
+        const thumb = row.querySelector('.thumb');
+        thumb.innerHTML = (dish.image ? `<img src="${dish.image}" alt="">` : (dish.emoji || '🥗')) + '<div class="mask">更换图片</div>';
+        saveBtn.textContent = '已保存';
+        row.querySelector('[data-act="removeImg"]').style.display = dish.image ? '' : 'none';
+        renderStats();
+        toast('已保存，点餐页刷新即可看到');
+        setTimeout(() => {
+          saveBtn.textContent = '保存';
+          saveBtn.disabled = true;
+        }, 1200);
+      } catch (e) {
+        saveBtn.textContent = '保存';
+        saveBtn.disabled = false;
+        toast(e.message || '保存失败', true);
+      }
+    });
+  });
+}
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file || !pendingDishId) return;
+  if (!file.type.startsWith('image/')) { toast('请选择图片文件', true); return; }
+  if (file.size > 2 * 1024 * 1024) { toast('图片请压缩到 2MB 以内', true); return; }
+
+  const row = document.querySelector(`.row[data-id="${pendingDishId}"]`);
+  const thumb = row.querySelector('.thumb');
+  thumb.innerHTML = '<div class="mask">上传中…</div>';
+
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, dataUrl })
+    });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '上传失败');
+    thumb.innerHTML = `<img src="${json.data.url}" alt=""><div class="mask">更换图片</div>`;
+    row.querySelector('[data-field="image"]').value = json.data.url;
+    row.querySelector('[data-act="removeImg"]').style.display = '';
+    row.classList.add('dirty');
+    row.querySelector('[data-act="save"]').disabled = false;
+    toast('图片已上传，点「保存」生效');
+  } catch (err) {
+    thumb.innerHTML = '<div class="mask">上传失败</div>';
+    toast(err.message || '上传失败', true);
+  }
+});
+
+document.getElementById('search').addEventListener('input', (e) => {
+  keyword = e.target.value.trim();
+  renderList();
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadMenu);
+
+loadMenu();
+</script>
+</body>
+</html>

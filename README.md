@@ -4,9 +4,13 @@
 
 一套面向轻食门店的**点餐 + 后台管理**最小可用闭环：顾客端 H5 完成选餐、规格选择、购物车、地址与结算下单；商家端后台完成菜品价格 / 库存 / 热量 / 图片的维护，并接单、完成订单。服务端为零第三方依赖的原生 Node HTTP 服务，数据以 JSON 文件持久化。
 
-| 顾客端点餐页 | 商家端后台（订单区） |
+| 顾客端点餐页 | 订单跟踪（状态由服务端驱动） |
 |---|---|
-| ![点餐页](docs/screenshots/menu.png) | ![后台订单](docs/screenshots/admin-orders.png) |
+| ![点餐页](docs/screenshots/menu.png) | ![跟踪页](docs/screenshots/tracking.png) |
+
+| 商家端后台（订单区） | 后台登录 |
+|---|---|
+| ![后台订单](docs/screenshots/admin-orders.png) | ![登录](docs/screenshots/login.png) |
 
 ---
 
@@ -22,10 +26,12 @@
 - 地址簿：增删改、默认地址、`localStorage` 本地持久化
 - 结算页：商品明细、配送费 ¥5、打包费 ¥2、**满 ¥58 免配送费**、订单备注与表单校验
 - **提交订单**：`POST /api/orders` 服务端重算金额并落库，跟踪页展示**真实订单号、金额与下单时间**
+- **订单跟踪**：进入跟踪页后每 5 秒轮询 `GET /api/orders/:id`，进度条、状态文案与时间轴全部由订单**事件链**驱动，商家接单/完成后顾客端自动变化
 - 骨架屏加载、Toast 轻提示
 
 ### 商家端后台（`/admin`）
 
+- **登录鉴权**：Cookie 会话（HttpOnly + SameSite），默认 `admin` / `dika2026`，可用环境变量覆盖；同一 IP 连续 5 次失败锁定 60 秒
 - 经营数据概览（菜品数、类目数、售罄数等统计）
 - 类目筛选 chips + 菜品列表
 - 行内编辑：名称、描述、价格、库存、热量
@@ -63,7 +69,9 @@ dika-light-meal-miniprogram/
 │   └── index.html        # 顾客端点餐 H5（单文件，1743 行）
 ├── prompts/              # AI 协作过程归档（规范见 prompts/README.md）
 │   ├── README.md
-│   └── 01-订单落库.md
+│   ├── 01-订单落库.md
+│   ├── 02-后台登录与鉴权.md
+│   └── 03-订单状态驱动跟踪页.md
 ├── server/
 │   └── server.js         # 零依赖 HTTP 服务 + 静态托管 + API
 ├── uploads/              # 运行时上传目录（内容不进仓库，保留 .gitkeep）
@@ -105,10 +113,14 @@ cp .env.example .env
 
 ```
 PORT=3000
+ADMIN_USER=admin
+ADMIN_PASSWORD=dika2026
 ```
 
 > 本项目不读取 `.env` 文件（零依赖，无 dotenv），环境变量由系统传入：
 > Windows `set PORT=8080 && node server\server.js`，macOS/Linux `PORT=8080 node server/server.js`。
+>
+> 不设置 `ADMIN_USER` / `ADMIN_PASSWORD` 时使用默认值 `admin` / `dika2026`，启动日志会提示。**部署到公网前必须覆盖默认口令。**
 
 ### 4. 启动
 
@@ -143,9 +155,11 @@ dika轻食 server running at http://localhost:3000
 1. 点餐页加载出 8 个类目，滚动右侧列表，左侧导轨高亮自动跟随；
 2. 点任一菜品「选规格」→ 选择必选规格 → 单价实时变化 → 加入购物车 → 观察飞入动画与角标；
 3. 购物车结算 → 新增地址 → 提交订单，核对「满 ¥58 免配送费」与总价、总热量；提交成功后跟踪页应显示**真实订单号**，购物车清空；
-4. 打开 `/admin` → 改某菜品价格 / 库存 / 上传图片 → 刷新点餐页确认已生效（数据写回 `data/menu.json`）；
+4. 打开 `/admin` → 用 `admin` / `dika2026` 登录 → 改某菜品价格 / 库存 / 上传图片 → 刷新点餐页确认已生效（数据写回 `data/menu.json`）；
 5. 在同一页面下滑到「最近订单」→ 找到刚下的单，点「接单」→ 状态变「制作中」，再点「完成」→「已完成」；
-6. 回到点餐页，售出菜品的库存应已减少；把某菜品库存改成 0 后再下单，应提示「库存不足」且停留在结算页。
+6. 回到点餐页提交的订单，跟踪页会在 5 秒内自动刷新进度（可在两个标签页并排观察）；
+7. 回到点餐页，售出菜品的库存应已减少；把某菜品库存改成 0 后再下单，应提示「库存不足」且停留在结算页；
+8. 点后台右上角「退出登录」→ 页面回到登录遮罩；此时直接调 `GET /api/orders` 会返回 401。
 
 ---
 
@@ -153,19 +167,23 @@ dika轻食 server running at http://localhost:3000
 
 服务端统一响应体：`{ code: 0, data: ... }`，异常时 `{ code: <http 码>, message: "..." }`。
 
-| 方法 | 路径 | 请求体 | 说明 |
+| 方法 | 路径 | 权限 | 请求体 / 说明 |
 |---|---|---|---|
-| GET | `/api/menu` | — | 返回整份菜单（`categories` + `dishes` + `fees`） |
-| PUT | `/api/dishes/:id` | `{ price?, stock?, calorie?, image?, name?, desc? }` | 更新单个菜品；`price/stock/calorie` 须为非负整数，`name` 须非空 |
-| POST | `/api/upload` | `{ dataUrl, filename }` | 图片以 base64 dataURL 提交；限 2MB，白名单 png/jpg/jpeg/webp/gif；返回 `{ url: "/uploads/xxx" }` |
-| POST | `/api/orders` | `{ items:[{ dishId, qty, unitPrice, specDesc? }], address:{ name, phone, building, room }, remark? }` | **下单**。服务端校验菜品存在、单价不低于基础价、库存充足，重算小计/配送费/打包费/合计/总热量，扣减库存后落库；返回订单号与金额 |
-| GET | `/api/orders?limit=50` | — | 订单列表，按创建时间倒序，`limit` 上限 200 |
-| PUT | `/api/orders/:id` | `{ status }` | 状态流转：`accepted` / `done` / `canceled`（不可改回 `pending`） |
-| GET | `/*` | — | 静态文件托管；`/` → 点餐页，`/admin` → 后台；`/data`、`/.trae`、含 `..` 的路径一律 403 |
+| POST | `/api/login` | 公开 | `{ username, password }`；成功写入 `HttpOnly` Cookie `dika_admin`，失败 401，同一 IP 5 次失败锁 60 秒（429） |
+| POST | `/api/logout` | 公开 | 销毁会话并清 Cookie |
+| GET | `/api/session` | 公开 | 返回当前登录用户；未登录 401，后台据此决定是否弹登录框 |
+| GET | `/api/menu` | 公开 | 返回整份菜单（`categories` + `dishes` + `fees`） |
+| POST | `/api/orders` | 公开（顾客） | `{ items:[{ dishId, qty, unitPrice, specDesc? }], address:{ name, phone, building, room }, remark? }`；服务端校验菜品、单价、库存，重算全部金额，扣库存后落库 |
+| GET | `/api/orders/:id` | 公开（凭订单号） | 顾客端跟踪用；返回状态、事件链与脱敏手机号（`136****5678`），404 表示订单不存在 |
+| PUT | `/api/dishes/:id` | 🔒 需登录 | `{ price?, stock?, calorie?, image?, name?, desc? }`；`price/stock/calorie` 须为非负整数，`name` 须非空 |
+| POST | `/api/upload` | 🔒 需登录 | `{ dataUrl, filename }`；限 2MB，白名单 png/jpg/jpeg/webp/gif；返回 `{ url: "/uploads/xxx" }` |
+| GET | `/api/orders?limit=50` | 🔒 需登录 | 订单列表，按创建时间倒序，`limit` 上限 200 |
+| PUT | `/api/orders/:id` | 🔒 需登录 | `{ status }`：`accepted` / `done` / `canceled`，同时追加事件链记录 |
+| GET | `/*` | 公开 | 静态文件托管；`/` → 点餐页，`/admin` → 后台；`/data`、`/.trae`、含 `..` 的路径一律 403 |
 
 下单接口的错误语义：`400` 参数非法 / 菜品不存在 / 单价低于基础价；`409` 库存不足；`413` 请求体过大。
 
-安全细节：`readBody()` 带体积上限（普通请求 64KB、下单 256KB、上传 8MB）防内存打爆；`writeMenu()` / `writeOrders()` 均采用「临时文件 + rename」原子写，避免写坏 JSON；金额与库存只在服务端计算，前端传值不作为最终依据；静态服务做 `path.join` 前缀校验防目录穿越。
+安全细节：`readBody()` 带体积上限（普通请求 64KB、下单 256KB、上传 8MB）防内存打爆；`writeMenu()` / `writeOrders()` 均采用「临时文件 + rename」原子写，避免写坏 JSON；金额与库存只在服务端计算，前端传值不作为最终依据；口令比对先 SHA-256 再 `crypto.timingSafeEqual`；会话令牌用 `crypto.randomBytes(24)` 生成；静态服务做 `path.join` 前缀校验防目录穿越。
 
 ---
 
@@ -221,8 +239,12 @@ dika轻食 server running at http://localhost:3000
     "total": 6600,
     "totalCalorie": 640,
     "itemCount": 2,
+    "events": [                       // 状态事件链，驱动跟踪页时间轴
+      { "status": "pending",  "at": "2026-10-28T04:03:04.000Z" },
+      { "status": "accepted", "at": "2026-10-28T04:05:31.000Z" }
+    ],
     "createdAt": "2026-10-28T04:03:04.000Z",
-    "updatedAt": "2026-10-28T04:03:04.000Z"
+    "updatedAt": "2026-10-28T04:05:31.000Z"
   }
 ]
 ```
@@ -234,11 +256,12 @@ dika轻食 server running at http://localhost:3000
 | # | 现状 | 规划 |
 |---|---|---|
 | 1 | 仓库名含 `miniprogram`，但当前主体为 **H5 版式**，尚无微信小程序工程（`app.json` / `*.wxml`） | 迁移为小程序端，或更名为 web 版并保留 H5 |
-| 2 | 订单已落库，但**无支付、无退款、无配送状态回传**，跟踪页进度条仍是演示态 | 接支付与配送回调，进度由订单状态驱动 |
+| 2 | 订单已完成状态闭环，但**无支付、无退款、无配送状态回传**，`done` 由商家手动点击 | 接支付与配送回调，状态由外部事件驱动 |
 | 3 | 下单扣库存是 `read → 改 → write`，多请求并发时存在**竞态窗口**（单机演示可接受） | 加文件锁，或换 SQLite / 数据库事务 |
-| 4 | 后台与 `GET /api/orders` **无鉴权**，订单含手机号与地址 | 加登录态与角色校验，列表脱敏 |
-| 5 | JSON 文件存储，历史订单只保留最近 2000 条，无分页 | 换数据库 + 分页 + 归档 |
-| 6 | 上传图片存本地 `uploads/`，无 CDN、无清理策略 | 接对象存储 + 定时清理 |
+| 4 | 会话存在**进程内存**里，重启即全部登出；Cookie 未加 `Secure`（本地 http 环境） | 换持久化会话存储，HTTPS 下补 `Secure` |
+| 5 | 顾客端凭**订单号**查询，订单号为「时间戳 + 4 位随机」，理论上可枚举 | 提高随机熵或加签名，必要时绑定手机号校验 |
+| 6 | JSON 文件存储，历史订单只保留最近 2000 条，无分页 | 换数据库 + 分页 + 归档 |
+| 7 | 上传图片存本地 `uploads/`，无 CDN、无清理策略 | 接对象存储 + 定时清理 |
 
 ---
 
@@ -247,7 +270,7 @@ dika轻食 server running at http://localhost:3000
 | 赛项要求 | 当前状态 |
 |---|---|
 | GitHub/Gitee 公开仓库 + 细粒度 Git 历史（禁一次性提交） | ✅ 仓库已建立，按模块拆分提交 |
-| AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | 🟡 已建立 `prompts/` 归档机制与第 1 条记录（[01-订单落库](prompts/01-订单落库.md)），持续累积中 |
+| AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 已归档 3 条：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md) |
 | README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第四节 |
 | 演示视频 MP4 1080p，5–8 分钟，含 ≥2 分钟 AI 协同复现 | ⬜ 待录制 |
 | 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ⬜ 待撰写 |

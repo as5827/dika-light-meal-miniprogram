@@ -64,7 +64,9 @@ dika-light-meal-miniprogram/
 │   ├── menu.json         # 菜单数据（8 类目 / 28 菜品 / 规格组 / 计费规则）
 │   └── orders.example.json  # 订单结构示例（运行时生成 data/orders.json，已 gitignore）
 ├── docs/
-│   └── screenshots/      # 界面截图（README 引用）
+│   ├── tech-doc.html     # 技术文档源文件（A4 打印样式，可直接改）
+│   ├── tech-doc.pdf      # 技术文档导出（17 页，≤30 页要求）
+│   └── screenshots/      # 界面截图（README 与文档引用）
 ├── preview/
 │   └── index.html        # 顾客端点餐 H5（单文件，1743 行）
 ├── prompts/              # AI 协作过程归档（规范见 prompts/README.md）
@@ -273,7 +275,7 @@ dika轻食 server running at http://localhost:3000
 | AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 已归档 3 条：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md) |
 | README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第四节 |
 | 演示视频 MP4 1080p，5–8 分钟，含 ≥2 分钟 AI 协同复现 | ⬜ 待录制 |
-| 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ⬜ 待撰写 |
+| 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ✅ 17 页：[docs/tech-doc.pdf](docs/tech-doc.pdf)，源文件 [tech-doc.html](docs/tech-doc.html) |
 
 > 说明：仓库最早的 6 次提交是**存量代码按模块导入**，早于 `prompts/` 归档机制建立，因此没有对应的 Prompt 记录，不做追溯性补写。自「订单落库」起，每次功能迭代按「一次 AI 对话 / 一个功能模块 = 一次 commit + 一份 Prompt 归档」推进。
 

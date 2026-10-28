@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>低卡轻食点餐系统 · 技术文档</title>
+<style>
+  @page { size: A4; margin: 17mm 15mm 15mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Source Han Sans SC", sans-serif;
+    font-size: 10pt; line-height: 1.72; color: #1f2328; margin: 0;
+  }
+  h1 { font-size: 17pt; color: #14532d; margin: 0 0 10px; padding-bottom: 8px;
+       border-bottom: 2px solid #22A06B; page-break-before: always; page-break-after: avoid; }
+  h2 { font-size: 12.5pt; color: #166534; margin: 16px 0 6px; page-break-after: avoid; }
+  h3 { font-size: 10.8pt; color: #1f2937; margin: 12px 0 4px; page-break-after: avoid; }
+  p { margin: 5px 0; text-align: justify; }
+  ul, ol { margin: 5px 0 5px 18px; padding: 0; }
+  li { margin: 2px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 9.2pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #d7dde3; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #f0f7f3; color: #14532d; font-weight: 600; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9pt;
+         background: #f2f4f6; padding: 1px 4px; border-radius: 3px; }
+  pre { background: #f7f9fa; border: 1px solid #e3e8ec; border-left: 3px solid #22A06B;
+        padding: 8px 10px; font-size: 8.6pt; line-height: 1.55; overflow: hidden;
+        white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; margin: 8px 0; }
+  pre code { background: none; padding: 0; font-size: 8.6pt; }
+  .lead { color: #4b5563; font-size: 9.6pt; }
+  .note { background: #f6fbf8; border: 1px solid #cbe7d8; border-radius: 5px;
+          padding: 8px 11px; margin: 9px 0; font-size: 9.2pt; page-break-inside: avoid; }
+  .note b { color: #166534; }
+  .fig { text-align: center; margin: 10px 0 4px; page-break-inside: avoid; }
+  .fig img { max-width: 100%; max-height: 104mm; border: 1px solid #e0e5e9; border-radius: 4px; }
+  .fig .cap { font-size: 8.6pt; color: #6b7280; margin-top: 4px; }
+  .fig-row { display: flex; gap: 10px; justify-content: center; page-break-inside: avoid; }
+  .fig-row .fig { flex: 1; }
+  .fig-row .fig img { max-width: 100%; max-height: 108mm; }
+
+  /* 封面 */
+  .cover { height: 252mm; display: flex; flex-direction: column; justify-content: center;
+           page-break-after: always; }
+  .cover .kicker { color: #22A06B; font-size: 11pt; letter-spacing: 2px; font-weight: 600; }
+  .cover h1.title { border: none; font-size: 30pt; color: #0f2e1f; margin: 10px 0 6px;
+                    page-break-before: avoid; letter-spacing: 1px; }
+  .cover .sub { font-size: 13pt; color: #374151; margin-bottom: 26px; }
+  .cover .meta { font-size: 9.6pt; color: #4b5563; line-height: 2; }
+  .cover .meta b { color: #111827; display: inline-block; width: 84px; }
+  .cover .meta { padding-left: 2mm; }
+  .cover .rule { height: 3px; width: 92px; background: #22A06B; margin: 18px 0 22px; }
+  .toc { font-size: 9.6pt; }
+  .toc div { margin: 3px 0; }
+  .toc .l1 { font-weight: 600; color: #166534; margin-top: 7px; }
+  .toc .l2 { padding-left: 16px; color: #4b5563; }
+</style>
+</head>
+<body>
+
+<!-- ================= 封面 ================= -->
+<div class="cover">
+  <div class="kicker">2026 第九届传智杯 · AI 创新应用挑战赛（个人赛）</div>
+  <h1 class="title">低卡轻食点餐系统</h1>
+  <div class="sub">基于意图驱动开发的全栈点餐 / 商家后台闭环<br>技术文档</div>
+  <div class="rule"></div>
+  <div class="meta">
+    <div><b>作品名称</b>dika-light-meal-miniprogram</div>
+    <div><b>参赛形式</b>个人赛（1 人）</div>
+    <div><b>技术形态</b>Native HTML/CSS/JS + Node.js 原生 HTTP（零第三方依赖）</div>
+    <div><b>代码仓库</b>https://github.com/as5827/dika-light-meal-miniprogram</div>
+    <div><b>文档版本</b>v1.0 · 2026 年 10 月</div>
+  </div>
+</div>
+
+<!-- ================= 目录 ================= -->
+<h1>目录</h1>
+<div class="toc">
+  <div class="l1">一、选题与问题定义</div>
+  <div class="l2">1.1 场景与用户　1.2 三个具体痛点　1.3 目标与范围界定</div>
+  <div class="l1">二、产品方案与业务闭环</div>
+  <div class="l2">2.1 功能地图　2.2 订单闭环时序　2.3 关键界面</div>
+  <div class="l1">三、意图控制策略（AI 协作方法）</div>
+  <div class="l2">3.1 协作范式　3.2 上下文管理　3.3 Prompt 结构模板　3.4 三次迭代的 Prompt 链　3.5 纠偏与复核　3.6 约束清单</div>
+  <div class="l1">四、架构设计与工程实现</div>
+  <div class="l2">4.1 分层与职责　4.2 请求管线　4.3 数据一致性与原子写　4.4 订单状态机　4.5 对生成代码的约束</div>
+  <div class="l1">五、可复现性论证</div>
+  <div class="l2">5.1 提交策略　5.2 Prompt 归档　5.3 十分钟复现路径　5.4 验证证据　5.5 不可复现项声明</div>
+  <div class="l1">六、工程质量与安全</div>
+  <div class="l2">6.1 鉴权与会话　6.2 输入校验与金额可信　6.3 并发与文件一致性　6.4 风险清单</div>
+  <div class="l1">七、用户体验与产品精细度</div>
+  <div class="l1">八、局限与后续规划</div>
+  <div class="l1">附录</div>
+  <div class="l2">A 接口清单　B 数据模型　C Prompt 归档索引</div>
+</div>
+
+<div class="note">
+<b>阅读指引：</b>本文档对应赛项评分维度组织——第三章对应「方法创新性与意图控制（20%）」，第四章对应「工程质量与架构设计（15%）」，第五章对应「过程可复现性与演进链路（25%）」，第二、七章对应「解题有效性与实用价值（25%）」「用户体验与产品精细度（15%）」。所有数据、命令与截图均来自本仓库真实运行结果。
+</div>
+
+<!-- ================= 一 ================= -->
+<h1>一、选题与问题定义</h1>
+
+<h2>1.1 场景与用户</h2>
+<p>轻食门店的典型经营形态是：菜品 SKU 不多（20–40 个）、但每天要改价格、估清（售罄）、换图；顾客以写字楼与校园周边为主，通过手机下单、到店自取或短途配送。这类门店通常没有预算去接一套 SaaS 点餐系统，一个「能改菜单 + 能收单 + 顾客能看到进度」的最小系统就足以覆盖 80% 的日常。</p>
+<p>因此本作品服务两类角色：</p>
+<table>
+  <tr><th style="width:16%">角色</th><th style="width:34%">核心诉求</th><th>典型动作</th></tr>
+  <tr><td>顾客</td><td>快速看清今天有什么、热量多少、多少钱，下单后知道做到哪一步了</td><td>选规格 → 加购 → 填地址 → 下单 → 看进度</td></tr>
+  <tr><td>店主 / 店员</td><td>随时改价、估清、换图；新订单能听见看到，做完点一下</td><td>登录后台 → 改菜品 → 看订单 → 接单 → 完成</td></tr>
+</table>
+
+<h2>1.2 三个具体痛点</h2>
+<p>不是泛泛的「餐饮数字化」，而是三个可验证的具体问题：</p>
+<ol>
+  <li><b>热量与价格信息不透明。</b>轻食客群对「多少卡」的敏感度高于普通快餐，但多数小店只在小程序图片里贴一张模糊的营养表。本作品把 <code>calorie</code> 作为菜品一级字段，点餐页与购物车实时累计总热量（<code>共 990 kcal</code>），并在后台可按菜品维护。</li>
+  <li><b>估清靠嘴说。</b>「今天牛油果没了」通常靠店员口头告知，线上仍可下单。本作品把 <code>stock</code> 落到菜品上：库存 0 时点餐页直接置灰并显示「已估清」，接口层也会在下单时二次校验并返回 409。</li>
+  <li><b>下单后进入信息黑箱。</b>顾客不知道商家看没看到单。本作品让订单状态从「待接单 → 制作中 → 已完成」单向推进，并把状态事件链同步到顾客端跟踪页（5 秒轮询），商家一点「接单」，顾客页面上的进度条就会走。</li>
+</ol>
+
+<h2>1.3 目标与范围界定</h2>
+<table>
+  <tr><th style="width:22%">维度</th><th>本期做</th><th>本期不做（及原因）</th></tr>
+  <tr><td>交易</td><td>下单、金额重算、库存扣减、状态流转</td><td>支付、退款、发票——需要支付资质与回调联调，个人赛周期内无法真实验证</td></tr>
+  <tr><td>履约</td><td>商家接单 / 完成，顾客端可见</td><td>骑手调度、路径规划——本项目不涉及真实配送体系，故不虚构骑手信息</td></tr>
+  <tr><td>账号</td><td>商家单账号登录（Cookie 会话）</td><td>顾客注册体系——顾客以「订单号」作为凭证查询，降低使用门槛</td></tr>
+  <tr><td>部署</td><td>单机 Node 进程 + JSON 文件</td><td>容器化、多实例、CDN——与「零依赖」定位冲突，列入后续规划</td></tr>
+</table>
+
+<!-- ================= 二 ================= -->
+<h1>二、产品方案与业务闭环</h1>
+
+<h2>2.1 功能地图</h2>
+<table>
+  <tr><th style="width:18%">端</th><th style="width:26%">模块</th><th>能力</th></tr>
+  <tr><td rowspan="4">顾客端<br><code>/</code></td><td>菜单浏览</td><td>8 个类目 / 28 道菜品；左侧导轨与右侧列表双向滚动联动；售罄置灰；骨架屏加载</td></tr>
+  <tr><td>规格与购物车</td><td>多规格组（必选 / 可选）、加价项实时改单价、飞入动画、数量角标、热量合计</td></tr>
+  <tr><td>地址与结算</td><td>地址簿增删改（localStorage）、配送费 ¥5 / 打包费 ¥2 / 满 ¥58 免配送、备注选填</td></tr>
+  <tr><td>下单与跟踪</td><td>提交订单落库；跟踪页显示订单号、金额、进度条与状态时间轴，5 秒轮询自动刷新</td></tr>
+  <tr><td rowspan="3">商家端<br><code>/admin</code></td><td>登录鉴权</td><td>Cookie 会话（HttpOnly + SameSite）、连续 5 次失败锁定 60 秒、退出登录</td></tr>
+  <tr><td>菜品管理</td><td>行内改名称 / 描述 / 价格 / 库存 / 热量；图片上传（dataURL → 落盘）；经营概览统计</td></tr>
+  <tr><td>订单管理</td><td>最近订单列表（明细 / 地址 / 备注 / 金额）、接单、完成、取消</td></tr>
+</table>
+
+<h2>2.2 订单闭环时序</h2>
+<pre><code>顾客端                     服务端                          商家端
+  │  选规格 / 加购            │                                │
+  │──POST /api/orders───────▶│ 1. 校验菜品存在 / 单价 ≥ 基础价   │
+  │                          │ 2. 校验库存 → 不足返回 409        │
+  │                          │ 3. 服务端重算小计/配送/打包/合计   │
+  │                          │ 4. 原子写 menu.json（扣库存）     │
+  │                          │ 5. 原子写 orders.json（落单+事件） │
+  │◀──订单号 / 金额 / events──│                                │
+  │  跳转跟踪页，5s 轮询       │                                │
+  │──GET /api/orders/:id────▶│ 返回状态 + 事件链（手机号脱敏）    │
+  │                          │◀──登录后 GET /api/orders────────│
+  │                          │◀──PUT /api/orders/:id {accepted}│
+  │                          │ 追加事件 {accepted, now}         │
+  │◀──状态变为 accepted───────│                                │
+  │  进度条推进到「制作中」     │                                │
+  │                          │◀──PUT ... {done}────────────────│
+  │◀──状态变为 done───────────│  轮询停止，全部节点打勾            │
+</code></pre>
+<p>这条链路是本作品的「业务主干」：其余功能（改价、换图、估清）都是围绕它服务的输入。它同时满足三种视角——顾客看得见进度、店主点得动状态、评委点开链接能自己复现。</p>
+
+<h2>2.3 关键界面</h2>
+<div class="fig-row">
+  <div class="fig"><img src="screenshots/menu.png" alt="点餐页"><div class="cap">图 1　顾客端点餐页（移动端）</div></div>
+  <div class="fig"><img src="screenshots/tracking.png" alt="跟踪页"><div class="cap">图 2　订单跟踪页（状态由服务端驱动）</div></div>
+</div>
+<div class="fig"><img src="screenshots/admin-orders.png" alt="后台订单区"><div class="cap">图 3　商家端后台：菜品管理与最近订单</div></div>
+
+<!-- ================= 三 ================= -->
+<h1>三、意图控制策略（AI 协作方法）</h1>
+<p class="lead">本章回答一个问题：在「代码主要由 AI 产出」的前提下，人如何保证结果不走样、可维护、可复现。</p>
+
+<h2>3.1 协作范式：人定边界，AI 填实现</h2>
+<p>本项目采用「意图驱动 + 强约束」的协作方式，人的职责集中在四件事，AI 负责在这些边界内产出实现：</p>
+<table>
+  <tr><th style="width:24%">人的职责</th><th>具体做法</th><th>在仓库中的痕迹</th></tr>
+  <tr><td>定边界</td><td>先声明硬约束（零第三方依赖、Node ≥18、单文件前端、数据落 JSON），再让 AI 出方案</td><td><code>prompts/01</code> 第 2 节、<code>README</code> 技术栈表</td></tr>
+  <tr><td>定验收</td><td>每个迭代先写「怎样算完成」，再写代码</td><td><code>prompts/01</code> 的 A/B/C/D 交付物表</td></tr>
+  <tr><td>做取舍</td><td>对 AI 给出的备选方案逐条拍板，记录否决理由</td><td><code>prompts/0x</code> 的「方案取舍」表</td></tr>
+  <tr><td>复核</td><td>不接受「看起来对」，必须给出状态码、日志或截图</td><td><code>prompts/0x</code> 的「验证记录」表</td></tr>
+</table>
+
+<h2>3.2 上下文管理</h2>
+<p>AI 走样的主要原因不是能力，而是上下文给错。本项目在每次迭代开场都会显式投喂三类信息：</p>
+<ol>
+  <li><b>硬约束</b>：如「服务端必须零第三方依赖，不能引入 npm 包」。这条约束直接否决了 SQLite、Express、JWT 库等一整套方案，避免了后期回退。</li>
+  <li><b>现状事实</b>：如「<code>preview/index.html</code> 的提交按钮目前只做了前端校验并跳转，订单从未落库」。用代码事实替代模糊描述，AI 才不会重复实现已有能力。</li>
+  <li><b>受影响文件</b>：只喂需要改的文件与相邻的接口定义，避免把整个仓库塞进上下文导致风格漂移。</li>
+</ol>
+<div class="note">
+<b>反例（真实发生）：</b>在第一次建仓时，AI 用 PowerShell 把中文 JSON 作为命令行参数传给 <code>curl</code>，Windows PowerShell 5.1 按 GBK 编码传递参数，GitHub 收到非法 UTF-8 直接返回 400。定位后改为「UTF-8 文件 + <code>--data-binary @file</code>」一次通过。<b>这类问题的正确处理方式是把失败现象与原始响应体一起回灌给 AI，而不是只说「报错了」。</b>
+</div>
+
+<h2>3.3 Prompt 结构模板</h2>
+<p>凡是涉及多文件改动的任务，统一按下面的五段式组织，避免「帮我做个后台」这种开放式指令：</p>
+<pre><code>【角色】你是我这个零依赖 Node 项目的实现者，改动范围限定在 server/server.js 与 admin/index.html。
+【约束】不引入任何第三方依赖；不改变现有接口的返回结构；错误统一 { code, message }。
+【现状】后台目前没有任何鉴权，PUT /api/dishes/:id 可被匿名调用；前端靠隐藏按钮"假装"受限。
+【目标】实现 Cookie 会话登录，受保护接口未登录返回 401，登录失败限速。
+【验收】给出未登录 401、错误口令 401、正确登录 200、登出后 401 四组实测结果。</code></pre>
+<p>模板的价值在于把「验收标准」写进 Prompt 本身——AI 会主动围绕验收项组织实现，而不是堆功能。</p>
+
+<h2>3.4 三次迭代的 Prompt 链</h2>
+<p>仓库中 <code>prompts/</code> 目录按迭代归档，每条记录都包含需求原文、AI 拆解、方案取舍、接口契约与验证记录。三次迭代的核心决策如下：</p>
+<table>
+  <tr><th style="width:12%">迭代</th><th style="width:24%">关键决策</th><th>被否决的方案与理由</th></tr>
+  <tr><td>01<br>订单落库</td><td>JSON 单文件存储；服务端重算金额；下单扣库存</td><td>SQLite（<code>node:sqlite</code> 在 Node 18 不可用）；前端算价传后端（金额可篡改）；不扣库存（后台改库存成摆设）</td></tr>
+  <tr><td>02<br>登录鉴权</td><td>Cookie + 内存 Map 会话；口令 SHA-256 后定时安全比较；按 IP 限速</td><td>JWT（零依赖下要自己实现 HMAC 与过期校验，收益低）；Basic Auth（无法主动登出）；全局失败计数（一人锁死所有人）</td></tr>
+  <tr><td>03<br>状态驱动跟踪</td><td>落 events 事件链；5 秒轮询；终态停止</td><td>SSE / WebSocket（零依赖下握手与重连成本高，状态变化是低频事件）；用 <code>updatedAt</code> 推算时间轴（第二次改状态会覆盖第一次）</td></tr>
+</table>
+
+<h2>3.5 纠偏与复核</h2>
+<p>AI 的产出不直接进主干，必须过三道闸：</p>
+<ol>
+  <li><b>语法闸</b>：<code>node --check server.js</code> 与内联脚本抽离后 <code>node --check</code>；</li>
+  <li><b>行为闸</b>：用 <code>curl</code> 打真接口，核对状态码与响应体，覆盖正常路径 + 至少两条异常路径；</li>
+  <li><b>视觉闸</b>：headless 浏览器截图，确认页面确实渲染成预期样子（防止「接口对但界面崩」）。</li>
+</ol>
+<p>三道闸在 <code>prompts/</code> 的验证记录表里逐条留痕，这也是第五章「可复现性论证」的证据来源。</p>
+
+<h2>3.6 约束清单</h2>
+<table>
+  <tr><th style="width:26%">约束</th><th>来源</th><th>对实现的直接影响</th></tr>
+  <tr><td>零第三方依赖</td><td>部署环境不可控，避免 <code>npm install</code> 失败</td><td>路由、静态服务、Cookie 解析、原子写全部手写；代价是功能密度受限</td></tr>
+  <tr><td>Node ≥ 18</td><td>评审可能用较老运行时</td><td>不使用 <code>node:sqlite</code> 等新 API</td></tr>
+  <tr><td>前端单文件</td><td>免构建、可直接双击查看/评审</td><td>无打包工具、无框架，样式与逻辑内联</td></tr>
+  <tr><td>金额以「分」为整数</td><td>浮点误差不可接受</td><td>全部金额字段整数存储，展示层转换</td></tr>
+</table>
+
+<!-- ================= 四 ================= -->
+<h1>四、架构设计与工程实现</h1>
+
+<h2>4.1 分层与职责</h2>
+<table>
+  <tr><th style="width:26%">文件</th><th style="width:12%">行数</th><th>职责</th></tr>
+  <tr><td><code>server/server.js</code></td><td>518</td><td>HTTP 服务：路由分发、静态托管、会话鉴权、参数校验、原子读写、订单状态机</td></tr>
+  <tr><td><code>preview/index.html</code></td><td>1721</td><td>顾客端：菜单渲染、SKU、购物车、地址、结算、订单跟踪与轮询</td></tr>
+  <tr><td><code>admin/index.html</code></td><td>587</td><td>商家端：登录、菜品编辑、图片上传、订单列表与状态操作</td></tr>
+  <tr><td><code>data/menu.json</code></td><td>—</td><td>菜单 + 计费规则（唯一数据源，前后端共用）</td></tr>
+  <tr><td><code>data/orders.json</code></td><td>—</td><td>订单（运行时生成，已 gitignore，结构见 <code>orders.example.json</code>）</td></tr>
+</table>
+<p>分层原则：<b>服务端是唯一的业务真相</b>。前端只负责展示与交互，金额、库存、状态合法性全部由服务端裁决；前端计算仅用于即时反馈，不作为提交依据。</p>
+
+<h2>4.2 请求管线</h2>
+<pre><code>request
+  → 路由匹配（按 method + path 前缀，顺序敏感：精确匹配的 /api/orders 先于 /api/orders/:id）
+  → 鉴权（仅受保护接口：PUT /api/dishes/*、POST /api/upload、GET /api/orders、PUT /api/orders/*）
+  → 请求体读取（readBody 带体积上限：普通 64KB / 下单 256KB / 上传 8MB）
+  → 参数校验（类型 + 范围 + 业务规则：菜品存在、单价 ≥ 基础价、库存充足）
+  → 业务处理（重算金额 → 原子写菜单 → 原子写订单）
+  → 统一响应（成功 { code:0, data }；失败 { code:<http>, message }）
+</code></pre>
+<p>统一响应结构让前端可以用同一套 <code>if (!res.ok || json.code !== 0) throw new Error(json.message)</code> 处理所有接口，Toast 直接展示后端文案（如「「烟熏三文鱼沙拉」库存不足，仅剩 12 份」）。</p>
+
+<h2>4.3 数据一致性与原子写</h2>
+<p>JSON 文件最大的风险是「写一半崩溃 → 文件损坏 → 全部数据丢失」。本项目对所有持久化写入统一采用「临时文件 + rename」：</p>
+<pre><code>const writeOrders = (list) =&gt; {
+  const tmp = ORDERS_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(list, null, 2), 'utf8');
+  fs.renameSync(tmp, ORDERS_FILE);   // rename 在同一分区上是原子操作
+};</code></pre>
+<p>下单时先写菜单（扣库存）再写订单，顺序不可颠倒：如果反过来，可能出现「订单已生成但库存没扣」的超卖；当前顺序最坏情况是「库存扣了但订单没落」，属于可接受的保守失败（少卖而非超卖），并已在限制说明中标注。</p>
+
+<h2>4.4 订单状态机</h2>
+<table>
+  <tr><th style="width:16%">当前状态</th><th style="width:26%">允许流转到</th><th>触发方</th><th>副作用</th></tr>
+  <tr><td><code>pending</code> 待接单</td><td><code>accepted</code> / <code>canceled</code></td><td>商家</td><td>追加事件；顾客端进度条推进</td></tr>
+  <tr><td><code>accepted</code> 制作中</td><td><code>done</code> / <code>canceled</code></td><td>商家</td><td>追加事件；顾客端显示「制作中」</td></tr>
+  <tr><td><code>done</code> 已完成</td><td>—（终态）</td><td>商家</td><td>追加事件；顾客端停止轮询</td></tr>
+  <tr><td><code>canceled</code> 已取消</td><td>—（终态）</td><td>商家</td><td>追加事件；顾客端隐藏进度条</td></tr>
+</table>
+<p>服务端显式拒绝把状态改回 <code>pending</code>，其余非法值一律 400。事件链 <code>events[]</code> 与状态同步追加，保证时间轴永远可还原，而不是靠单一 <code>updatedAt</code> 猜测。</p>
+
+<h2>4.5 对生成代码的约束</h2>
+<table>
+  <tr><th style="width:28%">约束</th><th>落地方式</th></tr>
+  <tr><td>显式路由，不用中间件魔术</td><td>每个接口一个 <code>if (req.method === ... &amp;&amp; url.startsWith(...))</code> 块，出错时能一眼定位</td></tr>
+  <tr><td>错误码约定</td><td>400 参数 / 401 未登录 / 404 不存在 / 409 冲突（库存）/ 413 过大 / 429 限速 / 500 服务端</td></tr>
+  <tr><td>输入一律当敌人</td><td><code>asInt(v,min,max)</code> / <code>asStr(v,max)</code> 统一收口，禁止直接使用 <code>req.body</code> 字段</td></tr>
+  <tr><td>注释解释「为什么」</td><td>如 <code>// rename 在同一分区上是原子操作</code>、<code>// 首次运行时文件不存在</code></td></tr>
+  <tr><td>前端不重复业务逻辑</td><td>前端算价仅用于展示；提交后以服务端返回的 total 为准</td></tr>
+</table>
+
+<!-- ================= 五 ================= -->
+<h1>五、可复现性论证</h1>
+<p class="lead">本章的目标是回答评委的四个追问：代码是不是一次性堆出来的？AI 协作过程是否真实？换台机器能不能跑起来？凭据在哪？</p>
+
+<h2>5.1 提交策略</h2>
+<p>仓库当前 <b>17 次提交</b>（含本文档提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
+<pre><code>85dc4f7 docs: 更新 README 与截图（后台鉴权、状态驱动跟踪页）
+1c7b900 docs(prompts): 补充 02 鉴权与 03 状态驱动跟踪的迭代记录
+0457862 feat(preview): 跟踪页轮询真实订单状态
+32dc3c3 feat(admin): 登录遮罩与退出登录
+135614d feat(server): 后台会话与接口鉴权 + 订单事件链 + 公开订单查询
+c194a57 docs: 补充订单 API、数据模型、界面截图与限制说明
+5491b6a feat(admin): 后台订单列表与状态流转
+42f6c72 feat(preview): 结算页对接下单接口，跟踪页展示真实订单
+405bd41 feat(server): 订单落库 API（创建/查询/状态流转）+ 下单扣库存
+aaacec6 docs(prompts): 建立 AI 协作过程归档规范与首份记录
+a83d090 chore: 统一换行符规范（.gitattributes）
+...（更早 6 次为存量代码按模块导入）</code></pre>
+<div class="note">
+<b>诚实声明：</b>最早的 6 次提交是存量代码按模块导入，发生在 <code>prompts/</code> 机制建立之前，因此<b>没有对应的 Prompt 记录</b>。本文档与仓库均未对这些提交做追溯性补写——伪造的 Prompt 链在评审追问下必然崩塌，可信度应当押在真实可查的后续迭代上。
+</div>
+
+<h2>5.2 Prompt 归档</h2>
+<p><code>prompts/</code> 目录的约束写在 <code>prompts/README.md</code> 中，单文件必须包含七段：原始需求、上下文、AI 拆解、方案取舍、关键 Prompt 与产出、验证记录、遗留问题；编号与提交顺序一致，并在提交信息中互相引用。</p>
+<table>
+  <tr><th style="width:10%">编号</th><th style="width:30%">迭代</th><th>归档内容要点</th></tr>
+  <tr><td>01</td><td>订单落库</td><td>存储/写入/金额/库存/文件入库 5 项决策与否决理由；接口契约；重启持久化验证</td></tr>
+  <tr><td>02</td><td>后台登录与鉴权</td><td>会话载体 3 选 1；Cookie 属性；定时安全比较；按 IP 限速；受保护接口清单</td></tr>
+  <tr><td>03</td><td>订单状态驱动跟踪</td><td>轮询 vs SSE/WebSocket；事件链建模；状态映射表；虚构内容清理</td></tr>
+</table>
+
+<h2>5.3 十分钟复现路径</h2>
+<pre><code># 1. 克隆（Node ≥ 18，无需 npm install）
+git clone https://github.com/as5827/dika-light-meal-miniprogram.git
+cd dika-light-meal-miniprogram
+
+# 2. 启动
+node server/server.js
+#   dika轻食 server running at http://localhost:3000
+#   点餐页  http://localhost:3000/preview/index.html
+#   后台    http://localhost:3000/admin
+
+# 3. 顾客端：选菜品 → 选规格 → 加购 → 结算 → 新增地址 → 提交订单
+#    预期：跳转跟踪页，显示真实订单号与金额，并出现「订单已提交」事件
+
+# 4. 商家端：打开 /admin → admin / dika2026 登录
+#    预期：看到「最近订单」中刚才那一单，状态「待接单」
+
+# 5. 点「接单」→ 切回顾客端跟踪页
+#    预期：5 秒内进度条推进到「制作中」，时间轴新增一条「商家已接单，开始制作」
+</code></pre>
+
+<h2>5.4 验证证据</h2>
+<p>下列结果均来自文档写作当天的真实执行（服务端口 3992，curl + headless Edge）：</p>
+<table>
+  <tr><th style="width:44%">用例</th><th style="width:18%">预期</th><th>实测</th></tr>
+  <tr><td>未登录 <code>GET /api/orders</code></td><td>401</td><td>401</td></tr>
+  <tr><td>未登录 <code>PUT /api/dishes/d1</code></td><td>401</td><td>401</td></tr>
+  <tr><td>错误口令登录</td><td>401 + 文案</td><td><code>{"code":401,"message":"账号或密码不正确"}</code></td></tr>
+  <tr><td>正确口令登录</td><td>200 + Set-Cookie</td><td><code>{"code":0,"data":{"user":"admin","expiresIn":28800000}}</code></td></tr>
+  <tr><td>登出后 <code>GET /api/orders</code></td><td>401</td><td>401</td></tr>
+  <tr><td>库存不足下单</td><td>409</td><td><code>{"code":409,"message":"「烟熏三文鱼沙拉」库存不足，仅剩 12 份"}</code></td></tr>
+  <tr><td>单价低于基础价</td><td>400</td><td><code>{"code":400,"message":"「烟熏三文鱼沙拉」价格异常"}</code></td></tr>
+  <tr><td>匿名查询订单</td><td>200 + 脱敏</td><td><code>phone=136****5678</code>，events=1</td></tr>
+  <tr><td>接单后事件链</td><td>pending → accepted</td><td>events=2，顺序正确</td></tr>
+  <tr><td>重启后订单仍在</td><td>持久化</td><td>重启进程后 <code>GET /api/orders</code> 仍返回该订单</td></tr>
+</table>
+<div class="fig"><img src="screenshots/login.png" alt="登录"><div class="cap">图 4　未登录访问后台时弹出登录遮罩（接口层同步返回 401）</div></div>
+
+<h2>5.5 不可复现项声明</h2>
+<ul>
+  <li><b>AI 对话原文</b>：归档的是结构化摘要（需求原文 / 决策 / 验证），不是逐字对话记录；逐字记录体量过大且包含环境噪声。</li>
+  <li><b>初始 6 次提交</b>：无 Prompt 记录，已在 5.1 声明。</li>
+  <li><b>支付与配送</b>：未接入，任何「已支付」「骑手已接单」类信息都不应出现在演示中——本项目已主动删除原型的虚构骑手卡片。</li>
+</ul>
+
+<!-- ================= 六 ================= -->
+<h1>六、工程质量与安全</h1>
+
+<h2>6.1 鉴权与会话</h2>
+<table>
+  <tr><th style="width:26%">措施</th><th>实现</th></tr>
+  <tr><td>会话载体</td><td>服务端内存 <code>Map&lt;token, {user, expiresAt}&gt;</code>，令牌 <code>crypto.randomBytes(24).toString('hex')</code></td></tr>
+  <tr><td>Cookie 属性</td><td><code>HttpOnly</code>（挡 XSS 读取）+ <code>SameSite=Lax</code>（挡跨站提交）+ <code>Path=/</code> + <code>Max-Age=28800</code></td></tr>
+  <tr><td>口令比对</td><td>双方先 SHA-256 再 <code>crypto.timingSafeEqual</code>，避免长度与前缀的时序泄漏</td></tr>
+  <tr><td>暴力破解</td><td>按 IP 计数，连续 5 次失败锁定 60 秒，返回 429 并给出剩余秒数</td></tr>
+  <tr><td>会话续期</td><td>滑动续期：每次命中把过期时间推到 8 小时后</td></tr>
+</table>
+
+<h2>6.2 输入校验与金额可信</h2>
+<p>所有写接口遵循「先收口、再校验、后落库」：</p>
+<pre><code>const asInt = (v, min, max) =&gt;
+  typeof v === 'number' &amp;&amp; Number.isInteger(v) &amp;&amp; v &gt;= min &amp;&amp; v &lt;= max ? v : null;
+const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '');</code></pre>
+<p>支付相关字段（<code>unitPrice</code>、<code>qty</code>）只被当作「输入」而非「结果」：小计、配送费、打包费、合计、总热量全部由服务端基于菜单与计费规则重算；<code>unitPrice</code> 仅允许 ≥ 菜品基础价（规格只能加价）。</p>
+
+<h2>6.3 并发与文件一致性</h2>
+<p>当前写入路径是 <code>read → 改 → write</code>，多请求并发下单存在竞态窗口（两个请求可能读到同一份库存）。单机演示场景可接受，已在限制中标注；后续方案是文件锁（<code>fs.open</code> + 独占标志）或迁移 SQLite 事务。</p>
+
+<h2>6.4 风险清单</h2>
+<table>
+  <tr><th style="width:34%">风险</th><th style="width:14%">等级</th><th>当前处置</th></tr>
+  <tr><td>默认口令 <code>admin/dika2026</code></td><td>中</td><td>可通过环境变量覆盖；启动日志与登录框均提示</td></tr>
+  <tr><td>会话存内存，重启全失效</td><td>低</td><td>演示可接受；已列入规划</td></tr>
+  <tr><td>订单号可枚举（时间戳 + 4 位随机）</td><td>中</td><td>手机号已脱敏；后续提高随机熵或加签名</td></tr>
+  <tr><td>并发扣库存竞态</td><td>中</td><td>单机演示可接受；规划加锁</td></tr>
+  <tr><td>Cookie 未加 <code>Secure</code></td><td>低</td><td>本地 http 调试无法设置；部署 HTTPS 时补</td></tr>
+</table>
+
+<!-- ================= 七 ================= -->
+<h1>七、用户体验与产品精细度</h1>
+<table>
+  <tr><th style="width:24%">场景</th><th>设计</th></tr>
+  <tr><td>浏览菜单</td><td>左侧导轨与右侧列表双向联动（滚动联动 + 点击平滑定位），解决长列表迷路；骨架屏避免白屏闪烁</td></tr>
+  <tr><td>选规格</td><td>必选组未选满时「加入购物车」置灰；加价项实时改单价，避免结算时价格跳变</td></tr>
+  <tr><td>加购反馈</td><td>飞入购物车动画 + 数量角标 + 底部结算栏，三重视觉确认</td></tr>
+  <tr><td>提交订单</td><td>按钮进入「提交中…」并禁用，防重复提交；失败 Toast 展示后端原文，库存类错误自动刷新菜单</td></tr>
+  <tr><td>跟踪页</td><td>进度条节点带呼吸动画指示当前状态；时间轴倒序、最新一条加粗；终态自动停止轮询</td></tr>
+  <tr><td>后台</td><td>行内编辑，改动即高亮 dirty，保存后按钮短暂显示「已保存」；401 统一回到登录态而不是静默失败</td></tr>
+  <tr><td>空态 / 错误态</td><td>菜单加载失败提供「重新加载」；订单为空提示「还没有订单，去点餐页下一单试试」</td></tr>
+</table>
+
+<!-- ================= 八 ================= -->
+<h1>八、局限与后续规划</h1>
+<table>
+  <tr><th style="width:36%">局限</th><th>规划</th></tr>
+  <tr><td>仓库名为 <code>miniprogram</code>，但主体是 H5 版式，暂无微信小程序工程</td><td>复用现有 <code>/api/*</code> 补一套原生小程序端（<code>app.json</code> + 页面），或更名为 web 版并保留 H5</td></tr>
+  <tr><td>无支付、无退款、无配送回调</td><td>接入支付沙箱与配送状态回调，让状态由外部事件驱动而非人工点击</td></tr>
+  <tr><td>JSON 文件存储，历史订单无分页</td><td>迁移 SQLite（Node ≥ 22 的 <code>node:sqlite</code>）并保留当前接口结构</td></tr>
+  <tr><td>会话与限速均为进程内存</td><td>持久化会话表 + 基于 Redis 的限速（或退化为文件计数）</td></tr>
+  <tr><td>无自动化测试</td><td>把 <code>prompts/</code> 里的 curl 用例固化为 <code>test/api.test.js</code>，用 <code>node --test</code> 运行</td></tr>
+</table>
+
+<!-- ================= 附录 ================= -->
+<h1>附录</h1>
+
+<h2>A 接口清单</h2>
+<table>
+  <tr><th style="width:8%">方法</th><th style="width:26%">路径</th><th style="width:14%">权限</th><th>说明</th></tr>
+  <tr><td>POST</td><td><code>/api/login</code></td><td>公开</td><td>登录，写 HttpOnly Cookie；失败 401，限速 429</td></tr>
+  <tr><td>POST</td><td><code>/api/logout</code></td><td>公开</td><td>销毁会话并清 Cookie</td></tr>
+  <tr><td>GET</td><td><code>/api/session</code></td><td>公开</td><td>返回当前登录用户，未登录 401</td></tr>
+  <tr><td>GET</td><td><code>/api/menu</code></td><td>公开</td><td>菜单 + 计费规则</td></tr>
+  <tr><td>POST</td><td><code>/api/orders</code></td><td>公开</td><td>下单：校验 → 重算金额 → 扣库存 → 落库</td></tr>
+  <tr><td>GET</td><td><code>/api/orders/:id</code></td><td>公开</td><td>订单跟踪，手机号脱敏，含事件链</td></tr>
+  <tr><td>PUT</td><td><code>/api/dishes/:id</code></td><td>登录</td><td>更新菜品价格/库存/热量/图片/名称/描述</td></tr>
+  <tr><td>POST</td><td><code>/api/upload</code></td><td>登录</td><td>图片上传（dataURL，≤2MB）</td></tr>
+  <tr><td>GET</td><td><code>/api/orders</code></td><td>登录</td><td>订单列表（倒序，limit ≤ 200）</td></tr>
+  <tr><td>PUT</td><td><code>/api/orders/:id</code></td><td>登录</td><td>状态流转，追加事件</td></tr>
+</table>
+
+<h2>B 数据模型</h2>
+<pre><code>// data/menu.json
+{
+  "categories": [{ "id": "c1", "name": "招牌沙拉" }],
+  "dishes": [{
+    "id": "d1", "cat": "c1", "name": "鸡胸肉藜麦沙拉",
+    "desc": "嫩煎鸡胸 · 藜麦 · 混合生菜",
+    "price": 3200,          // 单位：分
+    "calorie": 320,         // 单位：kcal
+    "image": "", "emoji": "🥗", "stock": 20, "tags": ["高蛋白"],
+    "specs": [{ "id": "g1", "name": "份量", "required": true,
+                "options": [{ "id": "o1", "name": "标准", "delta": 0 }] }]
+  }],
+  "fees": { "deliveryFee": 500, "packFee": 200, "freeDeliveryThreshold": 5800 }
+}
+
+// data/orders.json（运行时生成，结构见 data/orders.example.json）
+[{
+  "id": "20261028120304-4821",
+  "status": "pending",                       // pending | accepted | done | canceled
+  "items": [{ "dishId": "d1", "name": "鸡胸肉藜麦沙拉", "specDesc": "份量:加大",
+              "unitPrice": 3200, "qty": 2, "calorie": 320, "amount": 6400 }],
+  "address": { "name": "张三", "phone": "13800000000", "building": "3 号楼", "room": "502" },
+  "remark": "少冰",
+  "subtotal": 6400, "deliveryFee": 0, "packFee": 200, "total": 6600,
+  "totalCalorie": 640, "itemCount": 2,
+  "events": [{ "status": "pending", "at": "2026-10-28T04:03:04.000Z" }],
+  "createdAt": "2026-10-28T04:03:04.000Z", "updatedAt": "2026-10-28T04:03:04.000Z"
+}]</code></pre>
+
+<h2>C Prompt 归档索引</h2>
+<table>
+  <tr><th style="width:12%">编号</th><th style="width:34%">文件</th><th>主要决策</th></tr>
+  <tr><td>01</td><td><code>prompts/01-订单落库.md</code></td><td>JSON 单文件存储、服务端重算金额、下单扣库存、订单文件不入库</td></tr>
+  <tr><td>02</td><td><code>prompts/02-后台登录与鉴权.md</code></td><td>Cookie + 内存会话、定时安全比较、按 IP 限速、公开订单查询与脱敏</td></tr>
+  <tr><td>03</td><td><code>prompts/03-订单状态驱动跟踪页.md</code></td><td>事件链替代 updatedAt、5 秒轮询、终态停止、清理虚构内容</td></tr>
+</table>
+<p style="margin-top:14px;color:#6b7280;font-size:9pt;">文档所述功能与数据均可在仓库中复核：<code>https://github.com/as5827/dika-light-meal-miniprogram</code></p>
+
+</body>
+</html>

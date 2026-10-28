@@ -1039,33 +1039,7 @@
         <div class="node"><div class="node-dot">4</div><div class="node-label">已送达</div></div>
       </div>
 
-      <div class="rider-card">
-        <div class="rider-avatar">🛵</div>
-        <div class="rider-info">
-          <div class="rider-name">配送小哥 王师傅</div>
-          <div class="rider-phone">188****5678 · 接单后与您联系</div>
-        </div>
-        <div class="rider-call">呼叫</div>
-      </div>
-
-      <div class="timeline">
-        <div class="timeline-item">
-          <div class="timeline-time" id="t1Time">12:02</div>
-          <div class="timeline-text bold">订单已提交，等待商家接单</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">12:03</div>
-          <div class="timeline-text">商家确认，开始制作</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">--:--</div>
-          <div class="timeline-text">骑手到店取餐</div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-time">--:--</div>
-          <div class="timeline-text">餐品送达</div>
-        </div>
-      </div>
+      <div class="timeline" id="timeline"></div>
 
       <button class="back-btn" id="backToMenu">再来一单</button>
     </div>
@@ -1615,7 +1589,101 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
   showPage('Confirm');
 });
 document.getElementById('confirmBack').addEventListener('click', () => showPage('Menu'));
-/* ========== 提交订单 ========== */
+/* ========== 提交订单 & 订单跟踪 ========== */
+const TRACK_STEPS = ['已提交', '已接单', '制作中', '已完成'];
+const TRACK_STEP_INDEX = { pending: 1, accepted: 2, done: 3, canceled: -1 };
+const TRACK_STATUS_TEXT = {
+  pending: '等待商家接单',
+  accepted: '商家已接单，正在制作',
+  done: '订单已完成',
+  canceled: '订单已取消'
+};
+const TRACK_EVENT_TEXT = {
+  pending: '订单已提交，等待商家接单',
+  accepted: '商家已接单，开始制作',
+  done: '餐品制作完成，请取餐',
+  canceled: '订单已取消'
+};
+
+let trackTimer = null;
+let currentOrderId = '';
+
+function stopTracking() {
+  if (trackTimer) {
+    clearInterval(trackTimer);
+    trackTimer = null;
+  }
+}
+
+function formatClock(iso) {
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function renderTrackingStatus(order) {
+  const step = TRACK_STEP_INDEX[order.status];
+  const progress = document.getElementById('progress');
+  if (step < 0) {
+    progress.style.display = 'none';
+  } else {
+    progress.style.display = '';
+    progress.innerHTML =
+      `<div class="progress-fill" style="width:${(step / 3) * 100}%"></div>` +
+      TRACK_STEPS.map((label, i) => {
+        const cls = i < step ? 'done' : (i === step ? 'current' : '');
+        const dot = i < step ? '✓' : String(i + 1);
+        return `<div class="node ${cls}"><div class="node-dot">${dot}</div><div class="node-label">${label}</div></div>`;
+      }).join('');
+  }
+  document.getElementById('trackingStatus').textContent = TRACK_STATUS_TEXT[order.status] || '订单处理中';
+  document.getElementById('trackingSub').textContent = '订单号 ' + order.id;
+}
+
+function renderTimeline(order) {
+  const el = document.getElementById('timeline');
+  const events = Array.isArray(order.events) ? order.events : [];
+  if (!events.length) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = events
+    .slice()
+    .reverse()
+    .map((ev, idx) => `
+      <div class="timeline-item">
+        <div class="timeline-time">${formatClock(ev.at)}</div>
+        <div class="timeline-text ${idx === 0 ? 'bold' : ''}">${TRACK_EVENT_TEXT[ev.status] || ev.status}</div>
+      </div>`)
+    .join('');
+}
+
+function renderTracking(order) {
+  renderTrackingStatus(order);
+  renderTimeline(order);
+  if (order.status === 'done' || order.status === 'canceled') stopTracking();
+}
+
+async function pollOrder() {
+  if (!currentOrderId) return;
+  try {
+    const res = await fetch('/api/orders/' + encodeURIComponent(currentOrderId), { cache: 'no-store' });
+    if (!res.ok) return;
+    const json = await res.json();
+    renderTracking(json.data);
+  } catch (e) {
+    /* 网络抖动时静默忽略，下一次轮询再试 */
+  }
+}
+
+function startTracking(order) {
+  currentOrderId = order.id;
+  stopTracking();
+  renderTrackingStatus(order);
+  renderTimeline(order);
+  trackTimer = setInterval(pollOrder, 5000);
+}
+
 function showOrderTracking(order) {
   const brief = document.getElementById('orderBrief');
   const count = order.itemCount || 0;
@@ -1623,13 +1691,7 @@ function showOrderTracking(order) {
   brief.innerHTML = `
     <div class="row-1"><span>订单号 ${esc(order.id)}</span><span>¥${fenToYuan(order.total)}</span></div>
     <div class="row-2">共 ${count} 件 · ${order.totalCalorie || 0} kcal · 配送费 ${order.deliveryFee === 0 ? '免' : '¥' + fenToYuan(order.deliveryFee)}</div>`;
-  document.getElementById('trackingStatus').textContent = '订单已提交';
-  document.getElementById('trackingSub').textContent = '已通知商家接单 · 订单号 ' + order.id;
-  const t1 = document.getElementById('t1Time');
-  if (t1 && order.createdAt) {
-    const d = new Date(order.createdAt);
-    t1.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  }
+  startTracking(order);
 }
 
 document.getElementById('submitOrder').addEventListener('click', async (e) => {
@@ -1679,8 +1741,14 @@ document.getElementById('submitOrder').addEventListener('click', async (e) => {
   }
 });
 document.getElementById('backToMenu').addEventListener('click', () => {
+  stopTracking();
+  currentOrderId = '';
   cart = []; updateCart();
   document.getElementById('inputRemark').value = '';
+  showPage('Menu');
+});
+document.getElementById('trackingBack').addEventListener('click', () => {
+  stopTracking();
   showPage('Menu');
 });
 

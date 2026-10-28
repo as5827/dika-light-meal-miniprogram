@@ -156,6 +156,32 @@
   .state { text-align: center; padding: 80px 20px; color: var(--ink-3); font-size: 14px; }
   .state button { margin-top: 14px; }
 
+  /* ===== 订单区 ===== */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 30px 0 12px; font-size: 17px; font-weight: 700;
+  }
+  .order-row {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md);
+    padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .order-row .o-main { flex: 1; min-width: 0; }
+  .order-row .o-id { font-size: 13px; font-weight: 600; }
+  .order-row .o-time { font-size: 12px; color: var(--ink-3); margin-left: 8px; font-weight: 400; }
+  .order-row .o-items { font-size: 12px; color: var(--ink-2); margin-top: 6px; line-height: 1.7; }
+  .order-row .o-addr { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .order-row .o-right {
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end; white-space: nowrap;
+  }
+  .order-row .o-amount { font-size: 16px; font-weight: 700; }
+  .badge { font-size: 11px; padding: 2px 10px; border-radius: 999px; }
+  .badge.pending { background: #FFF4E5; color: #B26A00; }
+  .badge.accepted { background: #E8F3FF; color: #0B62D6; }
+  .badge.done { background: var(--brand-soft); color: var(--brand); }
+  .badge.canceled { background: #F2F2F2; color: var(--ink-3); }
+  .o-actions { display: flex; gap: 8px; }
+  .o-actions .btn { padding: 6px 12px; font-size: 12px; }
+
   @media (max-width: 620px) {
     .row { flex-wrap: wrap; }
     .actions { flex-direction: row; width: 100%; justify-content: flex-end; }
@@ -185,6 +211,12 @@
   <div class="cat-chips" id="catChips"></div>
 
   <div id="listWrap"></div>
+
+  <div class="section-head">
+    <span>最近订单</span>
+    <button class="btn btn-ghost" id="refreshOrders">刷新订单</button>
+  </div>
+  <div id="orderWrap"><div class="state">加载中…</div></div>
 </div>
 
 <input type="file" id="fileInput" accept="image/*" style="display:none">
@@ -421,7 +453,86 @@ document.getElementById('search').addEventListener('input', (e) => {
 
 document.getElementById('refreshBtn').addEventListener('click', loadMenu);
 
+/* ===== 订单管理 ===== */
+const STATUS_TEXT = { pending: '待接单', accepted: '制作中', done: '已完成', canceled: '已取消' };
+
+function fmtTime(iso) {
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+async function loadOrders() {
+  const wrap = document.getElementById('orderWrap');
+  wrap.innerHTML = '<div class="state">加载中…</div>';
+  try {
+    const res = await fetch('/api/orders?limit=20', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    renderOrders(json.data || []);
+  } catch (e) {
+    wrap.innerHTML = '<div class="state">订单加载失败<br><button class="btn btn-primary" onclick="loadOrders()">重试</button></div>';
+  }
+}
+
+function renderOrders(list) {
+  const wrap = document.getElementById('orderWrap');
+  if (!list.length) {
+    wrap.innerHTML = '<div class="state">还没有订单，去点餐页下一单试试</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((o) => {
+    const items = (o.items || [])
+      .map((i) => `${i.name}${i.specDesc ? '（' + i.specDesc + '）' : ''} ×${i.qty}`)
+      .join('、');
+    const a = o.address || {};
+    const buttons = o.status === 'pending'
+      ? `<button class="btn btn-primary" data-act="accepted" data-id="${o.id}">接单</button>
+         <button class="btn btn-ghost" data-act="canceled" data-id="${o.id}">取消</button>`
+      : (o.status === 'accepted'
+        ? `<button class="btn btn-primary" data-act="done" data-id="${o.id}">完成</button>`
+        : '');
+    return `<div class="order-row">
+      <div class="o-main">
+        <div class="o-id">${o.id}<span class="o-time">${fmtTime(o.createdAt)}</span></div>
+        <div class="o-items">${items}</div>
+        <div class="o-addr">${a.name || ''} ${a.phone || ''} · ${a.building || ''}${a.room || ''}${o.remark ? ' · 备注：' + o.remark : ''}</div>
+      </div>
+      <div class="o-right">
+        <div class="o-amount">¥${yuan(o.total)}</div>
+        <span class="badge ${o.status}">${STATUS_TEXT[o.status] || o.status}</span>
+        <div class="o-actions">${buttons}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-act]').forEach((btn) => {
+    btn.addEventListener('click', () => updateOrderStatus(btn.dataset.id, btn.dataset.act, btn));
+  });
+}
+
+async function updateOrderStatus(id, status, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/orders/' + encodeURIComponent(id), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '操作失败');
+    toast('订单已更新为「' + STATUS_TEXT[status] + '」');
+    loadOrders();
+  } catch (e) {
+    btn.disabled = false;
+    toast(e.message || '操作失败', true);
+  }
+}
+
+document.getElementById('refreshOrders').addEventListener('click', loadOrders);
+
 loadMenu();
+loadOrders();
 </script>
 </body>
 </html>

@@ -156,6 +156,27 @@
   .state { text-align: center; padding: 80px 20px; color: var(--ink-3); font-size: 14px; }
   .state button { margin-top: 14px; }
 
+  /* ===== 登录遮罩 ===== */
+  .login-mask {
+    position: fixed; inset: 0; background: rgba(22,58,42,.55);
+    display: none; align-items: center; justify-content: center; z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .login-mask.show { display: flex; }
+  .login-card {
+    width: 360px; background: #fff; border-radius: var(--radius-lg); padding: 26px 26px 22px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.18);
+  }
+  .login-title { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  .login-sub { font-size: 12px; color: var(--ink-3); line-height: 1.6; margin-bottom: 18px; }
+  .login-card input {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px;
+    font-size: 14px; font-family: inherit; outline: none; margin-bottom: 10px;
+  }
+  .login-card input:focus { border-color: var(--brand); }
+  .login-card .btn { width: 100%; padding: 11px; font-size: 14px; }
+  .login-err { color: var(--danger); font-size: 12px; min-height: 16px; margin-top: 8px; text-align: center; }
+
   /* ===== 订单区 ===== */
   .section-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -198,6 +219,7 @@
   </div>
   <div class="links">
     <a href="/preview/index.html" target="_blank">查看点餐页</a>
+    <a href="javascript:;" id="logoutBtn" style="display:none">退出登录</a>
   </div>
 </header>
 
@@ -217,6 +239,17 @@
     <button class="btn btn-ghost" id="refreshOrders">刷新订单</button>
   </div>
   <div id="orderWrap"><div class="state">加载中…</div></div>
+</div>
+
+<div class="login-mask" id="loginMask">
+  <div class="login-card">
+    <div class="login-title">商家后台登录</div>
+    <div class="login-sub">默认账号 <b>admin</b> / <b>dika2026</b>；可用环境变量 <code>ADMIN_USER</code>、<code>ADMIN_PASSWORD</code> 覆盖</div>
+    <input id="loginUser" placeholder="账号" autocomplete="username" value="admin">
+    <input id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="btn btn-primary" id="loginBtn">登录</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
 </div>
 
 <input type="file" id="fileInput" accept="image/*" style="display:none">
@@ -385,6 +418,7 @@ function bindRows() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        if (res.status === 401) { saveBtn.textContent = '保存'; saveBtn.disabled = false; showLogin('登录已过期，请重新登录'); return; }
         const json = await res.json();
         if (!res.ok || json.code !== 0) throw new Error(json.message || '保存失败');
         Object.assign(dish, json.data);
@@ -432,6 +466,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename: file.name, dataUrl })
     });
+    if (res.status === 401) { thumb.innerHTML = '<div class="mask">更换图片</div>'; showLogin('登录已过期，请重新登录'); return; }
     const json = await res.json();
     if (!res.ok || json.code !== 0) throw new Error(json.message || '上传失败');
     thumb.innerHTML = `<img src="${json.data.url}" alt=""><div class="mask">更换图片</div>`;
@@ -451,6 +486,66 @@ document.getElementById('search').addEventListener('input', (e) => {
   renderList();
 });
 
+/* ===== 登录 / 会话 ===== */
+function showLogin(msg) {
+  document.getElementById('loginMask').classList.add('show');
+  document.getElementById('loginErr').textContent = msg || '';
+  document.getElementById('loginPass').value = '';
+  setTimeout(() => document.getElementById('loginUser').focus(), 60);
+}
+
+async function checkSession() {
+  try {
+    const res = await fetch('/api/session', { cache: 'no-store' });
+    if (!res.ok) throw new Error('unauthorized');
+    const json = await res.json();
+    document.getElementById('loginMask').classList.remove('show');
+    document.getElementById('logoutBtn').style.display = '';
+    return json.data.user;
+  } catch (e) {
+    showLogin('');
+    return null;
+  }
+}
+
+async function doLogin() {
+  const btn = document.getElementById('loginBtn');
+  if (btn.disabled) return;
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  btn.disabled = true;
+  btn.textContent = '登录中…';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '登录失败');
+    document.getElementById('loginMask').classList.remove('show');
+    document.getElementById('logoutBtn').style.display = '';
+    toast('已登录：' + json.data.user);
+    loadMenu();
+    loadOrders();
+  } catch (err) {
+    document.getElementById('loginErr').textContent = err.message || '登录失败';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登录';
+  }
+}
+
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPass').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  showLogin('');
+  toast('已退出登录');
+});
+
 document.getElementById('refreshBtn').addEventListener('click', loadMenu);
 
 /* ===== 订单管理 ===== */
@@ -467,6 +562,7 @@ async function loadOrders() {
   wrap.innerHTML = '<div class="state">加载中…</div>';
   try {
     const res = await fetch('/api/orders?limit=20', { cache: 'no-store' });
+    if (res.status === 401) { showLogin('登录已过期，请重新登录'); return; }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
     renderOrders(json.data || []);
@@ -519,6 +615,7 @@ async function updateOrderStatus(id, status, btn) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
+    if (res.status === 401) { btn.disabled = false; showLogin('登录已过期，请重新登录'); return; }
     const json = await res.json();
     if (!res.ok || json.code !== 0) throw new Error(json.message || '操作失败');
     toast('订单已更新为「' + STATUS_TEXT[status] + '」');
@@ -531,8 +628,13 @@ async function updateOrderStatus(id, status, btn) {
 
 document.getElementById('refreshOrders').addEventListener('click', loadOrders);
 
-loadMenu();
-loadOrders();
+(async function boot() {
+  const user = await checkSession();
+  if (user) {
+    loadMenu();
+    loadOrders();
+  }
+})();
 </script>
 </body>
 </html>

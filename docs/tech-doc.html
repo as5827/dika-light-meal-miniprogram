@@ -79,7 +79,7 @@
   <div class="l1">二、产品方案与业务闭环</div>
   <div class="l2">2.1 功能地图　2.2 订单闭环时序　2.3 关键界面</div>
   <div class="l1">三、意图控制策略（AI 协作方法）</div>
-  <div class="l2">3.1 协作范式　3.2 上下文管理　3.3 Prompt 结构模板　3.4 三次迭代的 Prompt 链　3.5 纠偏与复核　3.6 约束清单</div>
+  <div class="l2">3.1 协作范式　3.2 上下文管理　3.3 Prompt 结构模板　3.4 五次迭代的 Prompt 链　3.5 纠偏与复核　3.6 约束清单</div>
   <div class="l1">四、架构设计与工程实现</div>
   <div class="l2">4.1 分层与职责　4.2 请求管线　4.3 数据一致性与原子写　4.4 订单状态机　4.5 对生成代码的约束</div>
   <div class="l1">五、可复现性论证</div>
@@ -131,10 +131,11 @@
 <h2>2.1 功能地图</h2>
 <table>
   <tr><th style="width:18%">端</th><th style="width:26%">模块</th><th>能力</th></tr>
-  <tr><td rowspan="4">顾客端<br><code>/</code></td><td>菜单浏览</td><td>8 个类目 / 28 道菜品；左侧导轨与右侧列表双向滚动联动；售罄置灰；骨架屏加载</td></tr>
+  <tr><td rowspan="5">顾客端<br><code>/</code></td><td>菜单浏览</td><td>8 个类目 / 28 道菜品；左侧导轨与右侧列表双向滚动联动；售罄置灰；骨架屏加载</td></tr>
   <tr><td>规格与购物车</td><td>多规格组（必选 / 可选）、加价项实时改单价、飞入动画、数量角标、热量合计</td></tr>
   <tr><td>地址与结算</td><td>地址簿增删改（localStorage）、配送费 ¥5 / 打包费 ¥2 / 满 ¥58 免配送、备注选填</td></tr>
   <tr><td>下单与跟踪</td><td>提交订单落库；跟踪页显示订单号、金额、进度条与状态时间轴，5 秒轮询自动刷新</td></tr>
+    <tr><td>AI 定制</td><td>输入性别 / 年龄 / 身高 / 体重 / 活动量 / 目标，得到这一餐的推荐组合，可一键加入购物车</td></tr>
   <tr><td rowspan="3">商家端<br><code>/admin</code></td><td>登录鉴权</td><td>Cookie 会话（HttpOnly + SameSite）、连续 5 次失败锁定 60 秒、退出登录</td></tr>
   <tr><td>菜品管理</td><td>行内改名称 / 描述 / 价格 / 库存 / 热量；图片上传（dataURL → 落盘）；经营概览统计</td></tr>
   <tr><td>订单管理</td><td>最近订单列表（明细 / 地址 / 备注 / 金额）、接单、完成、取消</td></tr>
@@ -168,6 +169,20 @@
 </div>
 <div class="fig"><img src="screenshots/admin-orders.png" alt="后台订单区"><div class="cap">图 3　商家端后台：菜品管理与最近订单</div></div>
 
+<h2>2.4 AI 个性化推荐：从身体指标到一份套餐</h2>
+<p>轻食用户最常问的两个问题是「我该吃多少」和「今天点哪个」。这两个问题可以被一个<strong>确定性模型</strong>回答，而不是每次调用大模型碰运气：</p>
+<table>
+  <tr><th style="width:22%">步骤</th><th>做法</th></tr>
+  <tr><td>① 基础代谢</td><td>Mifflin-St Jeor：<code>10×体重 + 6.25×身高 − 5×年龄 + (男 5 / 女 −161)</code></td></tr>
+  <tr><td>② 每日消耗</td><td>BMR × 活动系数（1.2 / 1.375 / 1.55 / 1.725）</td></tr>
+  <tr><td>③ 目标与蛋白</td><td>减脂 0.8×、维持 1.0×、增肌 1.1×，并设热量下限；蛋白按体重 1.6 / 1.2 / 1.8 g·kg⁻¹</td></tr>
+  <tr><td>④ 单餐预算</td><td>每日目标 × 40%（用户点的是"这一餐"，不是全天规划）</td></tr>
+  <tr><td>⑤ 组合搜索</td><td>主菜(1) × 加料(0-1) × 汤/果汁(0-1) × 甜点(0-1)，约 1500 个候选</td></tr>
+  <tr><td>⑥ 目标函数</td><td>蛋白达成 ×0.5 − 热量偏差 ×0.35 + 价格分 ×0.15 − 蛋白过量惩罚 ×0.2</td></tr>
+</table>
+<p>几个刻意的设计：<b>蛋白过量要扣分</b>，否则算法会无脑堆鸡胸；<b>预算无解时</b>退化为「满足营养下限的最便宜组合」并在结果里标注已放宽；<b>大模型只做文案润色</b>，Prompt 里明令"不得改动任何数字"，且未配置 Key 时完全不参与。</p>
+<div class="fig"><img src="screenshots/plan.png" alt="AI 定制"><div class="cap">图 4　AI 定制页：指标 → 推荐组合 → 偏差与理由 → 一键加购</div></div>
+<p class="lead" style="font-size:9pt;color:#6b7280;">可复现性说明：同样的输入必然得到同样的组合（无随机数、无模型采样），因此推荐结果可以被逐条验证——这也是把"AI 推荐"做成本地模型而不是调用大模型的核心理由。</p>
 <!-- ================= 三 ================= -->
 <h1>三、意图控制策略（AI 协作方法）</h1>
 <p class="lead">本章回答一个问题：在「代码主要由 AI 产出」的前提下，人如何保证结果不走样、可维护、可复现。</p>
@@ -202,13 +217,15 @@
 【验收】给出未登录 401、错误口令 401、正确登录 200、登出后 401 四组实测结果。</code></pre>
 <p>模板的价值在于把「验收标准」写进 Prompt 本身——AI 会主动围绕验收项组织实现，而不是堆功能。</p>
 
-<h2>3.4 三次迭代的 Prompt 链</h2>
+<h2>3.4 五次迭代的 Prompt 链</h2>
 <p>仓库中 <code>prompts/</code> 目录按迭代归档，每条记录都包含需求原文、AI 拆解、方案取舍、接口契约与验证记录。三次迭代的核心决策如下：</p>
 <table>
   <tr><th style="width:12%">迭代</th><th style="width:24%">关键决策</th><th>被否决的方案与理由</th></tr>
   <tr><td>01<br>订单落库</td><td>JSON 单文件存储；服务端重算金额；下单扣库存</td><td>SQLite（<code>node:sqlite</code> 在 Node 18 不可用）；前端算价传后端（金额可篡改）；不扣库存（后台改库存成摆设）</td></tr>
   <tr><td>02<br>登录鉴权</td><td>Cookie + 内存 Map 会话；口令 SHA-256 后定时安全比较；按 IP 限速</td><td>JWT（零依赖下要自己实现 HMAC 与过期校验，收益低）；Basic Auth（无法主动登出）；全局失败计数（一人锁死所有人）</td></tr>
   <tr><td>03<br>状态驱动跟踪</td><td>落 events 事件链；5 秒轮询；终态停止</td><td>SSE / WebSocket（零依赖下握手与重连成本高，状态变化是低频事件）；用 <code>updatedAt</code> 推算时间轴（第二次改状态会覆盖第一次）</td></tr>
+  <tr><td>04<br>小程序端与双端架构</td><td>原生小程序 vs 跨端框架；TS strict；模块级状态；双端字段对齐</td><td>uni-app / Taro（3 页规模下编译与调试成本高于收益）；购物车持久化（跨次启动带脏数据）</td></tr>
+  <tr><td>05<br>AI 推荐</td><td>本地营养学模型 + 组合搜索；大模型仅润色且默认关闭</td><td>直接调大模型生成套餐（结果不可复现、无法解释、每次不同）；用模型改写数字（幻觉污染营养数据）</td></tr>
 </table>
 
 <h2>3.5 纠偏与复核</h2>
@@ -302,7 +319,7 @@
 <p class="lead">本章的目标是回答评委的四个追问：代码是不是一次性堆出来的？AI 协作过程是否真实？换台机器能不能跑起来？凭据在哪？</p>
 
 <h2>5.1 提交策略</h2>
-<p>仓库当前 <b>20 次提交</b>（含小程序端、Prompt 归档与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
+<p>仓库当前 <b>23 次提交</b>（含小程序端、推荐引擎、Prompt 归档与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
 <pre><code>85dc4f7 docs: 更新 README 与截图（后台鉴权、状态驱动跟踪页）
 1c7b900 docs(prompts): 补充 02 鉴权与 03 状态驱动跟踪的迭代记录
 0457862 feat(preview): 跟踪页轮询真实订单状态
@@ -325,7 +342,9 @@ a83d090 chore: 统一换行符规范（.gitattributes）
   <tr><th style="width:10%">编号</th><th style="width:30%">迭代</th><th>归档内容要点</th></tr>
   <tr><td>01</td><td>订单落库</td><td>存储/写入/金额/库存/文件入库 5 项决策与否决理由；接口契约；重启持久化验证</td></tr>
   <tr><td>02</td><td>后台登录与鉴权</td><td>会话载体 3 选 1；Cookie 属性；定时安全比较；按 IP 限速；受保护接口清单</td></tr>
-  <tr><td>03</td><td>订单状态驱动跟踪</td><td>轮询 vs SSE/WebSocket；事件链建模；状态映射表；虚构内容清理</td></tr>
+  <tr><td>03</td><td>订单状态驱动跟踪</td><td>轮询 vs SSE/WebSocket；事件链建模；状态映射表；虚构内容清理</td></tr>  <tr><td>04</td><td>小程序端与双端架构</td><td>原生 vs 跨端框架；TS strict；模块级状态；双端字段对齐</td></tr>
+  <tr><td>04</td><td>小程序端与双端架构</td><td>原生 vs 跨端框架；TS strict；模块级状态；双端字段对齐</td></tr>
+  <tr><td>05</td><td>AI 减脂套餐推荐</td><td>本地模型 vs 调大模型；单餐粒度；目标函数与过量惩罚；预算放宽</td></tr>
 </table>
 
 <h2>5.3 十分钟复现路径</h2>
@@ -443,6 +462,8 @@ const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '
   <tr><td>POST</td><td><code>/api/logout</code></td><td>公开</td><td>销毁会话并清 Cookie</td></tr>
   <tr><td>GET</td><td><code>/api/session</code></td><td>公开</td><td>返回当前登录用户，未登录 401</td></tr>
   <tr><td>GET</td><td><code>/api/menu</code></td><td>公开</td><td>菜单 + 计费规则</td></tr>
+  <tr><td>GET</td><td><code>/api/recommend/options</code></td><td>公开</td><td>推荐表单可选项（性别 / 活动量 / 目标）</td></tr>
+  <tr><td>POST</td><td><code>/api/recommend</code></td><td>公开</td><td>身体指标 → 推荐套餐（BMR/TDEE/目标、组合、偏差、理由）</td></tr>
   <tr><td>POST</td><td><code>/api/orders</code></td><td>公开</td><td>下单：校验 → 重算金额 → 扣库存 → 落库</td></tr>
   <tr><td>GET</td><td><code>/api/orders/:id</code></td><td>公开</td><td>订单跟踪，手机号脱敏，含事件链</td></tr>
   <tr><td>PUT</td><td><code>/api/dishes/:id</code></td><td>登录</td><td>更新菜品价格/库存/热量/图片/名称/描述</td></tr>
@@ -460,6 +481,7 @@ const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '
     "desc": "嫩煎鸡胸 · 藜麦 · 混合生菜",
     "price": 3200,          // 单位：分
     "calorie": 320,         // 单位：kcal
+    "protein": 32,          // 单位：g（估算值，供推荐算法使用）
     "image": "", "emoji": "🥗", "stock": 20, "tags": ["高蛋白"],
     "specs": [{ "id": "g1", "name": "份量", "required": true,
                 "options": [{ "id": "o1", "name": "标准", "delta": 0 }] }]
@@ -487,6 +509,8 @@ const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '
   <tr><td>01</td><td><code>prompts/01-订单落库.md</code></td><td>JSON 单文件存储、服务端重算金额、下单扣库存、订单文件不入库</td></tr>
   <tr><td>02</td><td><code>prompts/02-后台登录与鉴权.md</code></td><td>Cookie + 内存会话、定时安全比较、按 IP 限速、公开订单查询与脱敏</td></tr>
   <tr><td>03</td><td><code>prompts/03-订单状态驱动跟踪页.md</code></td><td>事件链替代 updatedAt、5 秒轮询、终态停止、清理虚构内容</td></tr>
+  <tr><td>04</td><td><code>prompts/04-小程序端与双端架构.md</code></td><td>定位纠正、原生 vs 跨端、双端字段对齐、上架前置条件</td></tr>
+  <tr><td>05</td><td><code>prompts/05-AI减脂套餐推荐.md</code></td><td>本地营养学模型、组合搜索目标函数、预算放宽、大模型仅润色</td></tr>
 </table>
 <p style="margin-top:14px;color:#6b7280;font-size:9pt;">文档所述功能与数据均可在仓库中复核：<code>https://github.com/as5827/dika-light-meal-miniprogram</code></p>
 

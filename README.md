@@ -10,6 +10,12 @@
 - `server/` —— 两端共用的后端：零第三方依赖的原生 Node HTTP 服务，JSON 文件持久化
 
 两端**接口完全一致**（同一套 `/api/*`，见第六节），所以业务逻辑只写一遍；展示端牺牲了一点原生体验（无微信登录、无支付），换来的是"评委打开链接就能用、不用装小程序"。上架所需的事项见[第四节](#四小程序端生产端运行与上架)。
+### 创新点（两层）
+
+| 层面 | 创新点 | 在仓库中的落点 |
+|---|---|---|
+| 开发层面 | 多 AI 分工协同：需求拆解、前端生成、Bug 修复分别交给 AI，人工只做审查与 Prompt 纠偏；每次迭代沉淀「需求原文 → 方案取舍 → 验证记录」的结构化迭代链 | `prompts/01~05`；提交信息与归档编号一一对应 |
+| 业务层面 | ① 面向小微轻食商家的**零依赖低成本接单方案**；② **AI 个性化减脂套餐推荐**（身体指标 → 营养学模型 → 组合搜索）；③ **双前端**：小程序上架、H5 免安装演示 | `server/recommender.js`、`/api/recommend`、`miniprogram/pages/plan`、`preview` 的 AI 定制页 |
 
 | 顾客端点餐页 | 订单跟踪（状态由服务端驱动） |
 |---|---|
@@ -34,6 +40,7 @@
 - 结算页：商品明细、配送费 ¥5、打包费 ¥2、**满 ¥58 免配送费**、订单备注与表单校验
 - **提交订单**：`POST /api/orders` 服务端重算金额并落库，跟踪页展示**真实订单号、金额与下单时间**
 - **订单跟踪**：进入跟踪页后每 5 秒轮询 `GET /api/orders/:id`，进度条、状态文案与时间轴全部由订单**事件链**驱动，商家接单/完成后顾客端自动变化
+- **AI 定制减脂套餐**：输入性别 / 年龄 / 身高 / 体重 / 活动量 / 目标，服务端按 Mifflin-St Jeor 算 BMR → TDEE → 目标热量，在菜单里做组合搜索，给出高蛋白、低偏差、低价的套餐，可一键加入购物车
 - 骨架屏加载、Toast 轻提示
 
 ### 商家端后台（`/admin`）
@@ -72,6 +79,7 @@ dika-light-meal-miniprogram/
 │   ├── app.json / app.ts / app.wxss
 │   ├── pages/
 │   │   ├── menu/         # 点餐页：类目、菜品、规格弹层、购物车
+│   │   ├── plan/         # AI 定制套餐：身体指标 → 推荐结果 → 一键加购
 │   │   ├── confirm/      # 确认订单：地址、费用、提交
 │   │   └── tracking/     # 订单跟踪：状态 + 事件时间轴（5 秒轮询）
 │   ├── services/         # config.ts（后端地址）+ api.ts（唯一数据出口）
@@ -94,7 +102,8 @@ dika-light-meal-miniprogram/
 │   ├── 02-后台登录与鉴权.md
 │   └── 03-订单状态驱动跟踪页.md
 ├── server/
-│   └── server.js         # 零依赖 HTTP 服务 + 静态托管 + API
+│   ├── server.js         # 零依赖 HTTP 服务 + 静态托管 + API
+│   └── recommender.js    # 减脂套餐推荐引擎（营养学模型 + 组合搜索，纯函数）
 ├── uploads/              # 运行时上传目录（内容不进仓库，保留 .gitkeep）
 ├── .env.example          # 环境变量模板
 ├── .gitignore
@@ -248,6 +257,8 @@ dika轻食 server running at http://localhost:3000
 | POST | `/api/logout` | 公开 | 销毁会话并清 Cookie |
 | GET | `/api/session` | 公开 | 返回当前登录用户；未登录 401，后台据此决定是否弹登录框 |
 | GET | `/api/menu` | 公开 | 返回整份菜单（`categories` + `dishes` + `fees`） |
+| GET | `/api/recommend/options` | 公开 | 推荐表单的可选项（性别 / 活动量 / 目标），H5 与小程序共用 |
+| POST | `/api/recommend` | 公开 | 身体指标 → 推荐套餐：返回 BMR / TDEE / 目标热量 / 蛋白目标、组合明细、热量偏差与可解释的推荐理由；`useAI: true` 且配置了 `LLM_API_KEY` 时附带大模型润色文案 |
 | POST | `/api/orders` | 公开（顾客） | `{ items:[{ dishId, qty, unitPrice, specDesc? }], address:{ name, phone, building, room }, remark? }`；服务端校验菜品、单价、库存，重算全部金额，扣库存后落库 |
 | GET | `/api/orders/:id` | 公开（凭订单号） | 顾客端跟踪用；返回状态、事件链与脱敏手机号（`136****5678`），404 表示订单不存在 |
 | PUT | `/api/dishes/:id` | 🔒 需登录 | `{ price?, stock?, calorie?, image?, name?, desc? }`；`price/stock/calorie` 须为非负整数，`name` 须非空 |
@@ -277,6 +288,7 @@ dika轻食 server running at http://localhost:3000
       "desc": "嫩煎鸡胸 · 藜麦 · 混合生菜",
       "price": 3200,            // 单位：分
       "calorie": 320,           // 单位：kcal
+      "protein": 32,            // 单位：g（估算值，用于推荐算法）
       "image": "",              // 上传后为 /uploads/xxx.jpg
       "emoji": "🥗",            // 无图时的占位
       "stock": 20,
@@ -287,6 +299,7 @@ dika轻食 server running at http://localhost:3000
       ]
     }
   ],
+  "nutritionNote": "protein 为估算值（g），仅用于推荐算法演示，非实验室检测数据",
   "fees": {                     // 计费规则（服务端与前端共用同一份）
     "deliveryFee": 500,         // 配送费 5 元
     "packFee": 200,             // 打包费 2 元
@@ -337,6 +350,8 @@ dika轻食 server running at http://localhost:3000
 | 5 | 顾客端凭**订单号**查询，订单号为「时间戳 + 4 位随机」，理论上可枚举 | 提高随机熵或加签名，必要时绑定手机号校验 |
 | 6 | JSON 文件存储，历史订单只保留最近 2000 条，无分页 | 换数据库 + 分页 + 归档 |
 | 7 | 上传图片存本地 `uploads/`，无 CDN、无清理策略 | 接对象存储 + 定时清理 |
+| 8 | 营养数据只有热量与蛋白，`protein` 为**估算值**；推荐未考虑过敏原与忌口 | 补碳水 / 脂肪 / 膳食纤维与过敏原标签，接真实营养库 |
+| 9 | 大模型文案增强的代码已就绪，但需自备 `LLM_API_KEY` 才生效，未做真实调用验证 | 配置 Key 后实测，并加超时与降级监控 |
 
 ---
 
@@ -345,7 +360,7 @@ dika轻食 server running at http://localhost:3000
 | 赛项要求 | 当前状态 |
 |---|---|
 | GitHub/Gitee 公开仓库 + 细粒度 Git 历史（禁一次性提交） | ✅ 仓库已建立，按模块拆分提交 |
-| AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 已归档 3 条：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md) |
+| AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 已归档 5 条：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md)、[04-小程序端与双端架构](prompts/04-小程序端与双端架构.md)、[05-AI减脂套餐推荐](prompts/05-AI减脂套餐推荐.md) |
 | README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第五节 |
 | 演示视频 MP4 1080p，5–8 分钟，含 ≥2 分钟 AI 协同复现 | ⬜ 待录制 |
 | 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ✅ 17 页：[docs/tech-doc.pdf](docs/tech-doc.pdf)，源文件 [tech-doc.html](docs/tech-doc.html) |

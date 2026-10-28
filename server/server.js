@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_FILE = path.join(ROOT, 'data', 'menu.json');
@@ -75,6 +76,58 @@ const asInt = (v, min, max) =>
 
 const asStr = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
+/* ---------- 后台会话 ---------- */
+
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'dika2026';
+const SESSION_COOKIE = 'dika_admin';
+const SESSION_TTL = 8 * 60 * 60 * 1000;      // 8 小时，访问即续期
+const LOGIN_MAX_FAILS = 5;                    // 同一 IP 连续失败次数上限
+const LOGIN_LOCK_MS = 60 * 1000;              // 触发后锁定 60 秒
+
+const sessions = new Map();   // token -> { user, expiresAt }
+const loginFails = new Map(); // ip -> { count, lockUntil }
+
+const parseCookies = (req) => {
+  const raw = req.headers.cookie || '';
+  const out = {};
+  raw.split(';').forEach((part) => {
+    const i = part.indexOf('=');
+    if (i > -1) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+  });
+  return out;
+};
+
+const safeEqual = (a, b) => {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+};
+
+const getSession = (req) => {
+  const token = parseCookies(req)[SESSION_COOKIE];
+  if (!token) return null;
+  const session = sessions.get(token);
+  if (!session) return null;
+  if (session.expiresAt < Date.now()) {
+    sessions.delete(token);
+    return null;
+  }
+  session.expiresAt = Date.now() + SESSION_TTL; // 滑动续期
+  return { token, user: session.user };
+};
+
+const requireAuth = (req, res) => {
+  const session = getSession(req);
+  if (!session) {
+    sendJson(res, 401, { code: 401, message: '请先登录后台' });
+    return null;
+  }
+  return session;
+};
+
+const maskPhone = (phone) => String(phone || '').replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2');
+
 const sendJson = (res, code, payload) => {
   const body = JSON.stringify(payload);
   res.writeHead(code, {
@@ -132,6 +185,73 @@ const serveStatic = (res, urlPath) => {
 
 const server = http.createServer(async (req, res) => {
   const url = req.url || '/';
+  const clientIp = (req.socket && req.socket.remoteAddress) || 'unknown';
+
+  /* ---------- 后台登录 ---------- */
+
+  if (req.method === 'POST' && url === '/api/login') {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 8 * 1024));
+    } catch (e) {
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
+      return;
+    }
+
+    const record = loginFails.get(clientIp);
+    if (record && record.lockUntil > Date.now()) {
+      const left = Math.ceil((record.lockUntil - Date.now()) / 1000);
+      sendJson(res, 429, { code: 429, message: `登录失败次数过多，请 ${left} 秒后再试` });
+      return;
+    }
+
+    const username = asStr(payload.username, 40);
+    const password = typeof payload.password === 'string' ? payload.password : '';
+    if (username === ADMIN_USER && password && safeEqual(password, ADMIN_PASSWORD)) {
+      loginFails.delete(clientIp);
+      const token = crypto.randomBytes(24).toString('hex');
+      sessions.set(token, { user: username, expiresAt: Date.now() + SESSION_TTL });
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'Set-Cookie': `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_TTL / 1000}`
+      });
+      res.end(JSON.stringify({ code: 0, data: { user: username, expiresIn: SESSION_TTL } }));
+      return;
+    }
+
+    const fail = loginFails.get(clientIp) || { count: 0, lockUntil: 0 };
+    fail.count += 1;
+    if (fail.count >= LOGIN_MAX_FAILS) {
+      fail.lockUntil = Date.now() + LOGIN_LOCK_MS;
+      fail.count = 0;
+    }
+    loginFails.set(clientIp, fail);
+    sendJson(res, 401, { code: 401, message: '账号或密码不正确' });
+    return;
+  }
+
+  if (req.method === 'POST' && url === '/api/logout') {
+    const token = parseCookies(req)[SESSION_COOKIE];
+    if (token) sessions.delete(token);
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Set-Cookie': `${SESSION_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`
+    });
+    res.end(JSON.stringify({ code: 0 }));
+    return;
+  }
+
+  if (req.method === 'GET' && url === '/api/session') {
+    const session = getSession(req);
+    if (!session) {
+      sendJson(res, 401, { code: 401, message: '未登录' });
+      return;
+    }
+    sendJson(res, 200, { code: 0, data: { user: session.user } });
+    return;
+  }
 
   // 读取整份菜单
   if (req.method === 'GET' && url.startsWith('/api/menu')) {
@@ -145,6 +265,7 @@ const server = http.createServer(async (req, res) => {
 
   // 修改单个商品的图片 / 价格 / 库存 / 热量 / 名称 / 描述
   if (req.method === 'PUT' && url.startsWith('/api/dishes/')) {
+    if (!requireAuth(req, res)) return;
     const id = decodeURIComponent(url.slice('/api/dishes/'.length).split('?')[0]);
     let payload;
     try {
@@ -188,6 +309,7 @@ const server = http.createServer(async (req, res) => {
 
   // 上传图片：前端把文件读成 dataUrl 以 JSON 提交，避免引入 multipart 依赖
   if (req.method === 'POST' && url.startsWith('/api/upload')) {
+    if (!requireAuth(req, res)) return;
     let payload;
     try {
       payload = JSON.parse(await readBody(req, 8 * 1024 * 1024));
@@ -307,6 +429,7 @@ const server = http.createServer(async (req, res) => {
       total: subtotal + fees.delivery + fees.pack,
       totalCalorie: normalized.reduce((s, i) => s + i.calorie * i.qty, 0),
       itemCount: normalized.reduce((s, i) => s + i.qty, 0),
+      events: [{ status: 'pending', at: now }],
       createdAt: now,
       updatedAt: now
     };
@@ -337,14 +460,16 @@ const server = http.createServer(async (req, res) => {
         total: order.total,
         totalCalorie: order.totalCalorie,
         itemCount: order.itemCount,
+        events: order.events,
         createdAt: order.createdAt
       }
     });
     return;
   }
 
-  // 订单列表（后台用，按创建时间倒序）
-  if (req.method === 'GET' && url.startsWith('/api/orders')) {
+  // 订单列表（后台用，按创建时间倒序，需登录）
+  if (req.method === 'GET' && (url === '/api/orders' || url.startsWith('/api/orders?'))) {
+    if (!requireAuth(req, res)) return;
     const query = url.split('?')[1] || '';
     const matched = /(?:^|&)limit=(\d+)/.exec(query);
     const limit = Math.min(Math.max(parseInt(matched ? matched[1] : '50', 10) || 50, 1), 200);
@@ -356,8 +481,49 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 单个订单（顾客端跟踪用，凭订单号查询，手机号脱敏）
+  if (req.method === 'GET' && url.startsWith('/api/orders/')) {
+    const id = decodeURIComponent(url.slice('/api/orders/'.length).split('?')[0]);
+    const order = readOrders().find((o) => o.id === id);
+    if (!order) {
+      sendJson(res, 404, { code: 404, message: '订单不存在' });
+      return;
+    }
+    sendJson(res, 200, {
+      code: 0,
+      data: {
+        id: order.id,
+        status: order.status,
+        items: (order.items || []).map((i) => ({
+          name: i.name,
+          specDesc: i.specDesc,
+          qty: i.qty,
+          amount: i.amount
+        })),
+        address: {
+          name: (order.address && order.address.name) || '',
+          phone: maskPhone(order.address && order.address.phone),
+          building: (order.address && order.address.building) || '',
+          room: (order.address && order.address.room) || ''
+        },
+        remark: order.remark,
+        subtotal: order.subtotal,
+        deliveryFee: order.deliveryFee,
+        packFee: order.packFee,
+        total: order.total,
+        totalCalorie: order.totalCalorie,
+        itemCount: order.itemCount,
+        events: order.events || [],
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt
+      }
+    });
+    return;
+  }
+
   // 订单状态流转：接单 / 完成 / 取消
   if (req.method === 'PUT' && url.startsWith('/api/orders/')) {
+    if (!requireAuth(req, res)) return;
     const id = decodeURIComponent(url.slice('/api/orders/'.length).split('?')[0]);
     let payload;
     try {
@@ -380,6 +546,8 @@ const server = http.createServer(async (req, res) => {
       }
       order.status = next;
       order.updatedAt = new Date().toISOString();
+      order.events = Array.isArray(order.events) ? order.events : [{ status: 'pending', at: order.createdAt || order.updatedAt }];
+      order.events.push({ status: next, at: order.updatedAt });
       writeOrders(orders);
       sendJson(res, 200, { code: 0, data: order });
     } catch (e) {
@@ -400,4 +568,5 @@ server.listen(PORT, '0.0.0.0', () => {
   process.stdout.write(`dika轻食 server running at http://localhost:${PORT}\n`);
   process.stdout.write(`点餐页  http://localhost:${PORT}/preview/index.html\n`);
   process.stdout.write(`后台    http://localhost:${PORT}/admin\n`);
+  process.stdout.write(`后台账号 ${ADMIN_USER}${ADMIN_PASSWORD === 'dika2026' ? '（默认口令，建议用 ADMIN_PASSWORD 覆盖）' : ''}\n`);
 });

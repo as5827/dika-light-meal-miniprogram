@@ -1,0 +1,13 @@
+{
+  "name": "dika-light-meal-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "description": "低卡轻食点餐系统 · 微信小程序端（生产端）",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^3.12.2",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,115 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 60rpx;
+}
+
+/* ===== 顶部状态 ===== */
+.hero {
+  background: var(--brand-deep);
+  color: #fff;
+  padding: 48rpx 32rpx 40rpx;
+}
+.hero.canceled { background: #4B5563; }
+.hero-status { font-size: 44rpx; font-weight: 700; }
+.hero-sub {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+/* ===== 摘要 ===== */
+.card {
+  margin: 24rpx;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28rpx;
+}
+.summary { display: flex; align-items: baseline; }
+.sum-total { font-size: 40rpx; font-weight: 700; color: var(--ink-1); }
+.sum-meta { margin-left: 20rpx; font-size: 22rpx; color: var(--ink-3); }
+
+/* ===== 进度 ===== */
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin: 8rpx 48rpx 8rpx;
+}
+.step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.step-dot {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--line);
+  background: #fff;
+  color: var(--ink-3);
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-dot.done,
+.step-dot.current {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.step-label {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  color: var(--ink-3);
+}
+.step-label.done,
+.step-label.current { color: var(--ink-1); font-weight: 600; }
+
+/* ===== 时间轴 ===== */
+.timeline-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  margin-bottom: 16rpx;
+}
+.event {
+  display: flex;
+  align-items: flex-start;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #F6F7F6;
+}
+.event:last-child { border-bottom: none; }
+.event-time {
+  width: 110rpx;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+.event-text { flex: 1; font-size: 26rpx; color: var(--ink-2); }
+.event-text.latest { color: var(--ink-1); font-weight: 600; }
+.event.empty { justify-content: center; color: var(--ink-3); }
+
+/* ===== 状态 / 按钮 ===== */
+.state {
+  padding: 120rpx 40rpx;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 26rpx;
+}
+.retry {
+  margin: 30rpx auto 0;
+  width: 260rpx;
+  padding: 16rpx 0;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+}
+.back-btn {
+  margin: 20rpx 24rpx;
+  height: 92rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/menu/index",
+    "pages/confirm/index",
+    "pages/tracking/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "dika 轻食",
+    "navigationBarBackgroundColor": "#14532d",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f8f6",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

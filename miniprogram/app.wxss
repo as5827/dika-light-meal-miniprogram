@@ -1,0 +1,50 @@
+/* ===== 设计 token：与 Web 展示端保持同一套色板 ===== */
+page {
+  --brand: #22A06B;
+  --brand-deep: #14532D;
+  --brand-soft: #EAF7F0;
+  --bg: #F5F8F6;
+  --card: #FFFFFF;
+  --ink-1: #1A1A1A;
+  --ink-2: #595959;
+  --ink-3: #8C8C8C;
+  --line: #EDEDED;
+  --danger: #D9363E;
+  --radius: 24rpx;
+
+  background: var(--bg);
+  color: var(--ink-1);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 20rpx;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 999rpx;
+  text-align: center;
+  font-weight: 600;
+}
+
+.btn-primary.disabled {
+  background: #C9E5D8;
+}
+
+.muted {
+  color: var(--ink-3);
+}

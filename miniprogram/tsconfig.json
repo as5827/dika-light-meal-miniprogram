@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "target": "ES2018",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2018"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts", "typings/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}

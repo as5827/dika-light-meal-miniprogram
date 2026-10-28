@@ -1,0 +1,43 @@
+<view class="page">
+
+  <view class="hero {{canceled ? 'canceled' : ''}}">
+    <view class="hero-status">{{statusText}}</view>
+    <view class="hero-sub">{{subText}}</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="state">加载中…</view>
+
+  <view wx:elif="{{error}}" class="state">
+    <view>{{error}}</view>
+    <view class="retry" bindtap="goMenu">回到菜单</view>
+  </view>
+
+  <block wx:else>
+    <view class="card summary">
+      <view class="sum-total">¥{{totalText}}</view>
+      <view class="sum-meta">共 {{itemCount}} 件 · {{calorie}} kcal</view>
+    </view>
+
+    <view wx:if="{{!canceled}}" class="steps">
+      <view wx:for="{{steps}}" wx:key="seq" class="step">
+        <view class="step-dot {{item.state}}">
+          <text wx:if="{{item.state === 'done'}}">✓</text>
+          <text wx:else>{{item.seq}}</text>
+        </view>
+        <view class="step-label {{item.state}}">{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="card timeline">
+      <view class="timeline-title">订单动态</view>
+      <view wx:for="{{events}}" wx:key="time" class="event">
+        <view class="event-time">{{item.time}}</view>
+        <view class="event-text {{item.latest ? 'latest' : ''}}">{{item.text}}</view>
+      </view>
+      <view wx:if="{{events.length === 0}}" class="event empty">暂无动态</view>
+    </view>
+
+    <view class="back-btn" bindtap="goMenu">再来一单</view>
+  </block>
+
+</view>

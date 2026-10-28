@@ -1,0 +1,99 @@
+<view class="page">
+
+  <view class="header">
+    <view class="brand">dika 轻食</view>
+    <view class="slogan">低卡 · 高蛋白 · 每日新鲜现做</view>
+  </view>
+
+  <scroll-view class="cats" scroll-x enable-flex>
+    <view
+      wx:for="{{categories}}"
+      wx:key="id"
+      class="cat {{item.id === activeCat ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onCategoryTap"
+    >{{item.name}}</view>
+  </scroll-view>
+
+  <view wx:if="{{loading}}" class="state">菜单加载中…</view>
+
+  <view wx:elif="{{error}}" class="state">
+    <view>{{error}}</view>
+    <view class="retry" bindtap="onRetry">重新加载</view>
+  </view>
+
+  <scroll-view
+    wx:else
+    class="list"
+    scroll-y
+    scroll-into-view="{{anchor}}"
+    scroll-with-animation
+  >
+    <view wx:for="{{groups}}" wx:key="id" id="sec-{{item.id}}" class="group">
+      <view class="group-title">{{item.name}}</view>
+
+      <view wx:for="{{item.dishes}}" wx:for-item="dish" wx:key="id" class="dish">
+        <view class="thumb">{{dish.emoji}}</view>
+        <view class="info">
+          <view class="name">{{dish.name}}</view>
+          <view class="desc">{{dish.desc}}</view>
+          <view class="meta">
+            <text class="price">¥{{dish.priceText}}</text>
+            <text class="cal">{{dish.calorie}} kcal</text>
+            <text wx:if="{{dish.hasSpecs}}" class="spec-flag">可规格</text>
+          </view>
+        </view>
+        <view
+          class="add {{dish.soldOut ? 'disabled' : ''}}"
+          data-id="{{dish.id}}"
+          bindtap="onAddTap"
+        >{{dish.soldOut ? '估清' : '＋'}}</view>
+      </view>
+    </view>
+    <view class="list-bottom"></view>
+  </scroll-view>
+
+  <view wx:if="{{cartCount > 0}}" class="cartbar">
+    <view class="cart-left">
+      <view class="cart-amount">¥{{cartAmountText}}</view>
+      <view class="cart-cal">共 {{cartCalorie}} kcal</view>
+    </view>
+    <view class="cart-go" bindtap="goConfirm">去结算（{{cartCount}}）</view>
+  </view>
+
+  <view wx:if="{{skuVisible}}" class="mask" bindtap="closeSku"></view>
+  <view wx:if="{{skuVisible}}" class="sku">
+    <view class="sku-head">
+      <view class="sku-thumb">{{skuEmoji}}</view>
+      <view class="sku-title">
+        <view class="sku-name">{{skuName}}</view>
+        <view class="sku-price">¥{{skuPriceText}}</view>
+      </view>
+    </view>
+
+    <view wx:for="{{skuGroups}}" wx:for-item="g" wx:key="id" class="sku-group">
+      <view class="sku-group-title">{{g.name}}{{g.required ? '（必选）' : ''}}</view>
+      <view class="sku-opts">
+        <view
+          wx:for="{{g.options}}"
+          wx:for-item="o"
+          wx:key="id"
+          class="sku-opt {{o.checked ? 'on' : ''}}"
+          data-gid="{{g.id}}"
+          data-oid="{{o.id}}"
+          bindtap="onSkuTap"
+        >{{o.name}}</view>
+      </view>
+    </view>
+
+    <view class="sku-actions">
+      <view class="qty">
+        <view class="qty-btn" bindtap="onQtyMinus">−</view>
+        <view class="qty-val">{{skuQty}}</view>
+        <view class="qty-btn" bindtap="onQtyPlus">＋</view>
+      </view>
+      <view class="sku-confirm" bindtap="onSkuConfirm">加入购物车</view>
+    </view>
+  </view>
+
+</view>

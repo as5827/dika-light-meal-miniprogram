@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const recommender = require('./recommender');
+const log = require('./logger');
 
 const ROOT = path.resolve(__dirname, '..');
 const DATA_FILE = path.join(ROOT, 'data', 'menu.json');
@@ -188,6 +189,19 @@ const server = http.createServer(async (req, res) => {
   const url = req.url || '/';
   const clientIp = (req.socket && req.socket.remoteAddress) || 'unknown';
 
+  // 请求日志：只记 /api/*，静态资源不写，避免日志被页面和图片淹没
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    if (!url.startsWith('/api/')) return;
+    log.info('http', {
+      method: req.method,
+      path: url.split('?')[0],
+      status: res.statusCode,
+      ms: Date.now() - startedAt,
+      ip: clientIp
+    });
+  });
+
   /* ---------- 后台登录 ---------- */
 
   if (req.method === 'POST' && url === '/api/login') {
@@ -202,6 +216,7 @@ const server = http.createServer(async (req, res) => {
     const record = loginFails.get(clientIp);
     if (record && record.lockUntil > Date.now()) {
       const left = Math.ceil((record.lockUntil - Date.now()) / 1000);
+      log.warn('auth.locked', { ip: clientIp, leftSeconds: left });
       sendJson(res, 429, { code: 429, message: `登录失败次数过多，请 ${left} 秒后再试` });
       return;
     }
@@ -212,6 +227,7 @@ const server = http.createServer(async (req, res) => {
       loginFails.delete(clientIp);
       const token = crypto.randomBytes(24).toString('hex');
       sessions.set(token, { user: username, expiresAt: Date.now() + SESSION_TTL });
+      log.info('auth.login', { ok: true, ip: clientIp, user: username });
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': 'no-store',
@@ -228,6 +244,7 @@ const server = http.createServer(async (req, res) => {
       fail.count = 0;
     }
     loginFails.set(clientIp, fail);
+    log.warn('auth.login', { ok: false, ip: clientIp, user: username, fails: fail.count });
     sendJson(res, 401, { code: 401, message: '账号或密码不正确' });
     return;
   }
@@ -303,13 +320,40 @@ const server = http.createServer(async (req, res) => {
       budget: payload.budget
     });
     if (!plan) {
+      log.warn('recommend.empty', { goal: profile.goal, vegetarian: Boolean(payload.vegetarian) });
       sendJson(res, 409, { code: 409, message: '当前菜单里没有可推荐的组合（可能都已估清）' });
       return;
     }
 
+    log.info('recommend', {
+      profile: {
+        gender: profile.gender,
+        age: profile.age,
+        height: profile.height,
+        weight: profile.weight,
+        activity: profile.activity,
+        goal: profile.goal,
+        bmr: profile.bmr,
+        tdee: profile.tdee,
+        targetCalorie: profile.targetCalorie,
+        proteinTarget: profile.proteinTarget
+      },
+      mealTarget: plan.meal.targetCalorie,
+      mealProteinTarget: plan.meal.targetProtein,
+      candidates: plan.stats ? plan.stats.evaluated : 0,
+      elapsedMs: plan.stats ? plan.stats.elapsedMs : 0,
+      picked: plan.items.map((i) => i.id),
+      totals: plan.totals,
+      match: plan.match,
+      budgetRelaxed: plan.budgetRelaxed,
+      vegetarian: plan.vegetarian
+    });
+
     if (payload.useAI) {
+      const aiStart = Date.now();
       const aiReason = await recommender.enhanceReason(plan.reason, process.env);
       if (aiReason) plan.aiReason = aiReason;
+      log.info('recommend.ai', { ok: Boolean(aiReason), ms: Date.now() - aiStart });
     }
 
     sendJson(res, 200, { code: 0, data: plan });
@@ -498,9 +542,23 @@ const server = http.createServer(async (req, res) => {
       orders.unshift(order);
       writeOrders(orders.slice(0, MAX_ORDERS)); // 再落订单
     } catch (e) {
+      log.error('order.write', { message: e.message });
       sendJson(res, 500, { code: 500, message: '下单失败，请重试' });
       return;
     }
+
+    // 下单成功：记录金额、热量与扣减结果，便于对账和排查
+    log.info('order.create', {
+      id: order.id,
+      items: order.items.length,
+      qty: order.itemCount,
+      subtotal: order.subtotal,
+      deliveryFee: order.deliveryFee,
+      packFee: order.packFee,
+      total: order.total,
+      calorie: order.totalCalorie,
+      dishes: order.items.map((i) => i.dishId)
+    });
 
     sendJson(res, 200, {
       code: 0,
@@ -597,11 +655,13 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 404, { code: 404, message: '订单不存在' });
         return;
       }
+      const from = order.status;
       order.status = next;
       order.updatedAt = new Date().toISOString();
       order.events = Array.isArray(order.events) ? order.events : [{ status: 'pending', at: order.createdAt || order.updatedAt }];
       order.events.push({ status: next, at: order.updatedAt });
       writeOrders(orders);
+      log.info('order.status', { id, from, to: next });
       sendJson(res, 200, { code: 0, data: order });
     } catch (e) {
       sendJson(res, 500, { code: 500, message: '更新订单失败' });
@@ -622,4 +682,5 @@ server.listen(PORT, '0.0.0.0', () => {
   process.stdout.write(`点餐页  http://localhost:${PORT}/preview/index.html\n`);
   process.stdout.write(`后台    http://localhost:${PORT}/admin\n`);
   process.stdout.write(`后台账号 ${ADMIN_USER}${ADMIN_PASSWORD === 'dika2026' ? '（默认口令，建议用 ADMIN_PASSWORD 覆盖）' : ''}\n`);
+  log.info('server.start', { port: PORT, adminUser: ADMIN_USER, logFile: log.file });
 });

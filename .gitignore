@@ -2,6 +2,7 @@
 node_modules/
 
 # 运行时产物
+logs/
 uploads/*
 !uploads/.gitkeep
 data/orders.json

@@ -129,6 +129,9 @@ function recommend(menu, profile, prefs) {
   const soups = pool.filter((d) => d.cat === 'c5' || d.cat === 'c6');
   const desserts = pool.filter((d) => d.cat === 'c7');
 
+  const startedAt = Date.now();
+  let evaluated = 0; // 实际参与打分的组合数，写进日志便于观察菜单规模变化
+
   function search(relaxBudget) {
     let best = null;
     let cheapest = null;
@@ -136,6 +139,8 @@ function recommend(menu, profile, prefs) {
       const totals = totalsOf(items);
       if (budget && !relaxBudget && totals.price > budget) return;
       if (totals.calorie > mealCalorie * 1.35) return;
+
+      evaluated += 1;
 
       const caloriePenalty = Math.abs(totals.calorie - mealCalorie) / mealCalorie;
       const proteinScore = Math.min(1.6, totals.protein / Math.max(mealProtein, 1));
@@ -200,6 +205,7 @@ function recommend(menu, profile, prefs) {
     match,
     budgetRelaxed,
     vegetarian,
+    stats: { evaluated, elapsedMs: Date.now() - startedAt },
     reason: buildReason(profile, { targetCalorie: mealCalorie, targetProtein: mealProtein }, best.totals, match, {
       vegetarian,
       budgetRelaxed

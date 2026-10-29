@@ -92,7 +92,7 @@ dika-light-meal-miniprogram/
 │   └── orders.example.json  # 订单结构示例（运行时生成 data/orders.json，已 gitignore）
 ├── docs/
 │   ├── tech-doc.html     # 技术文档源文件（A4 打印样式，可直接改）
-│   ├── tech-doc.pdf      # 技术文档导出（21 页，≤30 页要求）
+│   ├── tech-doc.pdf      # 技术文档导出（22 页，≤30 页要求）
 │   ├── 提交清单.md        # 赛项材料逐条对照：要求 → 我们的文件 → 状态
 │   ├── video-script.md   # 演示视频分镜（含 2 分 30 秒 AI 协同复现段）
 │   └── screenshots/      # 界面截图（README 与文档引用）
@@ -403,7 +403,7 @@ jq -c 'select(.event=="http" and .ms>200)' logs/app.log
 | AI 对话 / Prompt 历史快照（≥3 个核心功能迭代链路） | ✅ 迭代记录 5+1 条，另附 [3 份对话快照](prompts/snapshots/)（真实报错与纠偏）；详见[docs/提交清单.md](docs/提交清单.md)。已归档：[01-订单落库](prompts/01-订单落库.md)、[02-后台登录与鉴权](prompts/02-后台登录与鉴权.md)、[03-订单状态驱动跟踪页](prompts/03-订单状态驱动跟踪页.md)、[04-小程序端与双端架构](prompts/04-小程序端与双端架构.md)、[05-AI减脂套餐推荐](prompts/05-AI减脂套餐推荐.md) |
 | README 10 分钟复现指南（环境、依赖、环境变量模板） | ✅ 见第五节 |
 | 演示视频 MP4 1080p，5–8 分钟，含 ≥2 分钟 AI 协同复现 | 🟡 分镜已就绪（[video-script.md](docs/video-script.md)），待按脚本录制 |
-| 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ✅ 21 页：[docs/tech-doc.pdf](docs/tech-doc.pdf)，源文件 [tech-doc.html](docs/tech-doc.html) |
+| 技术文档 PDF ≤30 页（意图控制策略 / 架构设计 / 可复现性论证） | ✅ 22 页：[docs/tech-doc.pdf](docs/tech-doc.pdf)，源文件 [tech-doc.html](docs/tech-doc.html) |
 
 > 说明：最早的 6 次提交是存量代码按模块导入，那时还没建归档习惯，所以没有对应记录。从「订单落库」开始，一次功能迭代对应一次提交加一份记录。
 

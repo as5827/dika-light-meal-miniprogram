@@ -1,0 +1,402 @@
+<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'><title>Prompt 历史快照与迭代记录</title><style>
+@page { size: A4; margin: 16mm 14mm 15mm; }
+* { box-sizing: border-box; }
+body { font-family: "Microsoft YaHei","PingFang SC",sans-serif; font-size: 9.6pt; line-height: 1.75; color: #1f2328; margin: 0; }
+h1 { font-size: 16pt; color: #14532d; border-bottom: 2px solid #22A06B; padding-bottom: 6px; margin: 0 0 10px; page-break-before: always; page-break-after: avoid; }
+h2 { font-size: 12pt; color: #166534; margin: 14px 0 6px; page-break-after: avoid; }
+h3 { font-size: 10.4pt; margin: 10px 0 4px; page-break-after: avoid; }
+p { margin: 4px 0; text-align: justify; }
+ul, ol { margin: 4px 0 4px 20px; padding: 0; }
+li { margin: 2px 0; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 8.8pt; page-break-inside: avoid; }
+th, td { border: 1px solid #d7dde3; padding: 4px 6px; vertical-align: top; }
+th { background: #f0f7f3; color: #14532d; }
+code { font-family: Consolas,monospace; font-size: 8.6pt; background: #f2f4f6; padding: 1px 3px; border-radius: 2px; }
+pre { background: #f7f9fa; border: 1px solid #e3e8ec; border-left: 3px solid #22A06B; padding: 7px 9px; font-size: 8.2pt; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+pre code { background: none; padding: 0; }
+.quote { background: #f6fbf8; border-left: 3px solid #cbe7d8; padding: 6px 10px; margin: 8px 0; color: #374151; }
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+.cover .k { color: #22A06B; font-weight: 600; letter-spacing: 2px; font-size: 10.5pt; }
+.cover h1.t { border: none; font-size: 26pt; color: #0f2e1f; margin: 8px 0 8px; page-break-before: avoid; }
+.cover .s { font-size: 12pt; color: #374151; margin-bottom: 24px; }
+.cover .m { font-size: 9.4pt; color: #4b5563; line-height: 2; }
+.cover .r { width: 90px; height: 3px; background: #22A06B; margin: 16px 0 20px; }
+.part { font-size: 13pt; color: #166534; font-weight: 700; margin: 0 0 8px; page-break-before: always; }
+</style></head><body>
+<div class="cover">
+  <div class="k">2026 第九届传智杯 · AI 创新应用挑战赛（个人赛）</div>
+  <h1 class="t">Prompt 历史快照与迭代记录</h1>
+  <div class="s">低卡轻食点餐系统 · dika-light-meal-miniprogram</div>
+  <div class="r"></div>
+  <div class="m">
+    代码仓库：https://github.com/as5827/dika-light-meal-miniprogram<br>
+    内容：3 份对话快照 + 6 份迭代记录 + 归档说明<br>
+    说明：本册为对话纪要（节选），保留当时的报错、命令与判断顺序，非逐字转录。<br>
+    导出：2026-10-29
+  </div>
+</div>
+<div class='part'>第一部分 对话快照</div>
+<h1>对话快照 01 · 从建仓到第一次成功推送</h1>
+<div class='quote'>说明：以下是当时的对话纪要（节选，非逐字转录），保留了真实的报错、命令与判断顺序。截图/录屏可另存，本文件只保留可检索的文字。</div>
+<h2>背景</h2>
+<p>项目代码已经在本地跑通（H5 + Node 后端），要迁到 GitHub 上，让评审能公开访问。</p>
+<h2>我说的（原话）</h2>
+<ol>
+<li>「我参与的是个人赛 你现在先把自己接上github」</li>
+<li>「加好了 用户名：grorge00 我使用的账号是grorge@qq.com 全局一键帮我替换成grorge@qq.com吧 我参加传智杯的项目名称是dika-light-meal-miniprogram 帮我解析上传一下主体代码吧」</li>
+<li>「为什么我没有在仓库看到我的项目？」</li>
+<li>「那换2977843600@qq.com这个账号你看可以不可以」</li>
+</ol>
+<h2>它先给出的判断</h2>
+<div class='quote'>&quot;仓库已建，6 个提交已推送。&quot;</div>
+<p>结论下早了。三件事同时发生了，只报了一件。</p>
+<h2>实际卡住的四个环节</h2>
+<p><b>① 建仓接口 400</b></p>
+<pre><code>POST /user/repos → 400
+{&quot;message&quot;:&quot;Problems parsing JSON&quot;}</code></pre>
+<p>原因：PowerShell 5.1 把中文描述按 GBK 编码传给 <code>curl.exe</code>，GitHub 收到非法 UTF-8。</p>
+<p>改法：把 JSON 写进 UTF-8 文件，用 <code>--data-binary @file</code>。一次通过，返回 201。</p>
+<p><b>② &quot;Repository not found&quot; 不是权限问题</b></p>
+<p><code>git ls-remote</code> 报 not found，第一反应是权限，实际是仓库根本没创建成功（上一条的 400 就是根因）。</p>
+<p><b>③ 换账号时撞上风控</b></p>
+<pre><code>ssh -T git@github.com      → Hi grorge00! You&#x27;ve successfully authenticated
+GET /users/grorge00        → 404
+GET /users/grorge00/repos  → 200 []</code></pre>
+<p>SSH 能认证、公开资料却 404，说明账号在库里存在但未公开（新号被标记）。这种号即使推上去，评委点链接也是 404。<b>决定换号</b>，改成 <code>as5827</code>（同一台机器上有它的凭据）。</p>
+<p><b>④ push 反复被重置</b></p>
+<pre><code>fatal: unable to access &#x27;https://github.com/...&#x27;: Recv failure: Connection was reset</code></pre>
+<p>排查顺序：先怀疑仓库权限（不是）→ 再查连通性（<code>api.github.com</code> 通、<code>github.com</code> 超时）→ 最后发现系统里开着代理 <code>127.0.0.1:7897</code>，但 git 完全没走它。</p>
+<pre><code>git config http.proxy http://127.0.0.1:7897
+git push → 成功</code></pre>
+<h2>我做的三个决定</h2>
+<table><tr><th>决定</th><th>依据</th></tr><tr><td>不追 grorge00，直接用 as5827</td><td>新号 404 意味着评委打不开，比赛场景下不能赌</td></tr><tr><td>不把 token 写进仓库或配置</td><td>只从系统凭据里读，用完即走；后来改成 Cookie 会话 + 环境变量</td></tr><tr><td>本地目录先迁到 Desktop 管理的新位置，再删旧的</td><td>两份代码必然改错，只留一份</td></tr></table>
+<h2>结果</h2>
+<ul>
+<li>提交历史完整上线（先 6 条，后续迭代到 27 条）；</li>
+<li>推送通道固定为「代理 + 系统凭据」，<code>git push</code> 不再需要额外参数；</li>
+<li>GitHub Desktop 接管本地目录，与远程保持同步。</li>
+</ul>
+<h2>复盘</h2>
+<p>这次折腾的教训不是&quot;命令记错了&quot;，而是<b>结论下得太早</b>：把&quot;我这边 push 成功&quot;当成了&quot;评委能打开&quot;。后面所有验收都改成用匿名接口复核（<code>private:false</code>、能否匿名读 README），而不是只看命令行回显。</p>
+<h1>对话快照 02 · 推荐引擎：从&quot;能算出一套&quot;到&quot;算得站得住&quot;</h1>
+<div class='quote'>说明：对话纪要（节选）。这里的取舍不是一次成型，中间被推翻过一轮。</div>
+<h2>我说的（原话）</h2>
+<div class='quote'>本项目为减脂餐创业商家打造轻量化点餐小程序……业务层面：面向小微轻食商家，提供低成本数字化接单方案，<b>内置 AI 个性化减脂套餐推荐，结合用户身体指标给出适配餐品</b>，同时双前端架构兼顾真实业务落地与评审演示便捷性。</div>
+<h2>它先给的方案</h2>
+<p>用大模型直接生成套餐，理由是这样&quot;更像 AI&quot;。</p>
+<p>我否掉的原因写在 <code>prompts/03</code> 里：结果不可复现，评审问&quot;为什么是这三道菜&quot;时答不上来；而且每次调用都要钱、要网、要 key。改成<b>本地营养学模型 + 组合搜索</b>，大模型只负责把结论说顺口。</p>
+<h2>第一版跑出来的问题</h2>
+<p>女 28 岁 / 165cm / 58kg / 轻度活动 / 减脂：</p>
+<pre><code>目标：每日 1441 kcal、蛋白 93 g；单餐预算 576 kcal / 37 g
+推荐：鸡胸肉藜麦沙拉 + 额外鸡胸肉 + 番茄时蔬汤
+合计：600 kcal、蛋白 64 g
+蛋白达成 173%</code></pre>
+<p>热量贴合，蛋白直接顶到目标的 1.7 倍。<b>这不是&quot;个性化&quot;，是把所有能加蛋白的东西堆上去。</b></p>
+<h2>怎么改的</h2>
+<p>目标函数原本是：</p>
+<pre><code>score = 蛋白达成×0.5 − 热量偏差×0.35 + 价格分×0.15</code></pre>
+<p>蛋白项被 <code>min(1.6, p/target)</code> 截断在 1.6，等于告诉算法&quot;蛋白越多越好&quot;。加了过量惩罚：</p>
+<pre><code>overProtein = max(0, 蛋白 − 目标×1.3) / 目标
+score = … − overProtein × 0.2</code></pre>
+<p>再跑：</p>
+<pre><code>合计 530 kcal、蛋白 59 g（目标 37 g，达成 159%）</code></pre>
+<p>仍然偏高，但这是有意的：轻食客群本来就冲高蛋白来的，压到 90% 反而推荐出&quot;蔬菜沙拉 + 气泡水&quot;这种没价值的组合。<b>这个度是人工定的，不是算法自己选的。</b></p>
+<h2>第二轮问题：预算太狠</h2>
+<p>预算填 ¥10，第一版直接返回&quot;无解&quot;。改成两段式：</p>
+<ol>
+<li>先在预算内搜索；</li>
+<li>无解时退化为「满足营养下限（蛋白 ≥60%、热量 ≥70%）的最便宜组合」，并在结果里标 <code>budgetRelaxed: true</code>。</li>
+</ol>
+<p>返回 ¥26 的全麦鸡胸三明治，前端明确写&quot;预算内没有合适组合，已自动放宽&quot;。</p>
+<h2>第三轮问题：营养数据从哪来</h2>
+<p>第一版想接公开营养库，但 28 道菜要逐条映射、还要处理&quot;同菜不同做法&quot;，成本和误差都不可控。最后：</p>
+<ul>
+<li>每道菜补一个 <code>protein</code> 估算值；</li>
+<li>在 <code>data/menu.json</code> 里写明 <code>nutritionNote: &quot;protein 为估算值（g），仅用于推荐算法演示，非实验室检测数据&quot;</code>；</li>
+<li>文档里也标了。</li>
+</ul>
+<p><b>宁可承认是估算，也不把假数据包装成检测报告。</b></p>
+<h2>验收</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>手算核对（女 28/165/58/轻度）</td><td>BMR 1310、TDEE 1801，与公式手算一致</td></tr><tr><td>素食过滤</td><td>三项全部素食</td></tr><tr><td>预算 ¥10</td><td>放宽后给最便宜合规组合，并标注</td></tr><tr><td>同参数两次请求</td><td>菜品 id 完全一致</td></tr><tr><td>非法参数</td><td>400 + 中文提示</td></tr></table>
+<h2>复盘</h2>
+<p>&quot;AI 推荐&quot;最容易糊弄的地方是：随便给一套，说这是模型算的。要让它站得住，得能回答三个问题——<b>输入是什么、怎么算的、为什么是这个结果</b>。所以推荐日志里把 704 个候选、6ms 耗时、选中三道菜、偏差 2% 全打出来了（见 README「运行日志」）。</p>
+<h1>对话快照 03 · 让大模型只改语气，别动数字</h1>
+<div class='quote'>说明：对话纪要（节选）。包含一次真实调用、一次兜底测试，以及&quot;去 AI 味&quot;的具体改法。</div>
+<h2>我说的（原话）</h2>
+<div class='quote'>API key:sk-\*\*\*\*（已脱敏） 调用一下试试并且再编辑润色文档和日志 尽量去除ai痕迹</div>
+<p>两个要求：<b>真的打通大模型</b>，<b>文档别写成一嘴 AI 腔</b>。</p>
+<h2>第一步：先确认 key 能用</h2>
+<p>先不接业务，直接打 <code>POST /v1/chat/completions</code>：</p>
+<pre><code>HTTP 200 · model: deepseek-flash
+choices[0].message.content: 减脂期保证蛋白质摄入，是因为……</code></pre>
+<p>能通。再接进 <code>/api/recommend</code> 的 <code>useAI</code> 分支。</p>
+<h2>第二步：约束它别乱动数字</h2>
+<p>推荐结果里全是算出来的数（BMR、目标热量、蛋白克数、偏差百分比），模型一旦&quot;顺手改写&quot;，前面的算法就白算了。系统提示直接写死：</p>
+<pre><code>你是一位耐心、鼓励型的营养师。你只能改写语气，不得修改、新增、删除任何数字或结论；
+输出 120 字以内中文，不要分点。</code></pre>
+<p>同一份数据，两次输出对比：</p>
+<pre><code>模板：……这套组合合计 590 kcal、蛋白 55 g，热量偏差 +2%，蛋白达成 153%。
+润色：……你这套组合合计 590 kcal、蛋白 55 g，热量只偏差 +2%，蛋白达成 153%，挺不错的，继续加油！</code></pre>
+<p>逐位比对：1312 / 1804 / 1443 / 91 / 40% / 577 / 36 / 590 / 55 / +2% / 153% —— 11 个数字全部一致。</p>
+<h2>第三步：不确定的情况要能兜底</h2>
+<p>把 key 换成一个无效值再请求：</p>
+<pre><code>code=0，aiReason 为空，reason 仍是模板文案，耗时 0.3s</code></pre>
+<p>接口不报错、页面不缺内容，只是少了那句&quot;继续加油&quot;。这一点写进了 <code>prompts/05</code> 和 README 的限制表：大模型是增强项，不是依赖项。</p>
+<h2>第四步：去 AI 味</h2>
+<p>这一条比接 key 麻烦。改了三类东西：</p>
+<table><tr><th>原来</th><th>改成</th><th>为什么</th></tr><tr><td>本章回答一个问题：在「代码主要由 AI 产出」的前提下……</td><td>这一章的疑问很具体：代码主要由 AI 产出时，人靠什么保证结果不走样。</td><td>设问句 + 长定语是典型的模型腔</td></tr><tr><td>几个刻意的设计：<b>蛋白过量要扣分</b>……</td><td>几处取舍：蛋白质超过目标 1.3 倍开始扣分……</td><td>&quot;刻意的设计&quot;是在自我表扬，读着假</td></tr><tr><td><b>诚实声明：</b> ……伪造的 Prompt 链在评审追问下必然崩塌</td><td><b>说明：</b> 最早的 6 次提交早于归档机制，这里也不补写。</td><td>解释&quot;我为什么诚实&quot;本身就是表演</td></tr></table>
+<p>另外把 <code>prompts/*.md</code> 的标题统一成「需求 / 拆解 / 取舍 / 接口 / 验证 / 没做的」，去掉「AI 的拆解」「协作形态：DSH Agent 会话」这类标签——<b>标签是给机器看的，记录是给人看的</b>。</p>
+<h2>复盘</h2>
+<p>&quot;让 AI 写得像人&quot;最容易走偏的地方，是把它改得更花哨。实际有效的只有三件事：<b>去掉自我评价、去掉设问和排比、把每句话落到具体数字和具体动作上</b>。第三点尤其重要——&quot;处理了并发问题&quot;是空话，&quot;先写菜单再写订单，最坏是少卖而不是超卖&quot;才是人写的。</p>
+<div class='part'>第二部分 迭代记录</div>
+<h1>01 · 订单落库</h1>
+<ul>
+<li><b>日期</b>：2026-10-28</li>
+<li><b>怎么做的</b>：我提需求和验收标准，AI 出方案、写代码</li>
+<li><b>对应提交</b>：<code>feat(server): 订单落库 API</code> → <code>feat(preview): 结算页对接下单接口</code> → <code>feat(admin): 后台订单列表</code> → <code>docs(readme): 补充订单 API</code></li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>先补 prompts/ + 订单落库</div>
+<p>上下文（会话中已确认）：</p>
+<ul>
+<li>赛项：2026 第九届传智杯「AI 创新应用挑战赛」个人赛，评审维度中「解题有效性与实用价值」占 25%，要求作品具备<b>完整的产品闭环</b>；</li>
+<li>现状：<code>preview/index.html</code> 的「提交订单」只做了前端校验 + <code>showPage(&#x27;Tracking&#x27;)</code> 跳转，<b>订单从未落库</b>，跟踪页是一张写死的静态页面；</li>
+<li>硬约束：服务端是<b>零第三方依赖</b>的原生 Node <code>http</code>，数据以 JSON 文件持久化，不能引入数据库或 npm 包。</li>
+</ul>
+<h2>2. 拆解</h2>
+<p>把一句话需求拆成三个可独立验收的交付物 + 一个过程性交付物：</p>
+<table><tr><th>#</th><th>交付物</th><th>验收标准</th></tr><tr><td>A</td><td>订单持久化接口</td><td><code>POST /api/orders</code> 返回订单号；重启服务后订单仍在</td></tr><tr><td>B</td><td>点餐端闭环</td><td>提交订单后，跟踪页显示<b>真实订单号与金额</b>，购物车清空</td></tr><tr><td>C</td><td>商家端闭环</td><td>后台能看到订单，能把状态从「待接单」推到「已完成」</td></tr><tr><td>D</td><td>过程归档</td><td><code>prompts/</code> 目录 + 本文件，与提交一一对应</td></tr></table>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>存储</td><td>SQLite（<code>node:sqlite</code>）/ 单文件 JSON / 内存</td><td><b>单文件 JSON</b>。零依赖约束下最稳；<code>node:sqlite</code> 在 Node 18 不可用，而 README 承诺 Node ≥ 18；内存方案重启即丢，无法体现&quot;落库&quot;</td></tr><tr><td>写入方式</td><td>直接 <code>writeFileSync</code> / 临时文件 + <code>rename</code></td><td><b>沿用现有 <code>writeMenu</code> 的原子写</b>。JSON 被写坏 = 全部订单丢失，这个风险不值得省几行代码</td></tr><tr><td>金额计算</td><td>前端算好传给后端 / 后端重算</td><td><b>后端重算</b>。前端传 <code>unitPrice</code> 只作为规格加价后的单价依据，小计、配送费、打包费、合计、总热量全部服务端重算——这是&quot;金额不可被前端篡改&quot;的最小防线</td></tr><tr><td>库存</td><td>不扣 / 下单扣减</td><td><b>下单扣减</b>。否则后台改库存只是摆设，闭环不成立；库存不足直接 409 拒绝下单</td></tr><tr><td>订单状态</td><td>只存 pending / 四态流转</td><td><b>四态</b>（待接单 / 制作中 / 已完成 / 已取消），否则后台没有可操作的东西</td></tr><tr><td>订单文件入库</td><td>提交 <code>data/orders.json</code> / 忽略</td><td><b>忽略</b>。提交一个空 JSON 会让每次本地测试产生脏 diff；改为提供 <code>data/orders.example.json</code> 说明结构，运行时自动创建</td></tr></table>
+<h2>4. 接口</h2>
+<pre><code>POST /api/orders
+{ &quot;items&quot;:[{ &quot;dishId&quot;:&quot;d1&quot;, &quot;qty&quot;:2, &quot;unitPrice&quot;:3200, &quot;specDesc&quot;:&quot;份量:加大&quot; }],
+  &quot;address&quot;:{ &quot;name&quot;:&quot;张三&quot;,&quot;phone&quot;:&quot;13800000000&quot;,&quot;building&quot;:&quot;3 号楼&quot;,&quot;room&quot;:&quot;502&quot; },
+  &quot;remark&quot;:&quot;少冰&quot; }
+→ 200 { &quot;code&quot;:0, &quot;data&quot;:{ &quot;id&quot;:&quot;20261028120304-4821&quot;, &quot;status&quot;:&quot;pending&quot;,
+                          &quot;subtotal&quot;:6400, &quot;deliveryFee&quot;:0, &quot;packFee&quot;:200, &quot;total&quot;:6600 } }
+→ 400 参数错误 / 菜品不存在 / 单价低于菜品基础价
+→ 409 库存不足</code></pre>
+<ul>
+<li><code>GET /api/orders?limit=50</code>：按创建时间倒序返回；</li>
+<li><code>PUT /api/orders/:id</code>：<code>{ &quot;status&quot;: &quot;accepted&quot; | &quot;done&quot; | &quot;canceled&quot; }</code>，非法流转直接 400。</li>
+</ul>
+<h2>5. 验证</h2>
+<p>见提交说明与 <code>README.md</code> 第 4 节自检清单，核心三项：</p>
+<ol>
+<li><code>POST /api/orders</code> 后进程重启，<code>GET /api/orders</code> 仍返回该订单；</li>
+<li>下单后 <code>GET /api/menu</code> 中对应菜品 <code>stock</code> 减少，后台刷新可见；</li>
+<li>库存置 0 后再下单返回 409，前端 Toast 提示且不跳转。</li>
+</ol>
+<h2>6. 没做的</h2>
+<ul>
+<li>订单文件容量：当前只做「保留最近 N 条」的截断，未做分页与归档；</li>
+<li>并发：多个请求同时下单时，<code>readMenu</code> → 扣减 → <code>writeMenu</code> 之间存在竞态窗口；单机演示场景可接受，生产需加写锁；</li>
+<li>无鉴权：<code>GET /api/orders</code> 任何人可读，含手机号与地址，已在 README「已知限制」中标注。</li>
+</ul>
+<h1>02 · 后台登录与鉴权</h1>
+<ul>
+<li><b>日期</b>：2026-10-28</li>
+<li><b>怎么做的</b>：我提需求和验收标准，AI 出方案、写代码</li>
+<li><b>对应提交</b>：<code>feat(server): 后台会话与接口鉴权</code> → <code>feat(admin): 登录遮罩与退出登录</code></li>
+<li><b>上游问题</b>：README「已知限制」第 4 条 —— 后台与订单接口无鉴权，订单含手机号与地址</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>好的你 1+2 先并行吧</div>
+<p>上下文：1 = 技术文档，2 = 再攒 2 条 Prompt 记录（建议做「后台登录与鉴权」和「订单状态驱动跟踪页」）。本条对应前者。</p>
+<p>具体要解决的问题（由 AI 从已知限制中提出，人类确认）：</p>
+<table><tr><th>#</th><th>问题</th><th>期望</th></tr><tr><td>1</td><td><code>PUT /api/dishes/:id</code> 任何人可改价改库存</td><td>必须登录后台才能写</td></tr><tr><td>2</td><td><code>GET /api/orders</code> 明文返回手机号与地址</td><td>必须登录后台才能读</td></tr><tr><td>3</td><td><code>POST /api/upload</code> 可被任意调用写盘</td><td>必须登录后台才能传</td></tr></table>
+<h2>2. 拆解</h2>
+<p>一句话：<b>把「后台」这个角色显式建模出来，而不是靠前端藏按钮。</b></p>
+<ul>
+<li>服务端：会话签发 / 校验 / 失效 + 受保护接口清单 + 登录失败限速；</li>
+<li>后台页：启动先探测会话，未登录弹登录遮罩；接口返回 401 时统一回到登录态；</li>
+<li>顾客端：不受影响（下单、查自己的订单仍需匿名可用）。</li>
+</ul>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>会话载体</td><td>JWT / HttpOnly Cookie + 服务端 Map / Basic Auth</td><td><b>Cookie + 内存 Map</b>。零依赖下 JWT 要自己实现 HMAC 与过期校验，收益不大；Basic Auth 每次请求带密码，浏览器体验差且无法主动登出；内存 Map 重启即失效，正好符合「演示态」定位，代价写进限制说明</td></tr><tr><td>Cookie 属性</td><td>普通 Cookie / HttpOnly + SameSite</td><td><b>HttpOnly + SameSite=Lax + Path=/</b>。HttpOnly 挡 XSS 偷 token，SameSite 挡跨站请求伪造；不过 HTTPS 环境下还应加 <code>Secure</code>，本地 http 调试加不了，已记入遗留</td></tr><tr><td>口令比对</td><td><code>===</code> / 哈希后 <code>timingSafeEqual</code></td><td><b>哈希后定时安全比较</b>。原始字符串比较会因长度/前缀提前返回而泄漏时序信息，<code>timingSafeEqual</code> 要求等长，所以先各自 SHA-256</td></tr><tr><td>会话续期</td><td>固定过期 / 滑动续期</td><td><b>滑动续期</b>（每次命中延长到 8 小时）。演示时不会写着写着被踢出去</td></tr><tr><td>暴力破解</td><td>不限 / 全局计数 / 按 IP 计数</td><td><b>按 IP 计数</b>，5 次失败锁 60 秒。全局计数会被一个人锁死所有人</td></tr><tr><td>默认口令</td><td>硬编码 / 环境变量</td><td><b>环境变量优先，缺省 <code>admin</code>/<code>dika2026</code></b>。缺省值写进启动日志与登录框提示，保证评委 <code>git clone</code> 后零配置可复现</td></tr><tr><td>顾客端订单查询</td><td>也要登录 / 凭订单号匿名查</td><td><b>凭订单号匿名查</b>，且 <b>手机号脱敏</b>（<code>136****5678</code>）。订单号即凭证，评委无需账号也能看到跟踪闭环</td></tr></table>
+<h2>4. 接口</h2>
+<pre><code>POST /api/login    { &quot;username&quot;:&quot;admin&quot;, &quot;password&quot;:&quot;dika2026&quot; }
+→ 200 { &quot;code&quot;:0, &quot;data&quot;:{ &quot;user&quot;:&quot;admin&quot;, &quot;expiresIn&quot;:28800000 } }
+      Set-Cookie: dika_admin=&lt;48位hex&gt;; HttpOnly; SameSite=Lax; Path=/; Max-Age=28800
+→ 401 账号或密码不正确
+→ 429 登录失败次数过多，请 N 秒后再试
+
+POST /api/logout        → 200 { &quot;code&quot;:0 }，同时清除 Cookie
+GET  /api/session       → 200 { &quot;code&quot;:0, &quot;data&quot;:{ &quot;user&quot;:&quot;admin&quot; } } / 401
+
+GET  /api/orders/:id    → 200 公开视图（手机号脱敏、含 events 事件链）/ 404</code></pre>
+<p>受保护清单：<code>PUT /api/dishes/:id</code>、<code>POST /api/upload</code>、<code>GET /api/orders</code>、<code>PUT /api/orders/:id</code>。</p>
+<p>公开清单：<code>GET /api/menu</code>、<code>POST /api/orders</code>、<code>GET /api/orders/:id</code>。</p>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>未登录 <code>GET /api/orders</code></td><td>401</td></tr><tr><td>未登录 <code>PUT /api/dishes/d1</code></td><td>401</td></tr><tr><td>未登录 <code>POST /api/upload</code></td><td>401</td></tr><tr><td>错误口令</td><td>401 <code>账号或密码不正确</code></td></tr><tr><td>正确口令</td><td>200，<code>Set-Cookie</code> 写入 cookie jar</td></tr><tr><td>带 Cookie 访问 session / orders / 改菜品</td><td>200 / 200 / 200</td></tr><tr><td>登出后再访问 <code>/api/orders</code></td><td>401</td></tr><tr><td>公开下线（无 Cookie）</td><td>200，订单正常创建</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>内存会话：进程重启后全部登录态失效（评审演示需重新登录一次，属预期）；</li>
+<li>未加 <code>Secure</code> 属性（本地 http 环境无法设置），部署 HTTPS 时应补；</li>
+<li>登录限速只按 IP，NAT 后多人共享出口 IP 时可能互相影响；</li>
+<li>没有角色区分：目前只有一个 <code>admin</code> 角色，后续若要区分店长/店员需扩展 <code>sessions</code> 里的角色字段。</li>
+</ul>
+<h1>03 · 订单状态驱动的跟踪页</h1>
+<ul>
+<li><b>日期</b>：2026-10-28</li>
+<li><b>怎么做的</b>：我提需求和验收标准，AI 出方案、写代码</li>
+<li><b>对应提交</b>：<code>feat(server): 订单事件链</code> → <code>feat(preview): 跟踪页轮询真实状态</code></li>
+<li><b>上游问题</b>：README「已知限制」第 2 条 —— 订单已落库，但跟踪页进度条仍是写死的演示态</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>好的你 1+2 先并行吧</div>
+<p>上下文：补第 2 条 Prompt 记录，把「订单状态驱动跟踪页」做成真实闭环——商家在后台点「接单 / 完成」，顾客端跟踪页应当自己变化。</p>
+<p>改造前的具体问题（读代码确认）：</p>
+<table><tr><th>位置</th><th>问题</th></tr><tr><td><code>preview/index.html</code> 跟踪页</td><td>进度条 4 个节点是写死的 <code>class=&quot;done&quot;/&quot;current&quot;</code>，文案「商家已接单 / 预计 12:35 送达」是常量</td></tr><tr><td>时间轴</td><td>4 条记录时间固定 <code>12:02 / 12:03 / --:--</code>，与真实订单无关</td></tr><tr><td>骑手卡片</td><td>「配送小哥 王师傅 188\*\*\*\*5678」是虚构内容，项目并没有配送体系</td></tr><tr><td>数据</td><td>订单只有 <code>status</code> 与 <code>updatedAt</code>，没有状态变更历史，无法还原时间轴</td></tr></table>
+<h2>2. 拆解</h2>
+<ul>
+<li><b>数据层</b>：订单增加 <code>events: [{ status, at }]</code> 事件链，创建时写入 <code>pending</code>，后台每次改状态追加一条；</li>
+<li><b>接口层</b>：新增公开的 <code>GET /api/orders/:id</code>（凭订单号查询，手机号脱敏），返回事件链；</li>
+<li><b>展示层</b>：跟踪页按 <code>status</code> 映射节点状态、按 <code>events</code> 渲染时间轴；进入页面后每 5 秒轮询一次，到终态停止；</li>
+<li><b>诚实性</b>：删掉虚构的骑手卡片与「预计送达时间」——没有的数据不假装有。</li>
+</ul>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>状态推进通知</td><td>前端轮询 / SSE / WebSocket</td><td><b>5 秒轮询</b>。零依赖约束下 SSE 要额外维护长连接与断线重连，WebSocket 在原生 <code>http</code> 上要自己实现握手与帧解析；订单状态变化是低频事件，轮询成本可忽略</td></tr><tr><td>轮询终点</td><td>一直轮询 / 到终态停止</td><td><b><code>done</code> / <code>canceled</code> 停止</b>，并在离开跟踪页时清掉定时器，避免后台标签页长期空转</td></tr><tr><td>时间轴数据</td><td>用 <code>updatedAt</code> 推算 / 落事件链</td><td><b>落 <code>events</code></b>。只有一个 <code>updatedAt</code> 时，第二次改状态会覆盖第一次的时间，时间轴必然错位</td></tr><tr><td>事件顺序</td><td>正序 / 倒序</td><td><b>倒序</b>（最新在最上），符合外卖类 App 的心智；最新一条加粗</td></tr><tr><td>订单查询鉴权</td><td>与后台同权限 / 凭订单号匿名</td><td><b>匿名</b>。顾客没有账号；手机号脱敏后，泄漏面仅剩「楼栋+门牌」，与外卖平台取餐码同一级别</td></tr><tr><td>取消态展示</td><td>仍显示 4 节点 / 隐藏进度条</td><td><b>隐藏进度条</b>，顶部状态文案改为「订单已取消」。已完成/已取消是互斥终态，继续画进度条会造成误解</td></tr><tr><td>轮询容错</td><td>失败弹 Toast / 静默</td><td><b>静默忽略</b>，下一次轮询再试。网络抖动时弹窗会打断用户，而跟踪页本身不是强交互页面</td></tr></table>
+<h2>4. 状态映射</h2>
+<table><tr><th>订单状态</th><th>顶部文案</th><th>进度节点</th><th>轮询</th></tr><tr><td><code>pending</code></td><td>等待商家接单</td><td>已提交 ✓ / <b>已接单</b>（当前） / 制作中 / 已完成</td><td>继续</td></tr><tr><td><code>accepted</code></td><td>商家已接单，正在制作</td><td>已提交 ✓ / 已接单 ✓ / <b>制作中</b>（当前） / 已完成</td><td>继续</td></tr><tr><td><code>done</code></td><td>订单已完成</td><td>全部打勾</td><td>停止</td></tr><tr><td><code>canceled</code></td><td>订单已取消</td><td>隐藏进度条，时间轴保留</td><td>停止</td></tr></table>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>下单后响应含 <code>events</code></td><td>1 条 <code>pending</code></td></tr><tr><td>匿名 <code>GET /api/orders/:id</code></td><td>200，<code>phone=136****5678</code>，<code>events=1</code></td></tr><tr><td>后台推 <code>accepted</code></td><td>200，事件链变为 <code>pending → accepted</code></td></tr><tr><td>再次匿名查询</td><td><code>status=accepted</code>，<code>events=2</code></td></tr><tr><td>跟踪页渲染（headless 截图）</td><td>顶部「商家已接单，正在制作」；进度条第 3 节点高亮；时间轴 14:31 接单 / 14:30 下单</td></tr><tr><td>虚构内容清理</td><td>骑手卡片、「预计 12:35 送达」、写死时间轴均已移除</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>轮询间隔固定 5 秒，未做「页面隐藏时暂停」（<code>visibilitychange</code>），后台标签页仍会每 5 秒请求一次；</li>
+<li>订单号是「时间戳 + 4 位随机」，理论可枚举；演示场景可接受，生产应改为足够熵的随机串或加签名；</li>
+<li>没有状态回滚：<code>done</code> 之后仍可被 <code>PUT</code> 改成 <code>canceled</code>，后续应加状态机白名单（当前只挡了改回 <code>pending</code>）。</li>
+</ul>
+<h1>04 · 小程序端与双端架构</h1>
+<ul>
+<li><b>日期</b>：2026-10-28</li>
+<li><b>怎么做的</b>：我提需求和验收标准，AI 出方案、写代码</li>
+<li><b>对应提交</b>：<code>feat(miniprogram): 新增微信小程序生产端</code> → <code>docs(prompts): 04</code> → <code>docs: README/技术文档同步</code></li>
+<li><b>上游问题</b>：README「已知限制」第 1 条 —— 仓库名带 <code>miniprogram</code>，但主体只有 H5</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>我想要做的是可以上架微信小程序端的 做 web 版本是为了方便在网页端查看 所以就是相当于做了两套代码 一套代码是实际应用的一套是方便展示的 你根据我的意思补充完善一下这个项目代码</div>
+<p>随消息附了一张技术栈截图，期望：微信原生小程序（不用 uni-app / Taro / mpvue）、TypeScript strict、WXML + WXSS、运行时零依赖。</p>
+<p>这句话其实是一次<b>定位纠正</b>：此前我把 H5 当成了主体、小程序当成&quot;以后再补&quot;，而真实的产品意图是反过来——<b>小程序是交付物，H5 只是演示壳</b>。</p>
+<h2>2. 拆解</h2>
+<ul>
+<li><b>重新划分两层</b>：<code>miniprogram/</code>（生产端，上架用）+ <code>preview/</code>、<code>admin/</code>（展示与运营），<code>server/</code> 两端共用；</li>
+<li><b>小程序端做一个完整闭环</b>，不做半成品：点餐（含规格弹层）→ 确认订单（地址/费用/备注）→ 订单跟踪（状态 + 事件时间轴）；</li>
+<li><b>字段与 Web 端严格对齐</b>，让&quot;同一套接口&quot;不是口号：规格加价用 <code>deltaPrice</code>、计费规则取 <code>menu.fees</code>、金额以「分」传输；</li>
+<li><b>把&quot;能不能上架&quot;拆成代码条件与资质条件</b>，后者写进 README 与文档，不假装技术能解决一切。</li>
+</ul>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>跨端框架</td><td>uni-app / Taro / 原生</td><td><b>原生</b>。只有 3 个页面，框架的编译产物、调试链路与版本兼容成本都高于收益；且本项目要的是&quot;微信里真的能用&quot;，不是&quot;多端发布&quot;</td></tr><tr><td>语言</td><td>JS / TypeScript strict</td><td><b>TS strict</b>。在没有运行时测试的前提下，类型是唯一能在提交前挡下 <code>deltaPrice</code> 写成 <code>delta</code> 这类错误的闸门；开发者工具原生编译 TS，不需要额外构建</td></tr><tr><td>状态管理</td><td>mobx-miniprogram / 模块级单例</td><td><b>模块级单例</b>。状态只有「一车商品」，observable 那套反而增加心智负担；页面 <code>onShow</code> 主动 <code>syncCart()</code></td></tr><tr><td>规格默认值</td><td>空选 → 禁用按钮 / 默认选中每组第一项</td><td><b>默认选中</b>。必选组永远有值，用户不必先点一遍才能看到价格</td></tr><tr><td>购物车持久化</td><td>存 Storage / 不存</td><td><b>不存</b>。跨次启动带着上次没下单的商品，比&quot;丢了再选&quot;更糟</td></tr><tr><td>收货地址</td><td>不存 / Storage</td><td><b>存</b>。地址几乎不变，重复填写是主要摩擦点</td></tr><tr><td>状态同步</td><td>WebSocket / SSE / 轮询</td><td><b>5 秒轮询</b>，与 H5 保持一致；订单状态是低频事件，两端逻辑相同便于讲清楚</td></tr></table>
+<h2>4. 接口与字段对齐核对</h2>
+<table><tr><th>环节</th><th>字段</th><th>核对结果</th></tr><tr><td>菜单</td><td><code>dishes[].specs[].options[].deltaPrice</code></td><td>✅ 从 <code>data/menu.json</code> 实际读取得知（不是文档里写的 <code>delta</code>）</td></tr><tr><td>计费</td><td><code>fees.deliveryFee / packFee / freeDeliveryThreshold</code></td><td>✅ 三字段齐全，页面按 <code>subtotal &gt;= freeDeliveryThreshold</code> 判免配送</td></tr><tr><td>下单</td><td><code>POST /api/orders { items[{dishId,qty,unitPrice,specDesc}], address{name,phone,building,room}, remark }</code></td><td>✅ 与服务端校验一致；<code>unitPrice = 基础价 + Σdelta</code>，满足「单价 ≥ 基础价」</td></tr><tr><td>查询</td><td><code>GET /api/orders/:id → { status, events[], total, itemCount, address.phone(脱敏) }</code></td><td>✅ 跟踪页用 <code>events</code> 渲染时间轴</td></tr></table>
+<div class='quote'>这次核对发现一个真实问题：<b>README 的规格示例写的是 <code>&quot;delta&quot;: 0</code>，而数据里是 <code>deltaPrice</code></b>。小程序端写完后回头把 README 示例一并改正——这类&quot;文档与数据打架&quot;的坑，正是双端对齐时最容易漏掉的。</div>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td><code>npx tsc --noEmit</code>（strict + noUnusedLocals）</td><td>✅ 0 error</td></tr><tr><td>依赖审计</td><td>运行时依赖 0；开发依赖仅 <code>typescript</code>、<code>miniprogram-api-typings</code></td></tr><tr><td>文件清单</td><td>25 个（含 <code>project.config.json</code> / <code>tsconfig.json</code> / 三页 12 个文件）</td></tr><tr><td>接口字段</td><td>逐项对照 <code>data/menu.json</code> 与 <code>server.js</code>，见上表</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li><b>本机没有微信开发者工具</b>，UI 未经模拟器/真机验证，只做了 TypeScript 静态检查与接口契约核对——这一条必须写清楚，不能把&quot;编译通过&quot;说成&quot;跑通了&quot;；</li>
+<li>未接 <code>wx.login</code>：顾客仍以订单号为凭证，订单不归属到具体用户；</li>
+<li>未接微信支付：当前是线下/到店结算；</li>
+<li>购物车未持久化（刻意为之，见取舍表）；</li>
+<li>未做分享卡片、订阅消息、骨架屏等小程序侧体验细节。</li>
+</ul>
+<h2>7. 上架前要准备什么</h2>
+<p>HTTPS 域名 → ICP 备案 → 服务器域名白名单 → 餐饮类目资质（食品经营许可证）→ 隐私保护指引配置。这五项不解决，代码再干净也提交不了审核。</p>
+<h1>05 · AI 个性化减脂套餐推荐</h1>
+<ul>
+<li><b>日期</b>：2026-10-28</li>
+<li><b>怎么做的</b>：我提需求和验收标准，AI 出方案、写代码</li>
+<li><b>对应提交</b>：<code>feat(recommend): 推荐引擎与接口</code> → <code>feat(ui): H5/小程序 AI 定制页</code> → <code>docs: 创新点与文档同步</code></li>
+<li><b>上游需求</b>：把「内置 AI 个性化减脂套餐推荐，结合用户身体指标给出适配餐品」从一句话变成可点开的功能</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>本项目为减脂餐创业商家打造轻量化点餐小程序……业务层面：面向小微轻食商家，提供低成本数字化接单方案，内置 AI 个性化减脂套餐推荐，结合用户身体指标给出适配餐品，同时双前端架构兼顾真实业务落地与评审演示便捷性。</div>
+<p>拆出来是一个明确的功能：<b>用户输入身体指标 → 系统给出这一餐该吃什么 → 能直接下单</b>。</p>
+<h2>2. 拆解</h2>
+<table><tr><th>层</th><th>交付物</th><th>验收标准</th></tr><tr><td>数据</td><td>菜品补 <code>protein</code>（克）</td><td>28 道菜全部有值，并声明为估算</td></tr><tr><td>算法</td><td><code>server/recommender.js</code></td><td>同输入同输出；每步可解释（BMR/TDEE/目标/偏差）</td></tr><tr><td>接口</td><td><code>GET /api/recommend/options</code>、<code>POST /api/recommend</code></td><td>参数非法 400；全售罄 409</td></tr><tr><td>展示</td><td>H5 定制页、小程序定制页</td><td>表单 → 结果 → 一键加购</td></tr><tr><td>说明</td><td>README / 技术文档 / 本记录</td><td>讲得清「为什么不是随便调个大模型」</td></tr></table>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>推荐由谁算</td><td>直接调大模型生成套餐 / 本地营养学模型 + 组合搜索</td><td><b>本地模型</b>。推荐结果要能复现、要能解释、要零成本——大模型每次输出都可能不同，评审问「为什么是这份」时答不上来。大模型只用于<b>文案增强</b>（见下）</td></tr><tr><td>大模型角色</td><td>不用 / 用来算 / 用来润色</td><td><b>只润色</b>，默认关闭：配置 <code>LLM_API_KEY</code> 才调用，Prompt 里写死「只改语气，不得改动任何数字」，失败自动回落模板文案。实测见第 5 节</td></tr><tr><td>推荐粒度</td><td>全天三餐 / 单餐</td><td><b>单餐（全天 40%）</b>。用户是在点一餐，不是在做营养规划</td></tr><tr><td>目标函数</td><td>只按热量 / 热量 + 蛋白 + 价格</td><td>三项加权：蛋白达成 0.5、热量偏差 -0.35、价格 0.15；另加<b>蛋白过量惩罚</b>（超过目标 1.3 倍开始扣分），否则算法会无脑堆鸡胸肉</td></tr><tr><td>预算无解</td><td>返回失败 / 忽略预算 / 给最便宜的合规组合</td><td><b>最便宜且满足营养下限（蛋白 ≥60%、热量 ≥70%）</b>，同时在结果里标注 <code>budgetRelaxed</code>，让用户知道放宽了</td></tr><tr><td>营养数据</td><td>不写 / 精确值 / 估算值</td><td><b>估算值 + 数据文件里写明 <code>nutritionNote</code></b>。伪造&quot;实验室级&quot;数据比承认估算更不诚实</td></tr></table>
+<h2>4. 计算链路</h2>
+<pre><code>身体指标 → Mifflin-St Jeor
+  BMR = 10×体重 + 6.25×身高 − 5×年龄 + (男 5 / 女 −161)
+→ TDEE = BMR × 活动系数(1.2 / 1.375 / 1.55 / 1.725)
+→ 每日目标 = TDEE × 目标系数(减脂 0.8 / 维持 1.0 / 增肌 1.1)，并设下限 1200/1400/1600
+→ 蛋白目标 = 体重 × (1.6 / 1.2 / 1.8) g
+→ 单餐预算 = 目标 × 40%
+→ 组合搜索：主菜(1) × 加料(0-1) × 汤/果汁(0-1) × 甜点(0-1)，约 1.5k 组合
+→ 目标函数打分，取最高</code></pre>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>输入</th><th>结果</th></tr><tr><td>手算核对</td><td>女 28 岁 165cm 58kg 轻度</td><td>BMR 1310 / TDEE 1801，与手算 1310.25 / 1801.6 一致</td></tr><tr><td>正常推荐</td><td>同上，减脂</td><td>鸡胸肉藜麦沙拉 + 额外鸡胸肉 + 番茄时蔬汤 = 530 kcal / 59 g / ¥57，热量偏差 −8%</td></tr><tr><td>素食过滤</td><td>男 72kg，<code>vegetarian</code></td><td>三项全部为素食菜品（牛油果藜麦能量碗 / 南瓜浓汤 / 抹茶豆腐慕斯）</td></tr><tr><td>预算过低</td><td>女 52kg，预算 ¥10</td><td><code>budgetRelaxed=true</code>，退化为最便宜的合规组合（全麦鸡胸三明治 ¥26）</td></tr><tr><td>确定性</td><td>同参数请求两次</td><td>菜品 id 完全一致</td></tr><tr><td>非法参数</td><td><code>age: &quot;x&quot;</code></td><td>400 + 中文提示</td></tr><tr><td>大模型润色（真实调用）</td><td>DeepSeek，<code>useAI: true</code></td><td>返回 <code>aiReason</code>，11 个数字（1312 / 1804 / 1443 / 91 / 40% / 577 / 36 / 590 / 55 / +2% / 153%）与模板完全一致，只把语气改得更口语</td></tr><tr><td>坏 Key 兜底</td><td>传一个无效 Key</td><td>0.3 秒返回，<code>aiReason</code> 为空，<code>reason</code> 仍是模板文案，接口 200 不受影响</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>蛋白为估算值，未做碳水/脂肪/膳食纤维，也未做过敏原与忌口过滤；</li>
+<li>未利用历史订单做协同过滤（现在是个体化，不是&quot;越用越准&quot;）；</li>
+<li>大模型润色已用 DeepSeek 实测，但没有做多模型对比与成本核算，也没有对生成文案做敏感词过滤；</li>
+<li>小程序端同 H5 一致地只做静态类型检查，UI 未在模拟器验证。</li>
+</ul>
+<h1>06 · 运行日志与 CI</h1>
+<ul>
+<li><b>日期</b>：2026-10-29</li>
+<li><b>对应提交</b>：<code>feat(log): 结构化日志</code> → <code>ci: 冒烟工作流</code> → <code>docs</code></li>
+<li><b>上游问题</b>：出问题时只能靠复现，推荐为什么选这三样、订单金额怎么算出来的，全靠猜</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>继续完善这个程序的日志，就是包括 AI 推荐计算热量什么的</div>
+<p>要的不是 <code>console.log(&#x27;here&#x27;)</code>，而是能回答三个问题：这单为什么是这个价、这套餐为什么这么推、这次请求为什么慢。</p>
+<h2>2. 拆解</h2>
+<table><tr><th>交付</th><th>验收</th></tr><tr><td>结构化日志模块</td><td>一行一条 JSON，可 <code>jq</code> 直接过滤</td></tr><tr><td>请求日志</td><td>只有 <code>/api/*</code>，带状态码与耗时</td></tr><tr><td>推荐日志</td><td>指标 → BMR/TDEE → 目标 → 候选数 → 选中组合 → 偏差，一条看全</td></tr><tr><td>订单日志</td><td>金额拆分、热量、菜品；状态流转记 from/to</td></tr><tr><td>认证日志</td><td>成功/失败/锁定，绝不落密码</td></tr><tr><td>脱敏</td><td>手机号、口令、token 落盘前替换</td></tr><tr><td>CI</td><td>语法 + 类型 + 接口冒烟，push 自动跑</td></tr></table>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>日志格式</td><td>自由文本 / 结构化 JSON</td><td><b>JSON Lines</b>。文本日志想统计&quot;推荐平均耗时&quot;只能写正则，JSON 直接 <code>jq</code> 聚合</td></tr><tr><td>依赖</td><td>winston / pino</td><td><b>零依赖</b>，与项目一贯的约束一致；功能只要&quot;分级 + 落盘 + 滚动&quot;，自己写 90 行足够</td></tr><tr><td>落盘策略</td><td>每请求一个文件 / 单文件不滚 / 单文件 + 按大小滚</td><td><b>单文件 + 5MB 滚动保留一份</b>。小服务器最怕日志把磁盘写满</td></tr><tr><td>静态资源</td><td>全记 / 不记</td><td><b>不记</b>。图片和页面会把真正有用的 API 日志淹掉</td></tr><tr><td>脱敏位置</td><td>打印时 / 写入前</td><td><b>写入前统一 sanitize</b>，控制台和文件都不会漏；靠&quot;记得别打手机号&quot;迟早出事</td></tr><tr><td>推荐耗时</td><td>只记总耗时</td><td><b>另记候选组合数</b>。菜单从 28 道加到 60 道时，候选数会先于耗时暴露问题</td></tr><tr><td>CI 范围</td><td>只跑语法 / 加类型与冒烟</td><td><b>语法 + 类型 + 冒烟</b>。这个项目没有测试框架，冒烟是最低成本的行为回归</td></tr></table>
+<h2>4. 日志事件</h2>
+<pre><code>{&quot;ts&quot;:&quot;2026-10-29T14:14:37.861Z&quot;,&quot;level&quot;:&quot;info&quot;,&quot;event&quot;:&quot;recommend&quot;,
+ &quot;profile&quot;:{&quot;gender&quot;:&quot;female&quot;,&quot;age&quot;:26,&quot;height&quot;:165,&quot;weight&quot;:58,&quot;activity&quot;:&quot;light&quot;,&quot;goal&quot;:&quot;cut&quot;,
+            &quot;bmr&quot;:1320,&quot;tdee&quot;:1815,&quot;targetCalorie&quot;:1452,&quot;proteinTarget&quot;:93},
+ &quot;mealTarget&quot;:581,&quot;mealProteinTarget&quot;:37,&quot;candidates&quot;:704,&quot;elapsedMs&quot;:6,
+ &quot;picked&quot;:[&quot;d9&quot;,&quot;d26&quot;,&quot;d18&quot;],
+ &quot;totals&quot;:{&quot;calorie&quot;:590,&quot;protein&quot;:55,&quot;price&quot;:5100},
+ &quot;match&quot;:{&quot;calorieDiffPct&quot;:2,&quot;proteinPct&quot;:149},&quot;budgetRelaxed&quot;:false,&quot;vegetarian&quot;:false}</code></pre>
+<p>这条记录把&quot;为什么是这套&quot;完整还原了：指标 → 代谢 → 目标 → 预算 → 搜了多少组合 → 选中哪三道 → 偏差多少。</p>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>启动</td><td><code>server.start</code> 记录端口、管理员账号、日志路径</td></tr><tr><td><code>GET /api/menu</code></td><td><code>http</code> 事件，200，6ms</td></tr><tr><td><code>POST /api/recommend</code></td><td><code>recommend</code> 事件，候选 704 组、耗时 6ms、选中 d9/d26/d18</td></tr><tr><td><code>POST /api/orders</code></td><td><code>order.create</code>，金额拆分 3200+500+200=3900，热量 320</td></tr><tr><td>错误口令</td><td><code>auth.login</code> <code>ok:false</code>，fails 计数</td></tr><tr><td>正确口令 + 访问订单</td><td><code>ok:true</code>，随后 <code>GET /api/orders</code> 200</td></tr><tr><td>脱敏单测</td><td><code>{phone,password}</code> → <code>{&quot;phone&quot;:&quot;*<b>&quot;,&quot;password&quot;:&quot;</b>*&quot;}</code></td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>没有集中式日志服务，也没有做日志查询接口（会把内部信息暴露给前端）；</li>
+<li>没有对日志做结构化采样，高并发时会全量写盘；</li>
+<li>推荐日志里的 <code>picked</code> 只存菜品 id，没存当时的单价快照，菜单改价后回溯会有偏差；</li>
+<li>CI 只在 push/PR 时跑，没有定时巡检。</li>
+</ul>
+<div class='part'>第三部分 归档说明</div>
+<h1>prompts/ · 迭代记录</h1>
+<p>这里放每次功能迭代的过程记录。赛项要求「至少 3 个核心功能迭代的完整 Prompt 链」，所以每条都写清楚：当时提了什么要求、AI 给了什么方案、我怎么选、最后怎么验证的。</p>
+<h2>写法约定</h2>
+<ul>
+<li>一次功能迭代一个文件，命名 <code>NN-功能名.md</code>，编号跟提交顺序一致；</li>
+<li>提交信息里带上编号，方便对照；</li>
+<li>只写真实发生过的事，没做的就写没做；</li>
+<li>token、密钥、手机号一律打码。</li>
+</ul>
+<h2>每条包含</h2>
+<ol>
+<li><b>需求</b>：当时的原话或关键句</li>
+<li><b>上下文</b>：代码到什么状态、有什么硬限制</li>
+<li><b>拆解</b>：要交付哪几样，怎么算完成</li>
+<li><b>取舍</b>：备选方案和放弃的理由（评审最看这段）</li>
+<li><b>接口 / 链路</b>：改动的具体形状</li>
+<li><b>验证</b>：跑过什么、结果如何</li>
+<li><b>没做的</b>：这次没覆盖的部分</li>
+</ol>
+<h2>索引</h2>
+<table><tr><th>编号</th><th>功能</th><th>对应提交</th></tr><tr><td>01</td><td>订单落库</td><td><code>feat(server): 订单落库 API</code> 起共四次</td></tr><tr><td>02</td><td>后台登录与鉴权</td><td><code>feat(server): 后台会话与接口鉴权</code>、<code>feat(admin): 登录遮罩</code></td></tr><tr><td>03</td><td>订单状态驱动跟踪页</td><td><code>feat(server): 订单事件链</code>、<code>feat(preview): 跟踪页轮询真实状态</code></td></tr><tr><td>04</td><td>小程序端与双端架构</td><td><code>feat(miniprogram): 微信小程序生产端</code></td></tr><tr><td>05</td><td>AI 减脂套餐推荐</td><td><code>feat(recommend)</code>、<code>feat(ui)</code> 两次提交</td></tr></table>
+<h2>早于这套记录的部分</h2>
+<p>仓库最早的 6 次提交是存量代码按模块导入，那时还没有这套记录，所以没有对应条目，也不补写。</p>
+<h2>对话快照（snapshots/）</h2>
+<p>赛项要求提交&quot;AI 对话历史导出的 Prompt 历史快照&quot;，所以另开一个目录放<b>带真实报错与命令的对话纪要</b>：</p>
+<table><tr><th>文件</th><th>内容</th></tr><tr><td><code>snapshots/01-建仓与推送排障.md</code></td><td>建仓 400（GBK 编码）、账号 404、push 被重置，四个卡点怎么定位</td></tr><tr><td><code>snapshots/02-推荐引擎调参.md</code></td><td>第一版蛋白 173% → 加过量惩罚 → 预算无解时退化策略</td></tr><tr><td><code>snapshots/03-大模型润色的数字约束.md</code></td><td>系统提示怎么防模型改数字、坏 Key 兜底、去 AI 味的具体改法</td></tr></table>
+<p>这些是纪要（节选），不是逐字转录；原始对话截图/录屏可另行补充。</p></body></html>

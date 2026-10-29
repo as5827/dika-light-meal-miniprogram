@@ -322,7 +322,7 @@
 <p class="lead">这一章面对四个问题：代码是不是一次性堆出来的、协作过程可不可查、换台机器能不能跑、凭据在哪。</p>
 
 <h2>5.1 提交策略</h2>
-<p>仓库当前 <b>24 次提交</b>（含小程序端、推荐引擎、Prompt 归档与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
+<p>仓库当前 <b>27 次提交</b>（含小程序端、推荐引擎、日志与 CI、迭代记录与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
 <pre><code>85dc4f7 docs: 更新 README 与截图（后台鉴权、状态驱动跟踪页）
 1c7b900 docs(prompts): 补充 02 鉴权与 03 状态驱动跟踪的迭代记录
 0457862 feat(preview): 跟踪页轮询真实订单状态
@@ -431,6 +431,24 @@ const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '
   <tr><td>Cookie 未加 <code>Secure</code></td><td>低</td><td>本地 http 调试无法设置；部署 HTTPS 时补</td></tr>
 </table>
 
+<h2>6.5 日志与可观测性</h2>
+<p>零依赖不等于没有可观测性。服务端把关键动作写成 JSON Lines，一行一条，控制台与 <code>logs/app.log</code> 双写，按 5MB 滚动保留一份历史，不至于把磁盘写满。</p>
+<table>
+  <tr><th style="width:22%">事件</th><th>关键字段与用途</th></tr>
+  <tr><td><code>http</code></td><td>method / path / status / ms / ip；只记 <code>/api/*</code>，静态资源不写，避免日志被页面和图片淹没</td></tr>
+  <tr><td><code>recommend</code></td><td>指标、bmr、tdee、targetCalorie、proteinTarget、candidates、elapsedMs、picked、totals、match</td></tr>
+  <tr><td><code>recommend.ai</code></td><td>ok / ms：润色是否生效、耗时多少</td></tr>
+  <tr><td><code>order.create</code> / <code>order.status</code></td><td>金额拆分、件数、热量、菜品；状态 from → to</td></tr>
+  <tr><td><code>auth.login</code> / <code>auth.locked</code></td><td>ok、ip、失败次数、锁定剩余秒数</td></tr>
+</table>
+<pre><code>{"ts":"2026-10-29T14:14:37.861Z","event":"recommend",
+ "profile":{"gender":"female","age":26,"height":165,"weight":58,"activity":"light","goal":"cut",
+            "bmr":1320,"tdee":1815,"targetCalorie":1452,"proteinTarget":93},
+ "mealTarget":581,"candidates":704,"elapsedMs":6,
+ "picked":["d9","d26","d18"],"totals":{"calorie":590,"protein":55,"price":5100},
+ "match":{"calorieDiffPct":2,"proteinPct":149}}</code></pre>
+<p>这一条就能独立回答「为什么是这三道菜」：指标怎么换算成代谢、单餐预算多少、搜了多少组合、最终偏差几个点。手机号、口令、token 在写入前统一脱敏（<code>phone</code> → <code>***</code>），避免日志本身变成泄漏面。</p>
+<p>配合 GitHub Actions：push 时跑服务端语法检查、小程序 <code>tsc --noEmit</code>、以及起服务后的三个接口冒烟。项目没有测试框架，冒烟是成本最低的行为回归。</p>
 <!-- ================= 七 ================= -->
 <h1>七、用户体验与产品精细度</h1>
 <table>

@@ -96,14 +96,20 @@ dika-light-meal-miniprogram/
 │   └── screenshots/      # 界面截图（README 与文档引用）
 ├── preview/
 │   └── index.html        # 顾客端点餐 H5（单文件，1743 行）
-├── prompts/              # AI 协作过程归档（规范见 prompts/README.md）
+├── prompts/              # 迭代记录（写法见 prompts/README.md）
 │   ├── README.md
 │   ├── 01-订单落库.md
 │   ├── 02-后台登录与鉴权.md
-│   └── 03-订单状态驱动跟踪页.md
+│   ├── 03-订单状态驱动跟踪页.md
+│   ├── 04-小程序端与双端架构.md
+│   ├── 05-AI减脂套餐推荐.md
+│   └── 06-运行日志与CI.md
 ├── server/
 │   ├── server.js         # 零依赖 HTTP 服务 + 静态托管 + API
-│   └── recommender.js    # 减脂套餐推荐引擎（营养学模型 + 组合搜索，纯函数）
+│   ├── recommender.js    # 减脂套餐推荐引擎（营养学模型 + 组合搜索，纯函数）
+│   └── logger.js         # 结构化日志（JSON Lines，脱敏 + 按大小滚动）
+├── logs/                 # 运行日志（gitignore，启动时自动创建）
+├── .github/workflows/    # CI：语法检查 + 类型检查 + 接口冒烟
 ├── uploads/              # 运行时上传目录（内容不进仓库，保留 .gitkeep）
 ├── .env.example          # 环境变量模板
 ├── .gitignore
@@ -270,6 +276,34 @@ dika轻食 server running at http://localhost:3000
 下单接口的错误语义：`400` 参数非法 / 菜品不存在 / 单价低于基础价；`409` 库存不足；`413` 请求体过大。
 
 安全细节：`readBody()` 带体积上限（普通请求 64KB、下单 256KB、上传 8MB）防内存打爆；`writeMenu()` / `writeOrders()` 均采用「临时文件 + rename」原子写，避免写坏 JSON；金额与库存只在服务端计算，前端传值不作为最终依据；口令比对先 SHA-256 再 `crypto.timingSafeEqual`；会话令牌用 `crypto.randomBytes(24)` 生成；静态服务做 `path.join` 前缀校验防目录穿越。
+
+### 运行日志
+
+服务端输出结构化日志（JSON Lines），控制台与 `logs/app.log` 双写，按 5MB 滚动保留一份历史。
+
+```bash
+# 只看推荐计算
+tail -f logs/app.log | jq -c 'select(.event=="recommend")'
+
+# 找慢请求
+jq -c 'select(.event=="http" and .ms>200)' logs/app.log
+```
+
+| 事件 | 关键字段 | 用途 |
+|---|---|---|
+| `http` | method / path / status / ms / ip | 只记 `/api/*`，定位慢接口与 4xx/5xx |
+| `recommend` | 指标、bmr、tdee、targetCalorie、candidates、elapsedMs、picked、totals、match | 复盘"为什么推这套"：从身体指标到最终三道菜一条看全 |
+| `recommend.ai` | ok / ms | 大模型润色是否生效、耗时 |
+| `order.create` | id、itemCount、subtotal、deliveryFee、packFee、total、calorie | 订单对账 |
+| `order.status` | from / to | 状态流转审计 |
+| `auth.login` | ok / ip / user / fails | 登录失败排查 |
+| `auth.locked` | ip / leftSeconds | 限速触发 |
+
+手机号、口令、token 在**落盘前**统一脱敏（`phone` → `***`）。`LOG_LEVEL` 调级别，`LOG_TO_FILE=0` 关闭文件只打控制台（CI 里就这么用）。
+
+### 持续集成
+
+`.github/workflows/ci.yml` 在 push / PR 时跑三步：服务端语法检查、小程序 `tsc --noEmit`、以及起服务后的接口冒烟（菜单 / 推荐 / 下单）。
 
 ---
 

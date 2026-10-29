@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 服务端语法检查
+        run: |
+          node --check server/server.js
+          node --check server/recommender.js
+          node --check server/logger.js
+
+      - name: 小程序类型检查
+        working-directory: miniprogram
+        run: |
+          npm ci
+          npx tsc --noEmit
+
+      - name: 接口冒烟
+        env:
+          LOG_TO_FILE: '0'
+          PORT: '3000'
+        run: |
+          node server/server.js &
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:3000/api/menu > /dev/null 2>&1 && break
+            sleep 0.5
+          done
+          curl -fsS http://127.0.0.1:3000/api/menu > /dev/null
+          curl -fsS http://127.0.0.1:3000/api/recommend/options > /dev/null
+          curl -fsS -X POST http://127.0.0.1:3000/api/recommend \
+            -H 'Content-Type: application/json' \
+            -d '{"profile":{"gender":"female","age":26,"height":165,"weight":58,"activity":"light","goal":"cut"}}' \
+            | grep -q '"code":0'
+          curl -fsS -X POST http://127.0.0.1:3000/api/orders \
+            -H 'Content-Type: application/json' \
+            -d '{"items":[{"dishId":"d1","qty":1,"unitPrice":3200}],"address":{"name":"CI","phone":"13800000000","building":"1","room":"101"}}' \
+            | grep -q '"code":0'
+          echo "冒烟通过"

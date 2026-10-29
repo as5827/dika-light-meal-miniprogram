@@ -126,27 +126,32 @@ def convert(md):
 CSS = """
 @page { size: A4; margin: 16mm 14mm 15mm; }
 * { box-sizing: border-box; }
-body { font-family: "Microsoft YaHei","PingFang SC",sans-serif; font-size: 9.6pt; line-height: 1.75; color: #1f2328; margin: 0; }
-h1 { font-size: 16pt; color: #14532d; border-bottom: 2px solid #22A06B; padding-bottom: 6px; margin: 0 0 10px; page-break-before: always; page-break-after: avoid; }
-h2 { font-size: 12pt; color: #166534; margin: 14px 0 6px; page-break-after: avoid; }
-h3 { font-size: 10.4pt; margin: 10px 0 4px; page-break-after: avoid; }
-p { margin: 4px 0; text-align: justify; }
-ul, ol { margin: 4px 0 4px 20px; padding: 0; }
-li { margin: 2px 0; }
-table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 8.8pt; page-break-inside: avoid; }
-th, td { border: 1px solid #d7dde3; padding: 4px 6px; vertical-align: top; }
-th { background: #f0f7f3; color: #14532d; }
-code { font-family: Consolas,monospace; font-size: 8.6pt; background: #f2f4f6; padding: 1px 3px; border-radius: 2px; }
-pre { background: #f7f9fa; border: 1px solid #e3e8ec; border-left: 3px solid #22A06B; padding: 7px 9px; font-size: 8.2pt; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
-pre code { background: none; padding: 0; }
-.quote { background: #f6fbf8; border-left: 3px solid #cbe7d8; padding: 6px 10px; margin: 8px 0; color: #374151; }
-.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
-.cover .k { color: #22A06B; font-weight: 600; letter-spacing: 2px; font-size: 10.5pt; }
-.cover h1.t { border: none; font-size: 26pt; color: #0f2e1f; margin: 8px 0 8px; page-break-before: avoid; }
-.cover .s { font-size: 12pt; color: #374151; margin-bottom: 24px; }
-.cover .m { font-size: 9.4pt; color: #4b5563; line-height: 2; }
-.cover .r { width: 90px; height: 3px; background: #22A06B; margin: 16px 0 20px; }
-.part { font-size: 13pt; color: #166534; font-weight: 700; margin: 0 0 8px; page-break-before: always; }
+body { font-family: "Times New Roman","SimSun","Songti SC",serif; font-size: 10pt; line-height: 1.7; color: #000; margin: 0; }
+h1 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 15pt; color: #000; border-bottom: 0.75pt solid #000; padding-bottom: 4pt; margin: 0 0 10pt; page-break-before: always; page-break-after: avoid; }
+h2 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 11pt; color: #000; margin: 12pt 0 5pt; page-break-after: avoid; }
+h3 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 10pt; margin: 9pt 0 4pt; page-break-after: avoid; }
+p { margin: 0 0 6pt; text-indent: 2em; text-align: justify; }
+ul, ol { margin: 4pt 0 6pt 2em; padding: 0; }
+li { margin: 2pt 0; text-align: justify; }
+table { width: 100%; border-collapse: collapse; margin: 6pt 0 9pt; font-size: 9pt; page-break-inside: avoid; }
+th, td { border: 0.5pt solid #000; padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #f0f0f0; font-weight: 700; }
+code { font-family: Consolas,"Courier New",monospace; font-size: 9pt; color: #000; }
+pre { font-family: Consolas,"Courier New",monospace; font-size: 8.4pt; line-height: 1.45; background: #fafafa; border: 0.5pt solid #999; padding: 6pt 8pt; margin: 6pt 0 8pt; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+pre code { font-size: 8.4pt; }
+.quote { border-left: 2pt solid #000; padding: 4pt 8pt; margin: 6pt 0 8pt; background: #fafafa; color: #111; }
+.quote p { text-indent: 0; }
+.paper-head { text-align: center; margin-bottom: 18pt; }
+.paper-head .conf { font-size: 9.5pt; color: #333; margin-bottom: 12pt; }
+.paper-head h1.title { font-family: "SimHei",sans-serif; font-size: 20pt; border: none; margin: 6pt 0 4pt; page-break-before: auto; letter-spacing: 1pt; }
+.paper-head .subtitle { font-size: 11.5pt; margin-bottom: 10pt; }
+.paper-head .author { font-size: 10pt; }
+.paper-head .affil { font-size: 9pt; color: #333; margin-top: 3pt; }
+.abstract { margin: 14pt 0 8pt; font-size: 9.5pt; line-height: 1.7; text-align: justify; }
+.abstract p { text-indent: 2em; }
+.note { font-size: 9.5pt; border-left: 2pt solid #000; padding: 4pt 8pt; background: #fafafa; margin: 8pt 0 10pt; }
+.note p { text-indent: 0; margin: 0; }
+.part { font-family: "SimHei",sans-serif; font-size: 13pt; color: #000; font-weight: 700; margin: 0 0 8pt; page-break-before: always; }
 """
 
 
@@ -164,17 +169,16 @@ def main():
             parts.append(convert(md))
 
     cover = """
-<div class="cover">
-  <div class="k">2026 第九届传智杯 · AI 创新应用挑战赛（个人赛）</div>
-  <h1 class="t">Prompt 历史快照与迭代记录</h1>
-  <div class="s">低卡轻食点餐系统 · dika-light-meal-miniprogram</div>
-  <div class="r"></div>
-  <div class="m">
-    代码仓库：https://github.com/as5827/dika-light-meal-miniprogram<br>
-    内容：3 份对话快照 + 6 份迭代记录 + 归档说明<br>
-    说明：本册为对话纪要（节选），保留当时的报错、命令与判断顺序，非逐字转录。<br>
-    导出：2026-10-29
-  </div>
+<div class="paper-head">
+  <div class="conf">2026 年第九届传智杯全国大学生数智创新与 AI 应用大赛 · AI 创新应用挑战赛（个人赛）</div>
+  <h1 class="title">Prompt 历史快照与迭代记录</h1>
+  <div class="subtitle">——低卡轻食点餐系统的 AI 协作过程留档</div>
+  <div class="author">参赛者：as5827</div>
+  <div class="affil">代码仓库：https://github.com/as5827/dika-light-meal-miniprogram　·　2026 年 10 月</div>
+</div>
+
+<div class="abstract">
+  <p>本册收录该项目开发过程中的三份对话快照与六份迭代记录。快照保留当时的报错原文、执行命令与判断顺序，用于说明问题如何被定位；迭代记录按「需求—拆解—取舍—接口—验证—没做的」组织，逐条说明每次功能落地的依据。所有内容均为纪要（节选），非逐字转录。</p>
 </div>
 """
 

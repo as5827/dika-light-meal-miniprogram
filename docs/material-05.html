@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'><title>提交清单与自查</title><style>
+@page { size: A4; margin: 16mm 14mm 15mm; }
+* { box-sizing: border-box; }
+body { font-family: "Times New Roman","SimSun","Songti SC",serif; font-size: 10pt; line-height: 1.7; color: #000; margin: 0; }
+h1 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 15pt; color: #000; border-bottom: 0.75pt solid #000; padding-bottom: 4pt; margin: 0 0 10pt; page-break-before: always; page-break-after: avoid; }
+h2 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 11pt; color: #000; margin: 12pt 0 5pt; page-break-after: avoid; }
+h3 { font-family: "SimHei","Heiti SC",sans-serif; font-size: 10pt; margin: 9pt 0 4pt; page-break-after: avoid; }
+p { margin: 0 0 6pt; text-indent: 2em; text-align: justify; }
+ul, ol { margin: 4pt 0 6pt 2em; padding: 0; }
+li { margin: 2pt 0; text-align: justify; }
+table { width: 100%; border-collapse: collapse; margin: 6pt 0 9pt; font-size: 9pt; page-break-inside: avoid; }
+th, td { border: 0.5pt solid #000; padding: 3pt 5pt; vertical-align: top; text-align: left; }
+th { background: #f0f0f0; font-weight: 700; }
+code { font-family: Consolas,"Courier New",monospace; font-size: 9pt; color: #000; }
+pre { font-family: Consolas,"Courier New",monospace; font-size: 8.4pt; line-height: 1.45; background: #fafafa; border: 0.5pt solid #999; padding: 6pt 8pt; margin: 6pt 0 8pt; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+pre code { font-size: 8.4pt; }
+.quote { border-left: 2pt solid #000; padding: 4pt 8pt; margin: 6pt 0 8pt; background: #fafafa; color: #111; }
+.quote p { text-indent: 0; }
+.paper-head { text-align: center; margin-bottom: 18pt; }
+.paper-head .conf { font-size: 9.5pt; color: #333; margin-bottom: 12pt; }
+.paper-head h1.title { font-family: "SimHei",sans-serif; font-size: 20pt; border: none; margin: 6pt 0 4pt; page-break-before: auto; letter-spacing: 1pt; }
+.paper-head .subtitle { font-size: 11.5pt; margin-bottom: 10pt; }
+.paper-head .author { font-size: 10pt; }
+.paper-head .affil { font-size: 9pt; color: #333; margin-top: 3pt; }
+.abstract { margin: 14pt 0 8pt; font-size: 9.5pt; line-height: 1.7; text-align: justify; }
+.abstract p { text-indent: 2em; }
+.note { font-size: 9.5pt; border-left: 2pt solid #000; padding: 4pt 8pt; background: #fafafa; margin: 8pt 0 10pt; }
+.note p { text-indent: 0; margin: 0; }
+.part { font-family: "SimHei",sans-serif; font-size: 13pt; color: #000; font-weight: 700; margin: 0 0 8pt; page-break-before: always; }
+</style></head><body>
+<div class="paper-head">
+  <div class="conf">2026 年第九届传智杯全国大学生数智创新与 AI 应用大赛 · AI 创新应用挑战赛（个人赛）</div>
+  <h1 class="title">提交清单与自查</h1>
+  <div class="subtitle">赛项要求逐条对照</div>
+  <div class="author">参赛者：as5827</div>
+  <div class="affil">代码仓库：https://github.com/as5827/dika-light-meal-miniprogram　·　2026 年 10 月</div>
+</div>
+<h1>参赛材料对照清单</h1>
+<div class='quote'>依据：传智杯 AI 创新应用挑战赛（个人赛）作品提交要求 2.1 / 2.2 / 2.3。 省赛提交截止 <b>2026-11-18</b>；提交入口在缴费后于赛事个人中心开放，材料需在截止前上传完毕。</div>
+<h2>一、代码仓库与演进记录（2.1）</h2>
+<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>GitHub / Gitee，Public 或提供评审访问权限</td><td>https://github.com/as5827/dika-light-meal-miniprogram ，<code>private: false</code></td><td>✅</td></tr><tr><td>细粒度提交历史，禁止一次性提交</td><td>27 个提交，按「功能模块 / 一次对话」拆分，<code>feat</code> / <code>docs</code> / <code>ci</code> 前缀区分</td><td>✅</td></tr><tr><td>每次提交对应一次与 AI 的核心对话或一个功能模块</td><td>每个功能提交都能在 <code>prompts/NN-*.md</code> 找到对应记录；提交信息里带模块名</td><td>✅</td></tr><tr><td>AI 对话历史导出的 Prompt 历史快照（可截图 / 录屏）</td><td><code>prompts/snapshots/</code> 下 3 份纪要：建仓排障、推荐调参、大模型数字约束；含真实报错与命令</td><td>✅（可补截图）</td></tr><tr><td>至少 3 个核心功能迭代的<b>完整 Prompt 链</b>（提问 → AI 建议 → 引导修 Bug）</td><td>01 建仓排障（4 个卡点）、02 推荐调参（3 轮）、03 润色约束（4 步）</td><td>✅</td></tr></table>
+<div class='quote'>补强建议：录屏时把 <code>prompts/snapshots/</code> 与对话窗口并排展示，比纯文字更直观。</div>
+<h2>二、复现性声明与重现指南（2.2）</h2>
+<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>README 中 10 分钟极速复现</td><td>README 第五节：克隆 → 启动 → 点单 → 接单，逐条给命令与预期</td><td>✅</td></tr><tr><td>环境配置说明</td><td>Node ≥ 18；无需 <code>npm install</code>（根目录零依赖）</td><td>✅</td></tr><tr><td>依赖清单</td><td>运行时 0 个；小程序端 2 个开发依赖（<code>typescript</code>、<code>miniprogram-api-typings</code>），见 <code>miniprogram/package.json</code></td><td>✅</td></tr><tr><td>环境变量模板</td><td><code>.env.example</code>：<code>PORT</code> / <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code> / <code>LOG_*</code> / <code>LLM_*</code></td><td>✅</td></tr></table>
+<h2>三、演示视频与技术文档（2.3）</h2>
+<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>视频 5–8 分钟，MP4 1080p</td><td>分镜已写好：<a href="video-script.md">video-script.md</a></td><td>⬜ 待录制</td></tr><tr><td>视频含 ≥2 分钟「AI 协同过程复现」</td><td>分镜第 4 段（3:40–6:10，共 2 分 30 秒）专门录 Prompt 输入 → 生成 → 修 Bug</td><td>⬜ 待录制</td></tr><tr><td>技术文档 PDF ≤30 页</td><td><a href="tech-doc.pdf">tech-doc.pdf</a>，20 页</td><td>✅</td></tr><tr><td>文档重点：意图控制策略</td><td>第三章：协作范式、上下文管理、五段式模板、五次迭代的 Prompt 链、纠偏与复核</td><td>✅</td></tr><tr><td>文档重点：架构设计</td><td>第四章：分层、请求管线、原子写、状态机、双端架构、对生成代码的约束</td><td>✅</td></tr><tr><td>文档重点：可复现性论证</td><td>第五章：提交策略、Prompt 归档、10 分钟复现路径、10 条实测证据、不可复现项声明</td><td>✅</td></tr></table>
+<h2>四、提交前 30 分钟自查</h2>
+<pre><code># 1. 仓库公开且最新（匿名视角）
+curl -s https://api.github.com/repos/as5827/dika-light-meal-miniprogram | jq &#x27;.private, .pushed_at&#x27;
+
+# 2. CI 是否绿
+#    https://github.com/as5827/dika-light-meal-miniprogram/actions
+
+# 3. 本地能起、能下单
+node server/server.js
+curl -s localhost:3000/api/menu | head -c 80
+
+# 4. 文档页数与最新时间
+ls -l docs/tech-doc.pdf</code></pre>
+<table><tr><th>检查项</th><th>通过标准</th></tr><tr><td>仓库可见性</td><td>匿名 <code>curl</code> 能拿到 <code>&quot;private&quot;: false</code></td></tr><tr><td>README 打开</td><td>图片、链接不 404（用相对路径，不依赖 raw 域名）</td></tr><tr><td>技术文档</td><td>≤30 页，且与仓库当前状态一致（提交数、接口数）</td></tr><tr><td>视频</td><td>1080p、5–8 分钟、含 2 分钟以上协同过程</td></tr><tr><td>组别</td><td>个人赛，按学籍选组（研究生组 / A / B / C，不可向下报）</td></tr></table>
+<h2>五、还差的与不打算做的</h2>
+<ul>
+<li><b>视频未录</b>：唯一硬缺口，分镜已就绪，按脚本录 6 分钟即可；录完建议同时上传 B 站备份，防止文件损坏；</li>
+<li>不做「AI 生成图片素材」：项目里的菜品图是 emoji 占位，没有版权风险，也省掉一层素材说明；</li>
+<li>不给演示站点做公网部署：比赛只要求仓库与文档，多一个域名就多一份运维和备案负担。</li>
+</ul></body></html>

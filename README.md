@@ -312,7 +312,19 @@ jq -c 'select(.event=="http" and .ms>200)' logs/app.log
 | `auth.login` | ok / ip / user / fails | 登录失败排查 |
 | `auth.locked` | ip / leftSeconds | 限速触发 |
 
-手机号、口令、token 在**落盘前**统一脱敏（`phone` → `***`）。`LOG_LEVEL` 调级别，`LOG_TO_FILE=0` 关闭文件只打控制台（CI 里就这么用）。
+### 自测（73 项）
+
+服务起好之后，另开一个终端：
+
+```bash
+node scripts/selftest.js
+```
+
+按真实调用顺序跑 11 组检查：静态页 → 菜单 → 推荐 → 一句话点餐 → 下单与库存 → 鉴权 → 状态流转 → 菜品维护 → 看板 → 登出 → 日志。
+最后会读 `logs/app.log` 核对九类事件是否落盘、手机号有没有脱敏、Key 有没有泄漏。
+全部通过退出码为 0，可直接接进 CI（仓库里的 `ci` 工作流就是这么用的）。
+
+手机号、口令、token 在**落盘前**统一脱敏（`phone` → `***`）。`LOG_LEVEL` 调级别，`LOG_TO_FILE=0` 关闭文件只打控制台（CI 里就这么用），`LOG_FILE` 指定日志文件路径。
 
 ### 持续集成
 

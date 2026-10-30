@@ -28,6 +28,8 @@
 | 03 | 订单状态驱动跟踪页 | `feat(server): 订单事件链`、`feat(preview): 跟踪页轮询真实状态` |
 | 04 | 小程序端与双端架构 | `feat(miniprogram): 微信小程序生产端` |
 | 05 | AI 减脂套餐推荐 | `feat(recommend)`、`feat(ui)` 两次提交 |
+| 06 | 运行日志与 CI | `feat(log)`、`ci:` 两次提交 |
+| 07 | 一句话点餐 | `feat(nl)`、`docs:` 两次提交 |
 
 ## 早于这套记录的部分
 

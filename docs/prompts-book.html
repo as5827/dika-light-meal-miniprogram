@@ -376,6 +376,41 @@ GET  /api/orders/:id    → 200 公开视图（手机号脱敏、含 events 事�
 <li>推荐日志里的 <code>picked</code> 只存菜品 id，没存当时的单价快照，菜单改价后回溯会有偏差；</li>
 <li>CI 只在 push/PR 时跑，没有定时巡检。</li>
 </ul>
+<h1>07 · 一句话点餐</h1>
+<ul>
+<li><b>日期</b>：2026-10-29</li>
+<li><b>对应提交</b>：<code>feat(nl): 自然语言点餐</code> → <code>docs: 文档与材料同步</code></li>
+<li><b>上游问题</b>：赛道的 10 个推荐方向里没有餐饮，作品容易被看成&quot;普通点餐系统&quot;；推荐模块又被定位成&quot;AI 只润色&quot;，AI 含量不足以支撑 20% 的「方法创新性与意图控制」</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<div class='quote'>你全部都做然后上传 GitHub —— 让这个项目从&quot;点餐系统 + 一个小推荐&quot;变成&quot;能听懂人话的点餐助手&quot;</div>
+<p>本来的交互是：用户翻类目、看菜品、自己算热量。改成：说一句话，系统把话拆成条件，再筛。</p>
+<h2>2. 拆解</h2>
+<table><tr><th>交付</th><th>验收</th></tr><tr><td>意图解析接口</td><td>一句话 → 结构化条件；模型失败时正则兜底</td></tr><tr><td>条件筛选</td><td>热量/蛋白/价格/素食/忌口/关键词，六个维度都能生效</td></tr><tr><td>筛不到时放宽</td><td>逐级去掉最软的条件，并把&quot;放宽了什么&quot;回传</td></tr><tr><td>双端入口</td><td>H5 菜单页顶部输入条；小程序同款</td></tr><tr><td>可复现</td><td>同一句话 + 同一菜单 = 同一结果，<code>temperature=0</code> 且筛选在本地</td></tr></table>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>谁来解析</td><td>让模型直接推荐菜品 / 模型只解析条件</td><td><b>只解析</b>。让模型点菜，它每次给你的组合都可能不同，评审问&quot;为什么是这三道&quot;就答不上；解析成条件后，筛选在本地跑，结果可复算</td></tr><tr><td>解析失败</td><td>直接报错 / 猜一个默认条件 / 正则兜底</td><td><b>正则兜底</b>。&quot;500千卡以内&quot;&quot;不要香菜&quot;&quot;预算40&quot;这些说法用正则就能覆盖大半，配置没到位或网络抖动时也不至于功能不可用</td></tr><tr><td>模型输出校验</td><td>信任模型返回 / 逐字段校验</td><td><b>逐字段校验</b>：数值做范围截断，数组限制长度与条数，非法值直接丢弃，不做猜测</td></tr><tr><td>筛不到怎么办</td><td>返回空 / 自动放宽 / 自动推荐别的</td><td><b>逐级放宽并回传</b>。关键词 → 忌口 → 蛋白 → 价格 → 热量 → 素食，每去掉一项就记一笔，前端明说&quot;已放宽 xxx&quot;，不假装命中</td></tr><tr><td>条件怎么展示</td><td>只给结果 / 结果 + 条件标签</td><td><b>标签化</b>。用户能一眼看出模型理解对不对（比如把&quot;高蛋白&quot;理解成没条件），这是意图对齐最便宜的验证方式</td></tr><tr><td>双端一致性</td><td>只做 H5</td><td><b>两端都做</b>。小程序是生产端，H5 是演示端，功能缺一个都说不通</td></tr></table>
+<h2>4. 接口</h2>
+<pre><code>POST /api/nl-order
+{ &quot;text&quot;: &quot;我想吃500千卡以内、高蛋白、不要香菜，预算40&quot; }
+
+→ 200
+{
+  &quot;source&quot;: &quot;llm&quot;,              // llm | llm+fallback | fallback | none
+  &quot;conditions&quot;: { &quot;maxCalorie&quot;: 500, &quot;maxPrice&quot;: 40, &quot;excludeKeywords&quot;: [&quot;香菜&quot;], ... },
+  &quot;tags&quot;: [&quot;热量 ≤ 500 kcal&quot;, &quot;价格 ≤ ¥40&quot;, &quot;不要香菜&quot;],
+  &quot;dropped&quot;: [],                // 被放宽掉的条件
+  &quot;dishes&quot;: [ { &quot;id&quot;: &quot;d13&quot;, &quot;name&quot;: &quot;香煎鸡胸配时蔬&quot;, &quot;calorie&quot;: 330, &quot;protein&quot;: 33, ... } ]
+}</code></pre>
+<h2>5. 验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>&quot;500 千卡以内、高蛋白、不要香菜，预算 40&quot;</td><td><code>source=llm</code>，条件解析为热量 ≤500 / 价格 ≤40 / 不要香菜，命中 8 道，前三是香煎鸡胸(330kcal/33g)、鸡胸藜麦沙拉(320/32)、清蒸龙利鱼(260/28)</td></tr><tr><td>&quot;来点素的，热量别超过 300&quot;</td><td>只筛选素食，命中 7 道，首位抹茶豆腐慕斯 190kcal</td></tr><tr><td>&quot;想吃鸡胸，蛋白 25 克以上&quot;</td><td>命中 3 道，蛋白全部 ≥25g</td></tr><tr><td>&quot;预算 30，来碗热的&quot;</td><td>关键词&quot;热&quot;无匹配 → 自动放宽，<code>dropped=[&quot;想吃热&quot;]</code>，返回价格 ≤30 的 8 道</td></tr><tr><td>未配置 Key 时的同一句话</td><td><code>source=fallback</code>，正则解析出热量/价格/忌口，结果与模型版接近</td></tr><tr><td>小程序端 <code>tsc --noEmit</code></td><td>0 error</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>不做多轮追问（&quot;再来点清淡的&quot;这类依赖上下文的说法，当前每次独立解析）；</li>
+<li>不做方言与错别字纠正，正则兜底只覆盖常见句式；</li>
+<li>模型解析结果没有做缓存，同一句话重复请求会重复计费；</li>
+<li>没接菜单之外的知识（比如&quot;适合增肌的&quot;这种需要营养学推理的说法，只能落到关键词）。</li>
+</ul>
 <div class='part'>第三部分 归档说明</div>
 <h1>prompts/ · 迭代记录</h1>
 <p>这里放每次功能迭代的过程记录。赛项要求「至少 3 个核心功能迭代的完整 Prompt 链」，所以每条都写清楚：当时提了什么要求、AI 给了什么方案、我怎么选、最后怎么验证的。</p>
@@ -397,7 +432,7 @@ GET  /api/orders/:id    → 200 公开视图（手机号脱敏、含 events 事�
 <li><b>没做的</b>：这次没覆盖的部分</li>
 </ol>
 <h2>索引</h2>
-<table><tr><th>编号</th><th>功能</th><th>对应提交</th></tr><tr><td>01</td><td>订单落库</td><td><code>feat(server): 订单落库 API</code> 起共四次</td></tr><tr><td>02</td><td>后台登录与鉴权</td><td><code>feat(server): 后台会话与接口鉴权</code>、<code>feat(admin): 登录遮罩</code></td></tr><tr><td>03</td><td>订单状态驱动跟踪页</td><td><code>feat(server): 订单事件链</code>、<code>feat(preview): 跟踪页轮询真实状态</code></td></tr><tr><td>04</td><td>小程序端与双端架构</td><td><code>feat(miniprogram): 微信小程序生产端</code></td></tr><tr><td>05</td><td>AI 减脂套餐推荐</td><td><code>feat(recommend)</code>、<code>feat(ui)</code> 两次提交</td></tr></table>
+<table><tr><th>编号</th><th>功能</th><th>对应提交</th></tr><tr><td>01</td><td>订单落库</td><td><code>feat(server): 订单落库 API</code> 起共四次</td></tr><tr><td>02</td><td>后台登录与鉴权</td><td><code>feat(server): 后台会话与接口鉴权</code>、<code>feat(admin): 登录遮罩</code></td></tr><tr><td>03</td><td>订单状态驱动跟踪页</td><td><code>feat(server): 订单事件链</code>、<code>feat(preview): 跟踪页轮询真实状态</code></td></tr><tr><td>04</td><td>小程序端与双端架构</td><td><code>feat(miniprogram): 微信小程序生产端</code></td></tr><tr><td>05</td><td>AI 减脂套餐推荐</td><td><code>feat(recommend)</code>、<code>feat(ui)</code> 两次提交</td></tr><tr><td>06</td><td>运行日志与 CI</td><td><code>feat(log)</code>、<code>ci:</code> 两次提交</td></tr><tr><td>07</td><td>一句话点餐</td><td><code>feat(nl)</code>、<code>docs:</code> 两次提交</td></tr></table>
 <h2>早于这套记录的部分</h2>
 <p>仓库最早的 6 次提交是存量代码按模块导入，那时还没有这套记录，所以没有对应条目，也不补写。</p>
 <h2>对话快照（snapshots/）</h2>

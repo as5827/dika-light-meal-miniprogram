@@ -15,7 +15,8 @@ const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 };
 const MIN_LEVEL = process.env.LOG_LEVEL || 'info';
 const TO_FILE = process.env.LOG_TO_FILE !== '0';
 const LOG_DIR = process.env.LOG_DIR || path.join(__dirname, '..', 'logs');
-const LOG_FILE = path.join(LOG_DIR, 'app.log');
+const LOG_FILE = process.env.LOG_FILE || path.join(LOG_DIR, 'app.log');
+const LOG_PATH_DIR = path.dirname(LOG_FILE);
 const MAX_BYTES = Number(process.env.LOG_MAX_BYTES || 5 * 1024 * 1024);
 
 const MASK_KEY = /^(phone|mobile|password|passwd|token|authorization|apikey|api_key|secret|llm_api_key)$/i;
@@ -27,7 +28,7 @@ let bytes = 0;
 function ensureFile() {
   if (ready || !TO_FILE) return;
   try {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
+    fs.mkdirSync(LOG_PATH_DIR, { recursive: true });
     if (fs.existsSync(LOG_FILE)) bytes = fs.statSync(LOG_FILE).size;
     ready = true;
   } catch (e) {

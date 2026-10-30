@@ -254,6 +254,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url === '/api/logout') {
     const token = parseCookies(req)[SESSION_COOKIE];
     if (token) sessions.delete(token);
+    log.info('auth.logout', { ip: clientIp, hadSession: Boolean(token) });
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
@@ -402,6 +403,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     const result = intent.searchWithLoose(menu, conditions, 8);
+    if (source === 'none') {
+      log.warn('intent.empty', { text });
+    }
     const dishes = result.dishes;
     const tags = intent.explain(conditions);
 
@@ -497,6 +501,12 @@ const server = http.createServer(async (req, res) => {
         dish.desc = payload.desc;
       }
       writeMenu(menu);
+      log.info('dish.update', {
+        id: dish.id,
+        fields: Object.keys(payload).filter((k) => ['price', 'stock', 'calorie', 'name', 'image'].includes(k)),
+        price: dish.price,
+        stock: dish.stock
+      });
       sendJson(res, 200, { code: 0, data: dish });
     } catch (e) {
       sendJson(res, 500, { code: 500, message: '保存失败' });

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const recommender = require('./recommender');
+const intent = require('./intent');
 const log = require('./logger');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -357,6 +358,65 @@ const server = http.createServer(async (req, res) => {
     }
 
     sendJson(res, 200, { code: 0, data: plan });
+    return;
+  }
+
+  // 一句话点餐：自然语言 → 结构化条件 → 菜单筛选
+  if (req.method === 'POST' && url.startsWith('/api/nl-order')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 8 * 1024));
+    } catch (e) {
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
+      return;
+    }
+
+    const text = asStr(payload.text, 200);
+    if (!text) {
+      sendJson(res, 400, { code: 400, message: '请说一句话，例如「500 千卡以内、高蛋白、不要香菜」' });
+      return;
+    }
+
+    let menu;
+    try {
+      menu = readMenu();
+    } catch (e) {
+      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      return;
+    }
+
+    const startedAt = Date.now();
+    const llm = await intent.parseWithLLM(text, process.env);
+    let conditions = llm;
+    let source = llm ? 'llm' : 'none';
+
+    if (!llm || intent.isEmpty(llm)) {
+      const fb = intent.fallbackParse(text);
+      if (!intent.isEmpty(fb)) {
+        conditions = fb;
+        source = llm ? 'llm+fallback' : 'fallback';
+      } else if (!llm) {
+        conditions = Object.assign({}, intent.EMPTY, { excludeKeywords: [], keywords: [] });
+      }
+    }
+
+    const result = intent.searchWithLoose(menu, conditions, 8);
+    const dishes = result.dishes;
+    const tags = intent.explain(conditions);
+
+    log.info('intent.parse', {
+      source,
+      text,
+      conditions,
+      matched: dishes.length,
+      dropped: result.dropped,
+      ms: Date.now() - startedAt
+    });
+
+    sendJson(res, 200, {
+      code: 0,
+      data: { source, conditions, tags, dishes, dropped: result.dropped }
+    });
     return;
   }
 

@@ -770,7 +770,46 @@
   .plan-entry-sub { font-size: 11px; color: #6B7280; margin-top: 2px; }
   .plan-entry-arrow { color: #22A06B; font-size: 20px; }
 
+  /* ========== 一句话点餐 ========== */
+  .nl-bar { display: flex; gap: 8px; margin: 10px 14px 0; }
+  .nl-input {
+    flex: 1; min-width: 0; border: 1px solid #E5E7EB; border-radius: 999px;
+    padding: 10px 14px; font-size: 13px; font-family: inherit; outline: none;
+  }
+  .nl-input:focus { border-color: #22A06B; }
+  .nl-btn {
+    border: none; background: #14532D; color: #fff; border-radius: 999px;
+    padding: 0 16px; font-size: 13px; font-family: inherit; cursor: pointer;
+  }
+  .nl-btn:disabled { background: #6B7280; }
+  .nl-result {
+    margin: 10px 14px 0; border: 1px solid #CBE7D8; background: #F6FBF8;
+    border-radius: 14px; padding: 12px 14px;
+  }
+  .nl-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: #166534; font-weight: 600;
+  }
+  .nl-close { cursor: pointer; color: #9CA3AF; font-weight: 400; }
+  .nl-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .nl-tag {
+    font-size: 11px; background: #fff; border: 1px solid #CBE7D8;
+    color: #166534; border-radius: 999px; padding: 3px 9px;
+  }
+  .nl-note { font-size: 11px; color: #B45309; margin: 6px 0; }
+  .nl-item {
+    display: flex; align-items: center; gap: 8px; padding: 9px 0;
+    border-top: 1px dashed #D7EBE0; font-size: 13px;
+  }
+  .nl-item-name { flex: 1; font-weight: 600; }
+  .nl-item-meta { font-size: 11px; color: #6B7280; }
+  .nl-add {
+    width: 26px; height: 26px; border-radius: 50%; background: #22A06B; color: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+  }
+
   /* ========== AI 定制套餐页 ========== */
+
   .plan-header {
     background: var(--brand-deep);
     color: #fff;
@@ -1039,7 +1078,14 @@
       <div class="plan-entry-arrow">›</div>
     </div>
 
+    <div class="nl-bar">
+      <input id="nlInput" class="nl-input" placeholder="一句话点餐：500 卡以内、高蛋白、不要香菜" />
+      <button class="nl-btn" id="nlBtn">AI 解析</button>
+    </div>
+    <div class="nl-result" id="nlResult" style="display:none"></div>
+
     <div class="notice">
+
       <span>今日特惠：满 ¥58 减配送费，满 ¥88 送希腊酸奶杯</span>
     </div>
 
@@ -1867,7 +1913,70 @@ document.getElementById('segGoal').addEventListener('click', (e) => {
   el.parentNode.querySelectorAll('.seg-item').forEach((x) => x.classList.toggle('active', x === el));
 });
 
+/* ========== 一句话点餐 ========== */
+let nlDishes = [];
+
+function renderNL(data) {
+  nlDishes = data.dishes || [];
+  const box = document.getElementById('nlResult');
+  const chips = (data.tags || []).map((t) => `<span class="nl-tag">${esc(t)}</span>`).join('');
+  const note = (data.dropped && data.dropped.length)
+    ? `<div class="nl-note">没有完全匹配，已放宽：${esc(data.dropped.join('、'))}</div>`
+    : '';
+  const items = nlDishes.map((d, i) => `
+    <div class="nl-item">
+      <div class="nl-item-name">${esc(d.name)}</div>
+      <div class="nl-item-meta">${d.calorie} kcal · 蛋白 ${d.protein} g</div>
+      <div class="nl-add" data-idx="${i}">＋</div>
+    </div>`).join('');
+  const srcLabel = data.source === 'llm' ? 'AI 解析' : '规则解析（未启用大模型）';
+  box.style.display = '';
+  box.innerHTML = `
+    <div class="nl-head"><span>${srcLabel} · 命中 ${nlDishes.length} 道</span><span class="nl-close" id="nlClose">关闭</span></div>
+    ${chips ? `<div class="nl-tags">${chips}</div>` : ''}
+    ${note}
+    ${items || '<div class="nl-note">没有符合的菜品，换个说法试试</div>'}`;
+  document.getElementById('nlClose').addEventListener('click', () => { box.style.display = 'none'; });
+  box.querySelectorAll('.nl-add').forEach((el) => {
+    el.addEventListener('click', () => {
+      const d = nlDishes[Number(el.dataset.idx)];
+      addToCart({ id: d.id, name: d.name, price: d.price, calorie: d.calorie }, [], 1, el);
+    });
+  });
+}
+
+async function nlOrder() {
+  const input = document.getElementById('nlInput');
+  const btn = document.getElementById('nlBtn');
+  const text = input.value.trim();
+  if (!text) { showToast('先说一句想吃什么'); return; }
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '理解中…';
+  try {
+    const res = await fetch('/api/nl-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '解析失败');
+    renderNL(json.data);
+  } catch (e) {
+    showToast(e.message || '解析失败');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'AI 解析';
+  }
+}
+
+document.getElementById('nlBtn').addEventListener('click', () => { void nlOrder(); });
+document.getElementById('nlInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') void nlOrder();
+});
+
 /* ========== 提交订单 & 订单跟踪 ========== */
+
 const TRACK_STEPS = ['已提交', '已接单', '制作中', '已完成'];
 const TRACK_STEP_INDEX = { pending: 1, accepted: 2, done: 3, canceled: -1 };
 const TRACK_STATUS_TEXT = {

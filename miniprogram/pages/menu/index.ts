@@ -1,4 +1,4 @@
-import { api, Dish, MenuData, SpecOption } from '../../services/api';
+import { api, Dish, MenuData, NlDish, SpecOption } from '../../services/api';
 import { cartStore } from '../../store/cart';
 import { fenToYuan } from '../../utils/format';
 
@@ -39,6 +39,13 @@ let skuSelected: Record<string, string> = {};
 
 Page({
   data: {
+    nlText: '',
+    nlLoading: false,
+    nlVisible: false,
+    nlSource: '',
+    nlTags: [] as string[],
+    nlDroppedText: '',
+    nlDishes: [] as NlDish[],
     categories: [] as { id: string; name: string }[],
     groups: [] as GroupVM[],
     activeCat: '',
@@ -241,5 +248,58 @@ Page({
 
   goPlan() {
     wx.navigateTo({ url: '/pages/plan/index' });
+  },
+
+  /* ---------- 一句话点餐 ---------- */
+
+  onNlInput(e: WechatMiniprogram.Input) {
+    this.setData({ nlText: e.detail.value });
+  },
+
+  async onNlSubmit() {
+    const text = (this.data.nlText || '').trim();
+    if (!text) {
+      wx.showToast({ title: '先说一句想吃什么', icon: 'none' });
+      return;
+    }
+    if (this.data.nlLoading) return;
+    this.setData({ nlLoading: true });
+    try {
+      const res = await api.nlOrder(text);
+      this.setData({
+        nlLoading: false,
+        nlVisible: true,
+        nlSource: res.source,
+        nlTags: res.tags || [],
+        nlDroppedText: (res.dropped || []).join('、'),
+        nlDishes: res.dishes || []
+      });
+    } catch (err) {
+      this.setData({ nlLoading: false });
+      wx.showToast({ title: (err as Error).message || '解析失败', icon: 'none', duration: 2500 });
+    }
+  },
+
+  onNlClose() {
+    this.setData({ nlVisible: false });
+  },
+
+  onNlAdd(e: WechatMiniprogram.TouchEvent) {
+    const id = e.currentTarget.dataset.id as string;
+    const dish = this.data.nlDishes.find((d) => d.id === id);
+    if (!dish) return;
+    cartStore.add(
+      {
+        dishId: dish.id,
+        name: dish.name,
+        specDesc: '',
+        unitPrice: dish.price,
+        qty: 1,
+        calorie: dish.calorie
+      },
+      dish.id + '::'
+    );
+    this.syncCart();
+    wx.vibrateShort({ type: 'light' });
   }
 });

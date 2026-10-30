@@ -102,6 +102,22 @@ export interface OrderDetail {
 
 /* ---------- 推荐引擎 ---------- */
 
+export interface NlDish {
+  id: string;
+  name: string;
+  calorie: number;
+  protein: number;
+  price: number;
+  emoji: string;
+}
+
+export interface NlResult {
+  source: string;
+  tags: string[];
+  dropped: string[];
+  dishes: NlDish[];
+}
+
 export interface RecommendOption {
   value: string;
   label: string;
@@ -186,6 +202,8 @@ export const api = {
 
   order: (id: string): Promise<OrderDetail> =>
     request<OrderDetail>('GET', '/api/orders/' + encodeURIComponent(id)),
+
+  nlOrder: (text: string): Promise<NlResult> => request<NlResult>('POST', '/api/nl-order', { text }),
 
   recommendOptions: (): Promise<RecommendOptions> =>
     request<RecommendOptions>('GET', '/api/recommend/options'),

@@ -24,6 +24,35 @@
     <text class="plan-arrow">›</text>
   </view>
 
+
+  <view class="nl-bar">
+    <input
+      class="nl-input"
+      value="{{nlText}}"
+      placeholder="一句话点餐：500 卡以内、高蛋白"
+      confirm-type="search"
+      bindinput="onNlInput"
+      bindconfirm="onNlSubmit"
+    />
+    <view class="nl-btn" bindtap="onNlSubmit">{{nlLoading ? '理解中' : 'AI 解析'}}</view>
+  </view>
+
+  <view wx:if="{{nlVisible}}" class="nl-result">
+    <view class="nl-head">
+      <text>{{nlSource === 'llm' ? 'AI 解析' : '规则解析'}} · 命中 {{nlDishes.length}} 道</text>
+      <text class="nl-close" bindtap="onNlClose">关闭</text>
+    </view>
+    <view wx:if="{{nlTags.length}}" class="nl-tags">
+      <text wx:for="{{nlTags}}" wx:key="*this" class="nl-tag">{{item}}</text>
+    </view>
+    <view wx:if="{{nlDroppedText}}" class="nl-note">没有完全匹配，已放宽：{{nlDroppedText}}</view>
+    <view wx:for="{{nlDishes}}" wx:key="id" class="nl-item">
+      <text class="nl-name">{{item.name}}</text>
+      <text class="nl-meta">{{item.calorie}} kcal · 蛋白 {{item.protein}} g</text>
+      <view class="nl-add" data-id="{{item.id}}" bindtap="onNlAdd">＋</view>
+    </view>
+  </view>
+
   <view wx:if="{{loading}}" class="state">菜单加载中…</view>
 
   <view wx:elif="{{error}}" class="state">

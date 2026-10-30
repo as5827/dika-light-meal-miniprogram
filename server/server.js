@@ -4,6 +4,7 @@ const path = require('path');
 const crypto = require('crypto');
 const recommender = require('./recommender');
 const intent = require('./intent');
+const stats = require('./stats');
 const log = require('./logger');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -417,6 +418,45 @@ const server = http.createServer(async (req, res) => {
       code: 0,
       data: { source, conditions, tags, dishes, dropped: result.dropped }
     });
+    return;
+  }
+
+  // 经营看板：今日订单聚合（后台可见）
+  if (req.method === 'GET' && url.startsWith('/api/stats') && !url.startsWith('/api/stats/insight')) {
+    if (!requireAuth(req, res)) return;
+    let menu;
+    try {
+      menu = readMenu();
+    } catch (e) {
+      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      return;
+    }
+    const data = stats.compute(readOrders(), menu);
+    log.info('stats.read', { orders: data.orders.total, revenue: data.revenue });
+    sendJson(res, 200, { code: 0, data });
+    return;
+  }
+
+  // 经营解读：模型把数字讲成人话，失败退回模板
+  if (req.method === 'POST' && url.startsWith('/api/stats/insight')) {
+    if (!requireAuth(req, res)) return;
+    let menu;
+    try {
+      menu = readMenu();
+    } catch (e) {
+      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      return;
+    }
+    const data = stats.compute(readOrders(), menu);
+    const startedAt = Date.now();
+    const aiText = await stats.insight(process.env, data);
+    const text = aiText || stats.fallbackInsight(data);
+    log.info('stats.insight', {
+      source: aiText ? 'llm' : 'template',
+      orders: data.orders.total,
+      ms: Date.now() - startedAt
+    });
+    sendJson(res, 200, { code: 0, data: { text, source: aiText ? 'llm' : 'template' } });
     return;
   }
 

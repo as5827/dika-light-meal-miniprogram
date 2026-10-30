@@ -411,6 +411,35 @@ GET  /api/orders/:id    → 200 公开视图（手机号脱敏、含 events 事�
 <li>模型解析结果没有做缓存，同一句话重复请求会重复计费；</li>
 <li>没接菜单之外的知识（比如&quot;适合增肌的&quot;这种需要营养学推理的说法，只能落到关键词）。</li>
 </ul>
+<h1>08 · 经营看板</h1>
+<ul>
+<li><b>日期</b>：2026-10-29</li>
+<li><b>对应提交</b>：<code>feat(stats): 经营看板</code>、<code>docs: 看板章节与材料同步</code></li>
+<li><b>上游问题</b>：赛道推荐方向 6 的描述是「基于标准数据格式的智能分析系统 + 动态图表大盘 + 大模型对长尾数据做趣味解读」。原项目只有商品与订单管理，没有&quot;看数据&quot;这一面，对位是虚的。</li>
+</ul>
+<hr/>
+<h2>1. 需求</h2>
+<p>商家想知道今天卖得怎么样：几单、多少钱、什么卖得好、什么时候忙、顾客点的热量高不高。原来这些只能一条条翻订单。</p>
+<h2>2. 拆解</h2>
+<table><tr><th>交付</th><th>验收</th></tr><tr><td>聚合接口</td><td>今日订单数（含待接/完成/取消）、营业额、客单价、24 小时分布、热销 Top5、客单热量分桶、库存告急</td></tr><tr><td>看板界面</td><td>后台一个区块，指标卡 + 时段柱状 + 热销条 + 热量分布条</td></tr><tr><td>AI 解读</td><td>一键让模型读今天的数字，给 3 条建议；没有 Key 时用模板</td></tr><tr><td>数字可信</td><td>模型只能复述给定的数字，不新增、不推测</td></tr></table>
+<h2>3. 取舍</h2>
+<table><tr><th>决策点</th><th>备选</th><th>选择与理由</th></tr><tr><td>图表库</td><td>引 ECharts / 手写 canvas / 纯 CSS 条</td><td><b>纯 CSS 条</b>。项目零依赖是卖点，为几张图引一个 300KB 的库不值；这里的数据量级也不需要交互图表</td></tr><tr><td>统计口径</td><td>全部订单 / 排除已取消</td><td><b>排除已取消</b>。取消单不该进营业额与客单价，否则数据虚高</td></tr><tr><td>热量统计</td><td>按单品累加 / 按订单合计后分桶</td><td><b>按订单合计分桶</b>。顾客关心的是&quot;这一餐多少卡&quot;，不是单个菜</td></tr><tr><td>AI 角色</td><td>让模型自己算 / 数字算好只让它解读</td><td><b>只解读</b>。模型不会数数，让它算必然出错；把结构化数字喂给它，只要求写建议</td></tr><tr><td>无 Key 时</td><td>报错 / 隐藏入口 / 模板文案</td><td><b>模板文案</b>。模板用同一份数字拼句子，逻辑与模型版一致，只是不好听</td></tr></table>
+<h2>4. 接口</h2>
+<pre><code>GET  /api/stats            （需登录）
+POST /api/stats/insight    （需登录）</code></pre>
+<p><code>GET /api/stats</code> 返回今日聚合：<code>orders{total,active,done,pending,canceled}</code>、<code>revenue</code>、<code>avgTicket</code>、</p>
+<p><code>hours[24]</code>、<code>topDishes[5]</code>、<code>calorie{avg,buckets[4]}</code>、<code>inventory{low,soldOut}</code>、<code>peakHour</code>。</p>
+<p><code>POST /api/stats/insight</code> 返回 <code>{ text, source }</code>，<code>source</code> 为 <code>llm</code> 或 <code>template</code>。</p>
+<h2>5. 验证</h2>
+<p>用 7 笔测试订单（含 1 笔库存不足被 409 拒绝）跑通：</p>
+<table><tr><th>检查</th><th>结果</th></tr><tr><td>聚合准确性</td><td>6 单、营业额 ¥418、客单价 ¥70、峰值 19 点，与手工核算一致</td></tr><tr><td>热销排序</td><td>鸡胸肉藜麦沙拉×4、烟熏三文鱼沙拉×3、照烧鸡腿糙米碗×2…</td></tr><tr><td>热量分桶</td><td>300–500 两单、&gt;700 四单，与订单热量对得上</td></tr><tr><td>AI 解读</td><td><code>source=llm</code>，输出 3 条建议，数字全部来自接口（6 单、售罄 4 项、19 点、¥70）</td></tr><tr><td>未配 Key</td><td><code>source=template</code>，输出同结构的一句话摘要</td></tr><tr><td>权限</td><td>未登录访问 <code>/api/stats</code> 返回 401</td></tr></table>
+<h2>6. 没做的</h2>
+<ul>
+<li>没做多日趋势与同比（需要更长时间的数据积累，两天造不出来）；</li>
+<li>没做导出 CSV / Excel；</li>
+<li>图表固定为&quot;今日 + 8–22 点&quot;，没有做时间范围切换；</li>
+<li>模型解读没有做缓存，同一份数据重复点会重复计费。</li>
+</ul>
 <div class='part'>第三部分 归档说明</div>
 <h1>prompts/ · 迭代记录</h1>
 <p>这里放每次功能迭代的过程记录。赛项要求「至少 3 个核心功能迭代的完整 Prompt 链」，所以每条都写清楚：当时提了什么要求、AI 给了什么方案、我怎么选、最后怎么验证的。</p>

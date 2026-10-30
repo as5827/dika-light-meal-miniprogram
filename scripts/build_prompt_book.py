@@ -26,6 +26,7 @@ FILES = [
         "prompts/05-AI减脂套餐推荐.md",
         "prompts/06-运行日志与CI.md",
         "prompts/07-一句话点餐.md",
+        "prompts/08-经营看板.md",
     ]),
     ("第三部分 归档说明", [
         "prompts/README.md",

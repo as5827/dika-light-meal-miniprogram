@@ -44,7 +44,7 @@
       "protein": 32,
       "image": "",
       "emoji": "🥗",
-      "stock": 20,
+      "stock": 16,
       "tags": [
         "高蛋白"
       ]
@@ -59,7 +59,7 @@
       "protein": 26,
       "image": "",
       "emoji": "🐟",
-      "stock": 12,
+      "stock": 9,
       "tags": [
         "高蛋白"
       ]
@@ -74,7 +74,7 @@
       "protein": 24,
       "image": "",
       "emoji": "🦐",
-      "stock": 15,
+      "stock": 14,
       "tags": [
         "高蛋白"
       ]
@@ -165,7 +165,7 @@
       "protein": 32,
       "image": "",
       "emoji": "🍱",
-      "stock": 22,
+      "stock": 20,
       "tags": [
         "高蛋白"
       ]
@@ -270,7 +270,7 @@
       "protein": 33,
       "image": "",
       "emoji": "🍗",
-      "stock": 16,
+      "stock": 15,
       "tags": [
         "高蛋白"
       ]

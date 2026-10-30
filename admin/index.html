@@ -156,6 +156,34 @@
   .state { text-align: center; padding: 80px 20px; color: var(--ink-3); font-size: 14px; }
   .state button { margin-top: 14px; }
 
+  /* ===== 经营看板 ===== */
+  .board { display: flex; flex-direction: column; gap: 10px; }
+  .board-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .metric { background: #fff; border: 1px solid #E7EBEF; border-radius: 10px; padding: 10px 12px; }
+  .metric .k { font-size: 11px; color: #6B7280; }
+  .metric .v { font-size: 20px; font-weight: 700; margin-top: 2px; }
+  .board-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+  .board-card { background: #fff; border: 1px solid #E7EBEF; border-radius: 10px; padding: 12px; }
+  .board-title { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 96px; }
+  .bar { flex: 1; background: #D1FAE5; border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
+  .bar.on { background: #22A06B; }
+  .bar span { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #9CA3AF; }
+  .rank { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 12px; }
+  .rank .name { flex: 1; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .track { display: inline-block; vertical-align: middle; width: 84px; height: 6px; background: #F3F4F6; border-radius: 3px; overflow: hidden; }
+  .rank .fill { display: block; height: 100%; background: #22A06B; }
+  .rank .num { width: 26px; text-align: right; color: #6B7280; }
+  .insight {
+    background: #F6FBF8; border: 1px solid #CBE7D8; border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; line-height: 1.7; color: #14532D; white-space: pre-wrap;
+  }
+  .insight .tag { font-size: 11px; color: #6B7280; display: block; margin-bottom: 4px; }
+  @media (max-width: 720px) {
+    .board-metrics { grid-template-columns: repeat(2, 1fr); }
+    .board-row { grid-template-columns: 1fr; }
+  }
+
   /* ===== 登录遮罩 ===== */
   .login-mask {
     position: fixed; inset: 0; background: rgba(22,58,42,.55);
@@ -225,6 +253,18 @@
 
 <div class="wrap">
   <div class="stat-row" id="statRow"></div>
+
+  <div class="section-head" style="margin-top:18px">
+    <span>经营看板</span>
+    <span>
+      <button class="btn btn-ghost" id="boardRefresh">刷新</button>
+      <button class="btn btn-primary" id="boardInsight">AI 解读</button>
+    </span>
+  </div>
+  <div class="board" id="board">
+    <div class="state">加载中…</div>
+  </div>
+
 
   <div class="toolbar">
     <input class="search" id="search" placeholder="搜索菜品名称">
@@ -528,6 +568,7 @@ async function doLogin() {
     toast('已登录：' + json.data.user);
     loadMenu();
     loadOrders();
+    loadBoard();
   } catch (err) {
     document.getElementById('loginErr').textContent = err.message || '登录失败';
   } finally {
@@ -548,7 +589,95 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 
 document.getElementById('refreshBtn').addEventListener('click', loadMenu);
 
+/* ===== 经营看板 ===== */
+let boardData = null;
+
+function boardEsc(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+function fmtMoney(fen) {
+  return '¥' + (fen / 100).toFixed(0);
+}
+
+function renderBoard(d) {
+  boardData = d;
+  const box = document.getElementById('board');
+  const maxHour = Math.max(1, Math.max.apply(null, d.hours.map((h) => h.count)));
+  const bars = d.hours
+    .filter((h) => h.h >= 8 && h.h <= 22)
+    .map((h) => '<div class="bar ' + (h.count ? 'on' : '') + '" style="height:' +
+      Math.round((h.count / maxHour) * 100) + '%" title="' + h.h + ':00 ' + h.count + ' 单"><span>' + h.h + '</span></div>')
+    .join('');
+
+  const maxQty = Math.max(1, Math.max.apply(null, d.topDishes.map((x) => x.qty).concat([1])));
+  const ranks = d.topDishes.length
+    ? d.topDishes.map((x) =>
+        '<div class="rank"><span class="name">' + boardEsc(x.name) + '</span>' +
+        '<span class="track"><span class="fill" style="width:' + Math.round((x.qty / maxQty) * 100) + '%"></span></span>' +
+        '<span class="num">' + x.qty + '</span></div>').join('')
+    : '<div class="state">今天还没有订单</div>';
+
+  const maxCal = Math.max(1, Math.max.apply(null, d.calorie.buckets.map((b) => b.count).concat([1])));
+  const calRows = d.calorie.buckets.map((b) =>
+    '<div class="rank"><span class="name">' + b.label + ' kcal</span>' +
+    '<span class="track"><span class="fill" style="width:' + Math.round((b.count / maxCal) * 100) + '%"></span></span>' +
+    '<span class="num">' + b.count + '</span></div>').join('');
+
+  box.innerHTML =
+    '<div class="board-metrics">' +
+      '<div class="metric"><div class="k">今日订单</div><div class="v">' + d.orders.total + '</div></div>' +
+      '<div class="metric"><div class="k">营业额</div><div class="v">' + fmtMoney(d.revenue) + '</div></div>' +
+      '<div class="metric"><div class="k">客单价</div><div class="v">' + fmtMoney(d.avgTicket) + '</div></div>' +
+      '<div class="metric"><div class="k">完成 / 待接</div><div class="v">' + d.orders.done + ' / ' + d.orders.pending + '</div></div>' +
+    '</div>' +
+    '<div class="board-row">' +
+      '<div class="board-card"><div class="board-title">下单时段（8–22 点）</div><div class="bars">' + bars + '</div></div>' +
+      '<div class="board-card"><div class="board-title">热销 Top 5</div>' + ranks + '</div>' +
+    '</div>' +
+    '<div class="board-card"><div class="board-title">客单热量分布</div>' + calRows + '</div>' +
+    '<div class="insight" id="boardInsightText"><span class="tag">经营解读</span>点右上角「AI 解读」，让模型读今天的数字。</div>';
+}
+
+async function loadBoard() {
+  try {
+    const res = await fetch('/api/stats', { credentials: 'same-origin', cache: 'no-store' });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '加载失败');
+    renderBoard(json.data);
+  } catch (e) {
+    const box = document.getElementById('board');
+    if (box) box.innerHTML = '<div class="state">看板加载失败：' + boardEsc(e.message) + '</div>';
+  }
+}
+
+async function requestInsight(btn) {
+  const box = document.getElementById('boardInsightText');
+  if (!box) return;
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '解读中…';
+  try {
+    const res = await fetch('/api/stats/insight', { method: 'POST', credentials: 'same-origin' });
+    const json = await res.json();
+    if (!res.ok || json.code !== 0) throw new Error(json.message || '解读失败');
+    const tag = json.data.source === 'llm' ? '模型解读' : '模板解读（未启用大模型）';
+    box.innerHTML = '<span class="tag">' + tag + '</span>' + boardEsc(json.data.text);
+  } catch (e) {
+    box.innerHTML = '<span class="tag">解读失败</span>' + boardEsc(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+}
+
+document.getElementById('boardRefresh').addEventListener('click', function () { void loadBoard(); });
+document.getElementById('boardInsight').addEventListener('click', function (e) { void requestInsight(e.currentTarget); });
+
 /* ===== 订单管理 ===== */
+
 const STATUS_TEXT = { pending: '待接单', accepted: '制作中', done: '已完成', canceled: '已取消' };
 
 function fmtTime(iso) {
@@ -633,6 +762,7 @@ document.getElementById('refreshOrders').addEventListener('click', loadOrders);
   if (user) {
     loadMenu();
     loadOrders();
+    loadBoard();
   }
 })();
 </script>

@@ -107,12 +107,12 @@ ol.refs li { margin: 3pt 0; }
 </div>
 
 <div class="abstract">
-  <p><b>摘　要：</b>小微轻食门店普遍缺一套用得起的点餐工具：菜单改不动、估清靠嘴说、下单后进入信息黑箱。本文设计并实现了一套面向此类门店的双端点餐系统，由微信原生小程序（生产端）、H5 页面（演示端）、商家后台与零第三方依赖的 Node.js 后端组成，四者共用同一套 REST 接口，业务逻辑只实现一次。系统在点餐链路之外增加了一个个性化套餐推荐模块：以 Mifflin-St Jeor 公式估算基础代谢，结合活动系数与目标系数得到单餐热量与蛋白预算，再在菜单的组合空间中做带约束的搜索，输出可解释的推荐结果；大模型仅用于文案润色且默认关闭，避免模型输出污染计算结果。开发过程采用意图驱动的 AI 协作方式：由人给出约束与验收标准，AI 产出实现，人负责取舍、复核与纠偏，全部迭代留有可检索的记录。系统共 43 次提交，通过 GitHub Actions 的语法检查、类型检查与接口冒烟，可在 10 分钟内本地复现。</p>
+  <p><b>摘　要：</b>小微轻食门店普遍缺一套用得起的点餐工具：菜单改不动、估清靠嘴说、下单后进入信息黑箱。本文设计并实现了一套面向此类门店的双端点餐系统，由微信原生小程序（生产端）、H5 页面（演示端）、商家后台与零第三方依赖的 Node.js 后端组成，四者共用同一套 REST 接口，业务逻辑只实现一次。系统在点餐链路之外增加了一个个性化套餐推荐模块：以 Mifflin-St Jeor 公式估算基础代谢，结合活动系数与目标系数得到单餐热量与蛋白预算，再在菜单的组合空间中做带约束的搜索，输出可解释的推荐结果；大模型仅用于文案润色且默认关闭，避免模型输出污染计算结果。开发过程采用意图驱动的 AI 协作方式：由人给出约束与验收标准，AI 产出实现，人负责取舍、复核与纠偏，全部迭代留有可检索的记录。系统共 44 次提交，通过 GitHub Actions 的语法检查、类型检查与接口冒烟，可在 10 分钟内本地复现。</p>
   <div class="kw"><b>关键词：</b>轻食点餐；微信小程序；意图驱动开发；营养学模型；组合优化；可复现性</div>
 </div>
 
 <div class="abstract">
-  <p><b>Abstract: </b>Small light-meal stores usually cannot afford a full ordering platform: menus are hard to update, sold-out items are announced verbally, and customers lose visibility after placing an order. This paper presents a dual-front-end ordering system for such stores, consisting of a native WeChat Mini Program (production), an H5 page (demonstration), a merchant console, and a zero-dependency Node.js backend sharing one REST API. An additional module recommends personalized meal sets: resting energy expenditure is estimated with the Mifflin-St Jeor equation, activity and goal factors yield a per-meal calorie and protein budget, and a constrained search over menu combinations produces an explainable recommendation. A large language model is used only to polish the wording and is disabled by default, so generated text never contaminates computed values. The system is developed through intent-driven AI collaboration, with 43 commits, a passing CI pipeline, and a ten-minute reproduction path.</p>
+  <p><b>Abstract: </b>Small light-meal stores usually cannot afford a full ordering platform: menus are hard to update, sold-out items are announced verbally, and customers lose visibility after placing an order. This paper presents a dual-front-end ordering system for such stores, consisting of a native WeChat Mini Program (production), an H5 page (demonstration), a merchant console, and a zero-dependency Node.js backend sharing one REST API. An additional module recommends personalized meal sets: resting energy expenditure is estimated with the Mifflin-St Jeor equation, activity and goal factors yield a per-meal calorie and protein budget, and a constrained search over menu combinations produces an explainable recommendation. A large language model is used only to polish the wording and is disabled by default, so generated text never contaminates computed values. The system is developed through intent-driven AI collaboration, with 44 commits, a passing CI pipeline, and a ten-minute reproduction path.</p>
   <div class="kw"><b>Keywords: </b>light meal ordering; WeChat Mini Program; intent-driven development; nutrition model; combinatorial search; reproducibility</div>
 </div>
 <h1 style="page-break-before: always;">目　录</h1>
@@ -399,7 +399,7 @@ user:   今日数据：{"订单":{"total":6,…},"营业额_元":418,"热销":["
 <p class="lead">这一章面对四个问题：代码是不是一次性堆出来的、协作过程可不可查、换台机器能不能跑、凭据在哪。</p>
 
 <h2>5.1 提交策略</h2>
-<p>仓库当前 <b>43 次提交</b>（含小程序端、推荐引擎、日志与 CI、对话快照与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
+<p>仓库当前 <b>44 次提交</b>（含小程序端、推荐引擎、日志与 CI、对话快照与本文档的提交），按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，语义化前缀区分类型（<code>feat</code> / <code>docs</code> / <code>chore</code>），提交信息正文写明改动点与取舍：</p>
 <pre><code>85dc4f7 docs: 更新 README 与截图（后台鉴权、状态驱动跟踪页）
 1c7b900 docs(prompts): 补充 02 鉴权与 03 状态驱动跟踪的迭代记录
 0457862 feat(preview): 跟踪页轮询真实订单状态
@@ -637,7 +637,7 @@ const asStr = (v, max) =&gt; (typeof v === 'string' ? v.trim().slice(0, max) : '
 <table>
   <tr><th style="width:22%">要求</th><th style="width:44%">我们的材料</th><th>状态</th></tr>
   <tr><td>仓库公开可访问</td><td><code>as5827/dika-light-meal-miniprogram</code>，<code>private: false</code>，匿名可读</td><td>已完成</td></tr>
-  <tr><td>细粒度提交历史</td><td>43 次提交，按功能模块与对话拆分，<code>feat</code> / <code>docs</code> / <code>ci</code> 前缀区分</td><td>已完成</td></tr>
+  <tr><td>细粒度提交历史</td><td>44 次提交，按功能模块与对话拆分，<code>feat</code> / <code>docs</code> / <code>ci</code> 前缀区分</td><td>已完成</td></tr>
   <tr><td>Prompt 历史快照（≥3 个核心迭代的完整链路）</td><td><code>prompts/snapshots/</code> 三份纪要：建仓排障（4 个卡点）、推荐调参（3 轮）、大模型数字约束（4 步）；另 <code>prompts/01–06</code> 六份迭代记录</td><td>已完成</td></tr>
   <tr><td>README 10 分钟复现指南</td><td>第五节：克隆 → 启动 → 点单 → 接单，逐条命令与预期；环境变量模板 <code>.env.example</code></td><td>已完成</td></tr>
   <tr><td>演示视频 5–8 分钟，含 ≥2 分钟 AI 协同复现</td><td><code>docs/video-script.md</code> 分镜（6:50，其中 2:30 为协同复现段）</td><td>待录制</td></tr>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 协同：提示词与代码</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", sans-serif;
+    background: #0F1A14; color: #E6F4EC;
+    padding: 48px 64px; height: 100vh; overflow: hidden;
+  }
+  .kicker { font-size: 20px; letter-spacing: 4px; color: #7FD1A8; margin-bottom: 18px; }
+  h1 { font-size: 40px; margin-bottom: 10px; }
+  .sub { font-size: 20px; color: #9DBFAE; margin-bottom: 34px; }
+  .card {
+    background: #14261C; border: 1px solid #2C4A38; border-radius: 12px;
+    padding: 22px 26px; margin-bottom: 22px;
+  }
+  .card h2 { font-size: 22px; color: #A7E3C4; margin-bottom: 14px; }
+  pre {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 19px; line-height: 1.65; white-space: pre-wrap; color: #D8EFE2;
+  }
+  .hi { color: #FFD479; }
+  .dim { color: #6C8C7B; }
+  .foot { position: fixed; bottom: 26px; left: 64px; font-size: 17px; color: #6C8C7B; }
+</style>
+</head>
+<body>
+  <div class="kicker">意图控制 · 第 1 步</div>
+  <h1>把模型锁在一个结构里</h1>
+  <div class="sub">server/intent.js —— 系统提示（节选）</div>
+
+  <div class="card">
+    <h2>SYSTEM_PROMPT</h2>
+    <pre>你是点餐意图解析器。把用户的一句话转换成严格的 JSON，不要输出任何解释。
+字段与含义：
+{"maxCalorie": 数字或null,  <span class="dim">// 热量上限，单位千卡</span>
+ "minProtein": 数字或null,  <span class="dim">// 蛋白质下限，单位克</span>
+ "maxPrice": 数字或null,    <span class="dim">// 价格上限，单位元</span>
+ "vegetarian": true或false,
+ "excludeKeywords": [字符串], <span class="dim">// 忌口</span>
+ "keywords": [字符串]}
+<span class="hi">用户没提到的字段一律填 null / false / []。宁可留空，不要猜。</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>调用参数 —— 让同一个输入只有一个答案</h2>
+    <pre>temperature: <span class="hi">0</span>          <span class="dim">// 不要发挥</span>
+response_format: { type: "json_object" }
+AbortSignal.timeout(12000)   <span class="dim">// 12 秒没回就放弃，走正则兜底</span></pre>
+  </div>
+
+  <div class="foot">模型只负责理解，筛选与计算全部在本地完成 —— 同一句话、同一份菜单，结果可复算</div>
+</body>
+</html>

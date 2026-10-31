@@ -24,4 +24,4 @@ desktop.ini
 # 小程序端
 miniprogram/node_modules/
 miniprogram/project.private.config.json
-
+docs/video/*.mp4

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>AI 协同：一次真实的修复</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", sans-serif; background: #14100E; color: #F5EBE3; padding: 46px 60px; height: 100vh; overflow: hidden; }
+  .kicker { font-size: 20px; letter-spacing: 4px; color: #F0B27A; margin-bottom: 16px; }
+  h1 { font-size: 38px; margin-bottom: 8px; }
+  .sub { font-size: 19px; color: #C8A98F; margin-bottom: 28px; }
+  .card { background: #1F1915; border: 1px solid #3E2F26; border-radius: 12px; padding: 20px 24px; margin-bottom: 18px; }
+  .card h2 { font-size: 21px; color: #F5C6A5; margin-bottom: 12px; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 18px; line-height: 1.6; white-space: pre-wrap; color: #F0E0D2; }
+  .bad { color: #F38B7A; }
+  .good { color: #9BE3A8; }
+  .dim { color: #8A7264; }
+  .foot { position: fixed; bottom: 24px; left: 60px; font-size: 16px; color: #8A7264; }
+</style>
+</head>
+<body>
+  <div class="kicker">意图控制 · 第 2 步</div>
+  <h1>模型没解析出来的时候，别让它猜</h1>
+  <div class="sub">server/intent.js —— num() 的一次真实修复</div>
+
+  <div class="card">
+    <h2>第一版：忘了挡 null</h2>
+    <pre><span class="bad">const num = (v, min, max) =&gt; {
+  const n = Number(v);          // Number(null) === 0，不是 NaN
+  if (!Number.isFinite(n)) return null;
+  return Math.min(max, Math.max(min, Math.round(n)));
+};</span>
+
+<span class="dim">// 结果：模型没给蛋白时，条件里多出「蛋白 ≥ 0」「价格 ≤ ¥1」，
+//       筛选结果被这几条假条件带偏，自测里才暴露出来。</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>修复后：先挡空值，再转数字</h2>
+    <pre><span class="good">const num = (v, min, max) =&gt; {
+  if (v === null || v === undefined || v === '') return null;  // 注意 Number(null) === 0，必须先挡掉
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(max, Math.max(min, Math.round(n)));
+};</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>回归验证：73 项自测</h2>
+    <pre><span class="dim">$</span> node scripts/selftest.js
+[4] 一句话点餐     PASS  解析出来源标识      source=llm
+                   PASS  解析出至少一个条件   tags=热量 ≤ 500 kcal/价格 ≤ ¥40/不要香菜
+                   PASS  命中菜品不超过 8 个  n=8
+[11] 运行日志      PASS  关键事件都写进了日志  9 类事件齐全
+<span class="good">通过 73 / 73   失败 0</span></pre>
+  </div>
+
+  <div class="foot">改完先跑自测，再提交 —— 这是人在这条链路里真正做的事</div>
+</body>
+</html>

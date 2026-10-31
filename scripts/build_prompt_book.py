@@ -153,6 +153,10 @@ pre code { font-size: 8.4pt; }
 .abstract p { text-indent: 2em; }
 .note { font-size: 9.5pt; border-left: 2pt solid #000; padding: 4pt 8pt; background: #fafafa; margin: 8pt 0 10pt; }
 .note p { text-indent: 0; margin: 0; }
+
+.fig { text-align: center; margin: 8pt 0 10pt; page-break-inside: avoid; }
+.fig img { max-width: 100%; max-height: 200mm; border: 0.5pt solid #999; }
+.fig .cap { font-size: 9pt; text-align: center; margin-top: 4pt; text-indent: 0; }
 .part { font-family: "SimHei",sans-serif; font-size: 13pt; color: #000; font-weight: 700; margin: 0 0 8pt; page-break-before: always; }
 """
 

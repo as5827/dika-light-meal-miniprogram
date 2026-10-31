@@ -157,6 +157,34 @@ pre code { font-size: 8.4pt; }
 """
 
 
+
+DIALOG_DIR = os.path.join(ROOT, "docs", "screenshots", "dialogs")
+
+DIALOG_CAPTIONS = {
+    "01": "起始对话：确认赛项与规则，明确要交的是哪些材料",
+    "02": "评分维度：过程可复现 25%、解题有效 25%、方法创新 20%，决定了后续所有取舍",
+    "03": "材料要求：Prompt 快照、README 复现指南、密钥安全，逐条对到仓库里的文件",
+    "04": "推荐引擎核对：手算 BMR / TDEE 与程序结果一致，同参数两次请求菜品完全相同",
+    "05": "赛道对比：个人赛与两个团队赛的取舍，以及交件前的三个确认",
+    "06": "仓库核验：本地与远程同提交、工作区干净、匿名可读，这一屏是提交前的最后检查",
+}
+
+
+def dialog_appendix():
+    if not os.path.isdir(DIALOG_DIR):
+        return ""
+    files = sorted(f for f in os.listdir(DIALOG_DIR) if f.lower().endswith(".png"))
+    if not files:
+        return ""
+    parts = ["<h1>附录　对话过程截图</h1>",
+             "<p>以下截图取自开发时与 AI 的会话界面，按时间顺序排列，用于佐证 prompts/ 下三份对话快照记录的过程真实发生。截图未做美化，保留当时的窗口与侧栏。</p>"]
+    for i, name in enumerate(files, 1):
+        key = name.split("-")[0]
+        cap = DIALOG_CAPTIONS.get(key, name.replace(".png", ""))
+        parts.append('<div class="fig"><img src="screenshots/dialogs/%s"><div class="cap">图 A-%d　%s</div></div>' % (name, i, cap))
+    return "\n".join(parts)
+
+
 def main():
     parts = []
     for title, files in FILES:
@@ -187,7 +215,7 @@ def main():
     html_doc = (
         "<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'>"
         "<title>Prompt 历史快照与迭代记录</title><style>" + CSS + "</style></head><body>"
-        + cover + "\n".join(parts) + "</body></html>"
+        + cover + "\n".join(parts) + dialog_appendix() + "</body></html>"
     )
 
     out = os.path.join(ROOT, "docs", "prompts-book.html")

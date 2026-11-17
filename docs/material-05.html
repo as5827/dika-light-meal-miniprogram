@@ -42,17 +42,17 @@ pre code { font-size: 8.4pt; }
 <h1>参赛材料对照清单</h1>
 <div class='quote'>依据：传智杯 AI 创新应用挑战赛（个人赛）作品提交要求 2.1 / 2.2 / 2.3。 校赛收件截止 <b>2026-10-31</b>；省赛提交截止 <b>2026-11-18</b>，提交入口在缴费后于赛事个人中心开放，材料需在截止前上传完毕。</div>
 <h2>一、代码仓库与演进记录（2.1）</h2>
-<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>GitHub / Gitee，Public 或提供评审访问权限</td><td>https://github.com/as5827/dika-light-meal-miniprogram ，<code>private: false</code></td><td>✅</td></tr><tr><td>细粒度提交历史，禁止一次性提交</td><td>60 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次对话」拆分，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分</td><td>✅</td></tr><tr><td>每次提交对应一次与 AI 的核心对话或一个功能模块</td><td>8 条迭代记录在 <code>prompts/NN-*.md</code>，共对应 13 次功能提交；提交信息正文写明改动点与取舍</td><td>✅</td></tr><tr><td>AI 对话历史导出的 Prompt 历史快照（可截图 / 录屏）</td><td><code>prompts/snapshots/</code> 下 3 份纪要（建仓排障、推荐调参、大模型数字约束，含真实报错与命令）+ 6 张对话过程截图</td><td>✅</td></tr><tr><td>至少 3 个核心功能迭代的<b>完整 Prompt 链</b>（提问 → AI 建议 → 引导修 Bug）</td><td>01 建仓排障（4 个卡点）、02 推荐调参（3 轮）、03 润色约束（4 步）；每条都含原始 Prompt、AI 方案、被否决的理由、修正过程</td><td>✅</td></tr></table>
+<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>GitHub / Gitee，Public 或提供评审访问权限</td><td>https://github.com/as5827/dika-light-meal-miniprogram ，<code>private: false</code></td><td>✅</td></tr><tr><td>细粒度提交历史，禁止一次性提交</td><td>61 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次对话」拆分，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分</td><td>✅</td></tr><tr><td>每次提交对应一次与 AI 的核心对话或一个功能模块</td><td>8 条迭代记录在 <code>prompts/NN-*.md</code>，共对应 13 次功能提交；提交信息正文写明改动点与取舍</td><td>✅</td></tr><tr><td>AI 对话历史导出的 Prompt 历史快照（可截图 / 录屏）</td><td><code>prompts/snapshots/</code> 下 3 份纪要（建仓排障、推荐调参、大模型数字约束，含真实报错与命令）+ 6 张对话过程截图</td><td>✅</td></tr><tr><td>至少 3 个核心功能迭代的<b>完整 Prompt 链</b>（提问 → AI 建议 → 引导修 Bug）</td><td>01 建仓排障（4 个卡点）、02 推荐调参（3 轮）、03 润色约束（4 步）；每条都含原始 Prompt、AI 方案、被否决的理由、修正过程</td><td>✅</td></tr></table>
 <div class='quote'>证据位置：<code>02-Prompt历史快照与迭代记录.pdf</code>（正文）+ <code>03-Prompt原始记录/</code>（Markdown 原文）+ <code>11-对话截图/</code>（过程截图）。</div>
 <h2>二、复现性声明与重现指南（2.2）</h2>
 <table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>README 中 10 分钟极速复现</td><td>README 第五节：克隆 → 启动 → 点单 → 接单，逐条给命令与预期</td><td>✅</td></tr><tr><td>环境配置说明</td><td>Node ≥ 18；无需 <code>npm install</code>（根目录零依赖）</td><td>✅</td></tr><tr><td>依赖清单</td><td>运行时 0 个；小程序端 2 个开发依赖（<code>typescript</code>、<code>miniprogram-api-typings</code>），见 <code>miniprogram/package.json</code></td><td>✅</td></tr><tr><td>环境变量模板</td><td><code>.env.example</code>：<code>PORT</code> / <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code> / <code>LOG_*</code> / <code>LLM_*</code></td><td>✅</td></tr></table>
 <h2>三、演示视频与技术文档（2.3）</h2>
-<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>视频 5–8 分钟，MP4 1080p</td><td><code>10-视频素材/dika-演示视频-1080p.mp4</code>，6 分 32 秒，1920×1080，带解说</td><td>✅</td></tr><tr><td>视频含 ≥2 分钟「AI 协同过程复现」</td><td>成片 4:20–6:20 共 2 分钟：真实屏幕操作，敲 Prompt → 看生成 → 引导修一次 Bug（分镜原计划 3:40–6:10，成片重排）</td><td>✅</td></tr><tr><td>技术文档 PDF ≤30 页</td><td><code>01-技术文档-低卡轻食点餐系统.pdf</code>，30 页</td><td>✅</td></tr><tr><td>文档重点：意图控制策略</td><td>第三章：协作范式、上下文管理、Prompt 结构模板、<b>八次</b>迭代的 Prompt 链、纠偏与复核、约束清单</td><td>✅</td></tr><tr><td>文档重点：架构设计</td><td>第四章：分层、请求管线、原子写、状态机、双端架构、对生成代码的约束</td><td>✅</td></tr><tr><td>文档重点：可复现性论证</td><td>第五章：提交策略、Prompt 归档、10 分钟复现路径、实测证据、不可复现项声明</td><td>✅</td></tr></table>
+<table><tr><th>要求</th><th>我们的材料</th><th>状态</th></tr><tr><td>视频 5–8 分钟，MP4 1080p</td><td><code>10-视频素材/dika-演示视频-1080p.mp4</code>，6 分 32 秒，1920×1080，带解说</td><td>✅</td></tr><tr><td>视频含 ≥2 分钟「AI 协同过程复现」</td><td>成片 4:20–6:20 共 2 分钟：真实屏幕操作，敲 Prompt → 看生成 → 引导修一次 Bug（分镜原计划 3:40–6:10，成片重排）</td><td>✅</td></tr><tr><td>技术文档 PDF ≤30 页</td><td><code>01-技术文档-低卡轻食点餐系统.pdf</code>，17 页</td><td>✅</td></tr><tr><td>文档重点：意图控制策略</td><td>第四章：协作方式、上下文管理、五段式 Prompt 模板、八次迭代的链、纠偏与复核、约束清单</td><td>✅</td></tr><tr><td>文档重点：架构设计</td><td>第三章：总体架构、模块划分、技术选型、数据模型、接口设计</td><td>✅</td></tr><tr><td>文档重点：可复现性论证</td><td>第七章：提交策略、Prompt 归档、十分钟复现、验证证据、不可复现项声明</td><td>✅</td></tr></table>
 <h2>四、提交前 30 分钟自查</h2>
 <pre><code># 1. 仓库公开且最新（匿名视角）
 curl -s https://api.github.com/repos/as5827/dika-light-meal-miniprogram | jq &#x27;.private, .pushed_at, .size&#x27;
 
-# 2. 提交数与本地一致（应为 60）
+# 2. 提交数与本地一致（应为 61）
 git rev-list --count HEAD
 
 # 3. CI 是否绿
@@ -64,7 +64,7 @@ curl -s localhost:3000/api/menu | head -c 80
 
 # 5. 材料页数
 python -c &quot;print(open(&#x27;docs/tech-doc.pdf&#x27;,&#x27;rb&#x27;).read().count(b&#x27;/Type /Page &#x27;) )&quot;</code></pre>
-<table><tr><th>检查项</th><th>通过标准</th></tr><tr><td>仓库可见性</td><td>匿名 <code>curl</code> 能拿到 <code>&quot;private&quot;: false</code></td></tr><tr><td>提交历史</td><td>60 次提交，含 <code>feat</code> / <code>docs</code> / <code>ci</code> 三类前缀，无巨型 initial commit</td></tr><tr><td>README 打开</td><td>图片、链接不 404（用相对路径，不依赖 raw 域名）</td></tr><tr><td>技术文档</td><td>≤30 页，且与仓库当前状态一致（提交数、接口数、迭代次数）</td></tr><tr><td>视频</td><td>1080p、5–8 分钟、含 2 分钟以上协同过程</td></tr><tr><td>组别</td><td>个人赛，按学籍选组（研究生组 / A / B / C，不可向下报）</td></tr></table>
+<table><tr><th>检查项</th><th>通过标准</th></tr><tr><td>仓库可见性</td><td>匿名 <code>curl</code> 能拿到 <code>&quot;private&quot;: false</code></td></tr><tr><td>提交历史</td><td>61 次提交，含 <code>feat</code> / <code>docs</code> / <code>ci</code> 三类前缀，无巨型 initial commit</td></tr><tr><td>README 打开</td><td>图片、链接不 404（用相对路径，不依赖 raw 域名）</td></tr><tr><td>技术文档</td><td>≤30 页，且与仓库当前状态一致（提交数、接口数、迭代次数）</td></tr><tr><td>视频</td><td>1080p、5–8 分钟、含 2 分钟以上协同过程</td></tr><tr><td>组别</td><td>个人赛，按学籍选组（研究生组 / A / B / C，不可向下报）</td></tr></table>
 <h2>五、已补齐与不打算做的</h2>
 <ul>
 <li><b>视频已录完</b>：6 分 32 秒 / 1920×1080 / 带解说，AI 协同段 4:20–6:20；</li>

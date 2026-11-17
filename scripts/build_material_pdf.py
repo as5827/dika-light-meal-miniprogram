@@ -45,7 +45,7 @@ def main():
   <div class="conf">2026 年第九届传智杯全国大学生数智创新与 AI 应用大赛 · AI 创新应用挑战赛（个人赛）</div>
   <h1 class="title">%s</h1>
   <div class="subtitle">%s</div>
-  <div class="author">参赛者：as5827</div>
+  <div class="author">参赛者：张晨（B 组）</div>
   <div class="affil">代码仓库：https://github.com/as5827/dika-light-meal-miniprogram　·　2026 年 10 月</div>
 </div>
 """ % (H.escape(title), H.escape(subtitle))

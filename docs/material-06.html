@@ -26,17 +26,22 @@ pre code { font-size: 8.4pt; }
 .abstract p { text-indent: 2em; }
 .note { font-size: 9.5pt; border-left: 2pt solid #000; padding: 4pt 8pt; background: #fafafa; margin: 8pt 0 10pt; }
 .note p { text-indent: 0; margin: 0; }
+
+.fig { text-align: center; margin: 8pt 0 10pt; page-break-inside: avoid; }
+.fig img { max-width: 100%; max-height: 200mm; border: 0.5pt solid #999; }
+.fig .cap { font-size: 9pt; text-align: center; margin-top: 4pt; text-indent: 0; }
 .part { font-family: "SimHei",sans-serif; font-size: 13pt; color: #000; font-weight: 700; margin: 0 0 8pt; page-break-before: always; }
 </style></head><body>
 <div class="paper-head">
   <div class="conf">2026 年第九届传智杯全国大学生数智创新与 AI 应用大赛 · AI 创新应用挑战赛（个人赛）</div>
   <h1 class="title">演示视频分镜</h1>
   <div class="subtitle">5–8 分钟 · 含 AI 协同过程复现</div>
-  <div class="author">参赛者：as5827</div>
+  <div class="author">参赛者：张晨（B 组）</div>
   <div class="affil">代码仓库：https://github.com/as5827/dika-light-meal-miniprogram　·　2026 年 10 月</div>
 </div>
 <h1>演示视频分镜脚本（5–8 分钟 / 1080p）</h1>
 <div class='quote'>要求：MP4、1080p、5–8 分钟，其中<b>不少于 2 分钟</b>的「AI 协同过程复现」。 本稿按 6 分 50 秒排，实际录到 5–8 分钟都算合规。</div>
+<div class='quote'><b>成片与本稿的差异（重要）</b>：本文是拍摄前的分镜稿。实际交付的 <code>10-视频素材/dika-演示视频-1080p.mp4</code> 为 <b>6 分 32 秒</b>，剪辑时把「痛点与方案」压短， AI 协同段落在 <b>4:20–6:20（2 分钟）</b>，收尾在 6:20–6:32。评审以成片时间轴为准， 对应关系见 <code>00-提交说明.pdf</code> 的「视频说明」一节。</div>
 <h2>录制前准备</h2>
 <table><tr><th>项</th><th>要求</th></tr><tr><td>分辨率</td><td>1920×1080，25 或 30fps，码率 ≥ 8Mbps</td></tr><tr><td>声音</td><td>真人解说，别用软件配音（评委会听出来）</td></tr><tr><td>画面</td><td>浏览器缩放 110%，字号大一点；深色 IDE 主题容易糊，用浅色</td></tr><tr><td>开录前</td><td><code>node server/server.js</code> 先跑起来；后台已登录；浏览器开三个标签：点餐页、后台、GitHub 仓库</td></tr><tr><td>录制工具</td><td>OBS / Windows 自带录屏 / 剪映录屏都行，关键是<b>分段录</b>，最后剪</td></tr></table>
 <h2>分段脚本</h2>

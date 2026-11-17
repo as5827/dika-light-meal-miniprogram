@@ -13,6 +13,11 @@ data/orders.json
 .env
 .env.local
 
+# Python 脚本产物（scripts/ 下有几个 pdf 生成脚本）
+__pycache__/
+*.pyc
+*.pyo
+
 # 系统与编辑器
 .DS_Store
 Thumbs.db

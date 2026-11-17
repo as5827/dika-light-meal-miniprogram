@@ -187,6 +187,166 @@ const serveStatic = (res, urlPath) => {
   });
 };
 
+/* ------------------------------------------------------------------
+ * AI 接口：一次性 JSON 与分阶段事件流（SSE）共用同一份计算逻辑
+ * 阶段名与阶段里的数字都来自真实计算，前端只负责把它们按节奏点亮
+ * ------------------------------------------------------------------ */
+
+const sseOpen = (res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+  if (typeof res.flushHeaders === 'function') res.flushHeaders();
+};
+
+const sseSend = (res, event) => {
+  if (res.writableEnded) return;
+  res.write(`data: ${JSON.stringify(event)}\n\n`);
+};
+
+const sseEmit = (res) => (stage, label, detail) =>
+  sseSend(res, { type: 'stage', stage, label, detail });
+
+const noopEmit = () => {};
+
+async function runRecommend(payload, emit) {
+  const say = typeof emit === 'function' ? emit : noopEmit;
+
+  const profile = recommender.normalizeProfile(payload.profile || payload);
+  if (!profile) {
+    return { status: 400, body: { code: 400, message: '请填写有效的年龄、身高与体重' } };
+  }
+
+  let menu;
+  try {
+    menu = readMenu();
+  } catch (e) {
+    return { status: 500, body: { code: 500, message: '读取菜单失败' } };
+  }
+
+  say('profile', '解析身体指标',
+    `BMR ${profile.bmr} kcal · TDEE ${profile.tdee} kcal · 每日目标 ${profile.targetCalorie} kcal`);
+
+  const allDishes = menu.dishes || [];
+  const onSale = allDishes.filter((d) => d.stock > 0);
+  say('pool', '筛出在售菜品', `${onSale.length} / ${allDishes.length} 道在售，估清的不参与组合`);
+
+  const plan = recommender.recommend(menu, profile, {
+    vegetarian: payload.vegetarian,
+    budget: payload.budget
+  });
+  if (!plan) {
+    log.warn('recommend.empty', { goal: profile.goal, vegetarian: Boolean(payload.vegetarian) });
+    return { status: 409, body: { code: 409, message: '当前菜单里没有可推荐的组合（可能都已估清）' } };
+  }
+
+  say('search', '组合搜索与打分',
+    `评估 ${plan.stats.evaluated} 个候选组合，用时 ${plan.stats.elapsedMs} ms`);
+  say('pick', '约束校验与优选',
+    `热量偏差 ${plan.match.calorieDiffPct}%，蛋白达成 ${plan.match.proteinPct}%`);
+
+  log.info('recommend', {
+    profile: {
+      gender: profile.gender,
+      age: profile.age,
+      height: profile.height,
+      weight: profile.weight,
+      activity: profile.activity,
+      goal: profile.goal,
+      bmr: profile.bmr,
+      tdee: profile.tdee,
+      targetCalorie: profile.targetCalorie,
+      proteinTarget: profile.proteinTarget
+    },
+    mealTarget: plan.meal.targetCalorie,
+    mealProteinTarget: plan.meal.targetProtein,
+    candidates: plan.stats ? plan.stats.evaluated : 0,
+    elapsedMs: plan.stats ? plan.stats.elapsedMs : 0,
+    picked: plan.items.map((i) => i.id),
+    totals: plan.totals,
+    match: plan.match,
+    budgetRelaxed: plan.budgetRelaxed,
+    vegetarian: plan.vegetarian
+  });
+
+  if (payload.useAI) {
+    const aiStart = Date.now();
+    say('ai', '大模型润色推荐理由', '把数字结论讲成人话，不改动任何数值');
+    const aiReason = await recommender.enhanceReason(plan.reason, process.env);
+    if (aiReason) plan.aiReason = aiReason;
+    log.info('recommend.ai', { ok: Boolean(aiReason), ms: Date.now() - aiStart });
+  }
+
+  return { status: 200, body: { code: 0, data: plan } };
+}
+
+async function runNlOrder(payload, emit) {
+  const say = typeof emit === 'function' ? emit : noopEmit;
+
+  const text = asStr(payload.text, 200);
+  if (!text) {
+    return { status: 400, body: { code: 400, message: '请说一句话，例如「500 千卡以内、高蛋白、不要香菜」' } };
+  }
+
+  let menu;
+  try {
+    menu = readMenu();
+  } catch (e) {
+    return { status: 500, body: { code: 500, message: '读取菜单失败' } };
+  }
+
+  const startedAt = Date.now();
+  say('parse', '解析这句话的意图', `「${text}」`);
+  const llm = await intent.parseWithLLM(text, process.env);
+
+  let conditions = llm;
+  let source = llm ? 'llm' : 'none';
+  if (llm && !intent.isEmpty(llm)) {
+    const t = intent.explain(llm);
+    say('llm', '大模型给出结构化条件', t.length ? t.join('、') : '没有识别到显式条件');
+  }
+
+  if (!llm || intent.isEmpty(llm)) {
+    const fb = intent.fallbackParse(text);
+    if (!intent.isEmpty(fb)) {
+      conditions = fb;
+      source = llm ? 'llm+fallback' : 'fallback';
+      const t = intent.explain(fb);
+      say('fallback', '规则兜底解析', t.length ? t.join('、') : '按关键词匹配');
+    } else if (!llm) {
+      conditions = Object.assign({}, intent.EMPTY, { excludeKeywords: [], keywords: [] });
+      say('fallback', '规则兜底解析', '没有识别到条件，按默认排序');
+    }
+  }
+
+  const result = intent.searchWithLoose(menu, conditions, 8);
+  const dishes = result.dishes;
+  const tags = intent.explain(conditions);
+
+  say('filter', '在菜单里筛选', `命中 ${dishes.length} 道`);
+  if (result.dropped && result.dropped.length) {
+    say('relax', '条件逐级放宽', result.dropped.join('、'));
+  }
+
+  if (source === 'none') {
+    log.warn('intent.empty', { text });
+  }
+
+  log.info('intent.parse', {
+    source,
+    text,
+    conditions,
+    matched: dishes.length,
+    dropped: result.dropped,
+    ms: Date.now() - startedAt
+  });
+
+  return { status: 200, body: { code: 0, data: { source, conditions, tags, dishes, dropped: result.dropped } } };
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url || '/';
   const clientIp = (req.socket && req.socket.remoteAddress) || 'unknown';
@@ -290,6 +450,32 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 个性化减脂套餐推荐（分阶段事件流：前端据此渲染「思考过程」）
+  if (req.method === 'POST' && url.startsWith('/api/recommend/stream')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 16 * 1024));
+    } catch (e) {
+      const tooLarge = e.message === 'BODY_TOO_LARGE';
+      sendJson(res, tooLarge ? 413 : 400, {
+        code: tooLarge ? 413 : 400,
+        message: tooLarge ? '请求内容过大' : '请求体不是合法 JSON'
+      });
+      return;
+    }
+    sseOpen(res);
+    try {
+      const r = await runRecommend(payload, sseEmit(res));
+      if (r.status === 200) sseSend(res, { type: 'done', data: r.body.data });
+      else sseSend(res, { type: 'error', code: r.body.code, message: r.body.message });
+    } catch (e) {
+      log.error('recommend.stream', { message: e.message });
+      sseSend(res, { type: 'error', code: 500, message: '推荐失败，请重试' });
+    }
+    res.end();
+    return;
+  }
+
   // 个性化减脂套餐推荐
   if (req.method === 'POST' && url.startsWith('/api/recommend')) {
     let payload;
@@ -303,63 +489,30 @@ const server = http.createServer(async (req, res) => {
       });
       return;
     }
+    const r = await runRecommend(payload);
+    sendJson(res, r.status, r.body);
+    return;
+  }
 
-    const profile = recommender.normalizeProfile(payload.profile || payload);
-    if (!profile) {
-      sendJson(res, 400, { code: 400, message: '请填写有效的年龄、身高与体重' });
-      return;
-    }
-
-    let menu;
+  // 一句话点餐：分阶段事件流（前端据此渲染「思考过程」）
+  if (req.method === 'POST' && url.startsWith('/api/nl-order/stream')) {
+    let payload;
     try {
-      menu = readMenu();
+      payload = JSON.parse(await readBody(req, 8 * 1024));
     } catch (e) {
-      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
       return;
     }
-
-    const plan = recommender.recommend(menu, profile, {
-      vegetarian: payload.vegetarian,
-      budget: payload.budget
-    });
-    if (!plan) {
-      log.warn('recommend.empty', { goal: profile.goal, vegetarian: Boolean(payload.vegetarian) });
-      sendJson(res, 409, { code: 409, message: '当前菜单里没有可推荐的组合（可能都已估清）' });
-      return;
+    sseOpen(res);
+    try {
+      const r = await runNlOrder(payload, sseEmit(res));
+      if (r.status === 200) sseSend(res, { type: 'done', data: r.body.data });
+      else sseSend(res, { type: 'error', code: r.body.code, message: r.body.message });
+    } catch (e) {
+      log.error('nl-order.stream', { message: e.message });
+      sseSend(res, { type: 'error', code: 500, message: '解析失败，请重试' });
     }
-
-    log.info('recommend', {
-      profile: {
-        gender: profile.gender,
-        age: profile.age,
-        height: profile.height,
-        weight: profile.weight,
-        activity: profile.activity,
-        goal: profile.goal,
-        bmr: profile.bmr,
-        tdee: profile.tdee,
-        targetCalorie: profile.targetCalorie,
-        proteinTarget: profile.proteinTarget
-      },
-      mealTarget: plan.meal.targetCalorie,
-      mealProteinTarget: plan.meal.targetProtein,
-      candidates: plan.stats ? plan.stats.evaluated : 0,
-      elapsedMs: plan.stats ? plan.stats.elapsedMs : 0,
-      picked: plan.items.map((i) => i.id),
-      totals: plan.totals,
-      match: plan.match,
-      budgetRelaxed: plan.budgetRelaxed,
-      vegetarian: plan.vegetarian
-    });
-
-    if (payload.useAI) {
-      const aiStart = Date.now();
-      const aiReason = await recommender.enhanceReason(plan.reason, process.env);
-      if (aiReason) plan.aiReason = aiReason;
-      log.info('recommend.ai', { ok: Boolean(aiReason), ms: Date.now() - aiStart });
-    }
-
-    sendJson(res, 200, { code: 0, data: plan });
+    res.end();
     return;
   }
 
@@ -372,56 +525,8 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
       return;
     }
-
-    const text = asStr(payload.text, 200);
-    if (!text) {
-      sendJson(res, 400, { code: 400, message: '请说一句话，例如「500 千卡以内、高蛋白、不要香菜」' });
-      return;
-    }
-
-    let menu;
-    try {
-      menu = readMenu();
-    } catch (e) {
-      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
-      return;
-    }
-
-    const startedAt = Date.now();
-    const llm = await intent.parseWithLLM(text, process.env);
-    let conditions = llm;
-    let source = llm ? 'llm' : 'none';
-
-    if (!llm || intent.isEmpty(llm)) {
-      const fb = intent.fallbackParse(text);
-      if (!intent.isEmpty(fb)) {
-        conditions = fb;
-        source = llm ? 'llm+fallback' : 'fallback';
-      } else if (!llm) {
-        conditions = Object.assign({}, intent.EMPTY, { excludeKeywords: [], keywords: [] });
-      }
-    }
-
-    const result = intent.searchWithLoose(menu, conditions, 8);
-    if (source === 'none') {
-      log.warn('intent.empty', { text });
-    }
-    const dishes = result.dishes;
-    const tags = intent.explain(conditions);
-
-    log.info('intent.parse', {
-      source,
-      text,
-      conditions,
-      matched: dishes.length,
-      dropped: result.dropped,
-      ms: Date.now() - startedAt
-    });
-
-    sendJson(res, 200, {
-      code: 0,
-      data: { source, conditions, tags, dishes, dropped: result.dropped }
-    });
+    const r = await runNlOrder(payload);
+    sendJson(res, r.status, r.body);
     return;
   }
 

@@ -45,117 +45,124 @@ pre code { font-size: 8.4pt; }
 </div>
 <div class='part'>第一部分 对话快照</div>
 <h1>对话快照 01 · 从建仓到第一次成功推送</h1>
-<div class='quote'>说明：以下是当时的对话纪要（节选，非逐字转录），保留了真实的报错、命令与判断顺序。截图/录屏可另存，本文件只保留可检索的文字。</div>
+<div class='quote'><b>第 1 条完整 Prompt 链。</b> 三份快照统一四段结构： <b>① 我提的 Prompt（原文）→ ② AI 给出的第一版方案 → ③ 我怎么引导它纠偏（含真实报错）→ ④ 验收结果。</b>  Prompt 为当时原文引用；AI 回复保留关键段落与原样命令回显，不逐字抄录整段对话。</div>
 <h2>背景</h2>
-<p>项目代码已经在本地跑通（H5 + Node 后端），要迁到 GitHub 上，让评审能公开访问。</p>
-<h2>我说的（原话）</h2>
+<p>代码已经在本地跑通（H5 + Node 后端），下一步是迁到 GitHub，让评审能公开打开。</p>
+<h2>① 我提的 Prompt</h2>
 <ol>
-<li>「我参与的是个人赛 你现在先把自己接上github」</li>
-<li>「加好了 用户名：grorge00 我使用的账号是grorge@qq.com 全局一键帮我替换成grorge@qq.com吧 我参加传智杯的项目名称是dika-light-meal-miniprogram 帮我解析上传一下主体代码吧」</li>
+<li>「我参与的是个人赛 你现在先把自己接上 github」</li>
+<li>「加好了 用户名：g\*\*\*e00　我使用的账号是 g\*\*\*e@qq.com　全局一键帮我替换成 g\*\*\*e@qq.com 吧　我参加传智杯的项目名称是 dika-light-meal-miniprogram　帮我解析上传一下主体代码吧」</li>
 <li>「为什么我没有在仓库看到我的项目？」</li>
-<li>「那换2977843600@qq.com这个账号你看可以不可以」</li>
+<li>「那换 2\*\*\*\*\*\*\*\*@qq.com 这个账号你看可以不可以」</li>
 </ol>
-<h2>它先给出的判断</h2>
-<div class='quote'>&quot;仓库已建，6 个提交已推送。&quot;</div>
-<p>结论下早了。三件事同时发生了，只报了一件。</p>
-<h2>实际卡住的四个环节</h2>
-<p><b>① 建仓接口 400</b></p>
+<div class='quote'>邮箱与账号已打码——它们能直接反查到本人，没必要留在公开仓库里。</div>
+<h2>② AI 给出的第一版方案</h2>
+<div class='quote'>「仓库已建，6 个提交已推送。」</div>
+<p><b>结论下早了。</b> 三件事同时发生，它只报了其中一件。真实状态是：仓库建失败了、推送实际没成、而我看到的那条&quot;成功&quot;只是本地命令的回显。</p>
+<h2>③ 我怎么引导它纠偏</h2>
+<p>我没有继续问&quot;为什么&quot;，而是<b>把每一步的原始回显贴回去</b>，让它按报错定位。四个卡点依次解开：</p>
+<p><b>卡点 1 · 建仓接口 400</b></p>
 <pre><code>POST /user/repos → 400
 {&quot;message&quot;:&quot;Problems parsing JSON&quot;}</code></pre>
-<p>原因：PowerShell 5.1 把中文描述按 GBK 编码传给 <code>curl.exe</code>，GitHub 收到非法 UTF-8。</p>
-<p>改法：把 JSON 写进 UTF-8 文件，用 <code>--data-binary @file</code>。一次通过，返回 201。</p>
-<p><b>② &quot;Repository not found&quot; 不是权限问题</b></p>
-<p><code>git ls-remote</code> 报 not found，第一反应是权限，实际是仓库根本没创建成功（上一条的 400 就是根因）。</p>
-<p><b>③ 换账号时撞上风控</b></p>
-<pre><code>ssh -T git@github.com      → Hi grorge00! You&#x27;ve successfully authenticated
-GET /users/grorge00        → 404
-GET /users/grorge00/repos  → 200 []</code></pre>
-<p>SSH 能认证、公开资料却 404，说明账号在库里存在但未公开（新号被标记）。这种号即使推上去，评委点链接也是 404。<b>决定换号</b>，改成 <code>as5827</code>（同一台机器上有它的凭据）。</p>
-<p><b>④ push 反复被重置</b></p>
+<p>我第一次的追问是「仓库没建成功，接口返回的是 Problems parsing JSON，你看下是不是编码问题」——这个提示让它转到正确方向：PowerShell 5.1 把中文描述按 GBK 编码传给 <code>curl.exe</code>，GitHub 收到的是非法 UTF-8。</p>
+<p>改法：JSON 写进 UTF-8 文件，用 <code>--data-binary @file</code> 提交。一次通过，返回 201。</p>
+<p><b>卡点 2 · &quot;Repository not found&quot; 不是权限问题</b></p>
+<p><code>git ls-remote</code> 报 not found，第一反应都是没权限。实际是仓库根本没建成（上一条的 400 就是根因）。<b>教训：报错文本会骗人，要看它前面的那一步成没成。</b></p>
+<p><b>卡点 3 · 换账号时撞上风控</b></p>
+<pre><code>ssh -T git@github.com      → Hi g***e00! You&#x27;ve successfully authenticated
+GET /users/g***e00         → 404
+GET /users/g***e00/repos   → 200 []</code></pre>
+<p>SSH 能认证、公开资料却 404——账号在库里存在但未公开（新号被标记）。这种号即使推上去，评委点链接也是 404。<b>决定换号</b>，改用 <code>as5827</code>（同一台机器上有它的凭据）。</p>
+<p><b>卡点 4 · push 反复被重置</b></p>
 <pre><code>fatal: unable to access &#x27;https://github.com/...&#x27;: Recv failure: Connection was reset</code></pre>
-<p>排查顺序：先怀疑仓库权限（不是）→ 再查连通性（<code>api.github.com</code> 通、<code>github.com</code> 超时）→ 最后发现系统里开着代理 <code>127.0.0.1:7897</code>，但 git 完全没走它。</p>
+<p>排查顺序：先怀疑仓库权限（不是）→ 再查连通性（<code>api.github.com</code> 通、<code>github.com</code> 超时）→ 最后发现系统里开着代理 <code>127.0.0.1:7897</code>，而 git 完全没走它。</p>
 <pre><code>git config http.proxy http://127.0.0.1:7897
 git push → 成功</code></pre>
 <h2>我做的三个决定</h2>
-<table><tr><th>决定</th><th>依据</th></tr><tr><td>不追 grorge00，直接用 as5827</td><td>新号 404 意味着评委打不开，比赛场景下不能赌</td></tr><tr><td>不把 token 写进仓库或配置</td><td>只从系统凭据里读，用完即走；后来改成 Cookie 会话 + 环境变量</td></tr><tr><td>本地目录先迁到 Desktop 管理的新位置，再删旧的</td><td>两份代码必然改错，只留一份</td></tr></table>
-<h2>结果</h2>
+<table><tr><th>决定</th><th>依据</th></tr><tr><td>不追 <code>g***e00</code>，直接用 <code>as5827</code></td><td>新号 404 意味着评委打不开，比赛场景下不能赌</td></tr><tr><td>不把 token 写进仓库或配置</td><td>只从系统凭据里读，用完即走；后来改成 Cookie 会话 + 环境变量</td></tr><tr><td>本地目录先迁到受管位置，再删旧的</td><td>两份代码必然改错，只留一份</td></tr></table>
+<h2>④ 验收结果</h2>
 <ul>
-<li>提交历史完整上线（先 6 条，后续迭代到 27 条）；</li>
+<li>提交历史完整上线（先 6 条，后续迭代到 58 条）；</li>
 <li>推送通道固定为「代理 + 系统凭据」，<code>git push</code> 不再需要额外参数；</li>
-<li>GitHub Desktop 接管本地目录，与远程保持同步。</li>
+<li><b>验收方式改了</b>：不再看命令行回显，改成匿名接口复核——<code>private:false</code>、能否匿名 clone、README 能否不登录打开。</li>
 </ul>
 <h2>复盘</h2>
-<p>这次折腾的教训不是&quot;命令记错了&quot;，而是<b>结论下得太早</b>：把&quot;我这边 push 成功&quot;当成了&quot;评委能打开&quot;。后面所有验收都改成用匿名接口复核（<code>private:false</code>、能否匿名读 README），而不是只看命令行回显。</p>
+<p>这次折腾的教训不是&quot;命令记错了&quot;，而是<b>结论下得太早</b>：把&quot;我这边 push 成功&quot;当成了&quot;评委能打开&quot;。后面所有验收都改成站在匿名访问者的角度复核，而不是只看自己终端的回显。</p>
 <h1>对话快照 02 · 推荐引擎：从&quot;能算出一套&quot;到&quot;算得站得住&quot;</h1>
-<div class='quote'>说明：对话纪要（节选）。这里的取舍不是一次成型，中间被推翻过一轮。</div>
-<h2>我说的（原话）</h2>
-<div class='quote'>本项目为减脂餐创业商家打造轻量化点餐小程序……业务层面：面向小微轻食商家，提供低成本数字化接单方案，<b>内置 AI 个性化减脂套餐推荐，结合用户身体指标给出适配餐品</b>，同时双前端架构兼顾真实业务落地与评审演示便捷性。</div>
-<h2>它先给的方案</h2>
-<p>用大模型直接生成套餐，理由是这样&quot;更像 AI&quot;。</p>
-<p>我否掉的原因写在 <code>prompts/03</code> 里：结果不可复现，评审问&quot;为什么是这三道菜&quot;时答不上来；而且每次调用都要钱、要网、要 key。改成<b>本地营养学模型 + 组合搜索</b>，大模型只负责把结论说顺口。</p>
-<h2>第一版跑出来的问题</h2>
-<p>女 28 岁 / 165cm / 58kg / 轻度活动 / 减脂：</p>
+<div class='quote'><b>第 2 条完整 Prompt 链。</b> 四段结构：<b>① 我提的 Prompt（原文）→ ② AI 给出的第一版方案 → ③ 我怎么引导它纠偏（三轮调参）→ ④ 验收结果。</b>  Prompt 为当时原文引用；AI 回复保留关键段落，数字与日志是当时跑出来的真值。</div>
+<h2>① 我提的 Prompt</h2>
+<div class='quote'>本项目为减脂餐创业商家打造轻量化点餐小程序……业务层面：面向小微轻食商家，提供低成本数字化接单方案， <b>内置 AI 个性化减脂套餐推荐，结合用户身体指标给出适配餐品</b>，同时双前端架构兼顾真实业务落地与评审演示便捷性。</div>
+<h2>② AI 给出的第一版方案</h2>
+<p>用大模型直接生成套餐，理由是&quot;这样更像 AI&quot;。</p>
+<p><b>我否掉了。</b> 三条理由写在 <code>prompts/05</code> 里：结果不可复现、评审问&quot;为什么是这三道菜&quot;答不上来、每次调用都要钱要网要 key。</p>
+<p>改成<b>本地营养学模型 + 组合搜索</b>，大模型只负责把结论说顺口。</p>
+<h2>③ 我怎么引导它纠偏（三轮）</h2>
+<h3>第一轮：蛋白量失控</h3>
+<p>第一版跑出来是这样（女 28 / 165cm / 58kg / 轻度活动 / 减脂）：</p>
 <pre><code>目标：每日 1441 kcal、蛋白 93 g；单餐预算 576 kcal / 37 g
 推荐：鸡胸肉藜麦沙拉 + 额外鸡胸肉 + 番茄时蔬汤
-合计：600 kcal、蛋白 64 g
-蛋白达成 173%</code></pre>
-<p>热量贴合，蛋白直接顶到目标的 1.7 倍。<b>这不是&quot;个性化&quot;，是把所有能加蛋白的东西堆上去。</b></p>
-<h2>怎么改的</h2>
+合计：600 kcal、蛋白 64 g   蛋白达成 173%</code></pre>
+<p>热量贴合，蛋白顶到目标的 1.7 倍。<b>这不是&quot;个性化&quot;，是把所有能加蛋白的东西堆上去。</b></p>
+<p>我的追问：「蛋白达成 173% 明显不合理，你看下目标函数是不是没有上限」。</p>
 <p>目标函数原本是：</p>
 <pre><code>score = 蛋白达成×0.5 − 热量偏差×0.35 + 价格分×0.15</code></pre>
-<p>蛋白项被 <code>min(1.6, p/target)</code> 截断在 1.6，等于告诉算法&quot;蛋白越多越好&quot;。加了过量惩罚：</p>
+<p>蛋白项被 <code>min(1.6, p/target)</code> 截断在 1.6，等于告诉算法&quot;蛋白越多越好&quot;。加上过量惩罚：</p>
 <pre><code>overProtein = max(0, 蛋白 − 目标×1.3) / 目标
 score = … − overProtein × 0.2</code></pre>
 <p>再跑：</p>
 <pre><code>合计 530 kcal、蛋白 59 g（目标 37 g，达成 159%）</code></pre>
-<p>仍然偏高，但这是有意的：轻食客群本来就冲高蛋白来的，压到 90% 反而推荐出&quot;蔬菜沙拉 + 气泡水&quot;这种没价值的组合。<b>这个度是人工定的，不是算法自己选的。</b></p>
-<h2>第二轮问题：预算太狠</h2>
-<p>预算填 ¥10，第一版直接返回&quot;无解&quot;。改成两段式：</p>
+<p>仍然偏高，但这是有意的：轻食客群本来就冲高蛋白来的，压到 90% 反而会推荐出&quot;蔬菜沙拉 + 气泡水&quot;这种没价值的组合。<b>这个度是人工定的，不是算法自己选的。</b></p>
+<h3>第二轮：预算太狠</h3>
+<p>我的追问：「预算填 10 块，接口返回无解，这个体验不行，得有退化方案」。</p>
+<p>改成两段式：</p>
 <ol>
 <li>先在预算内搜索；</li>
 <li>无解时退化为「满足营养下限（蛋白 ≥60%、热量 ≥70%）的最便宜组合」，并在结果里标 <code>budgetRelaxed: true</code>。</li>
 </ol>
 <p>返回 ¥26 的全麦鸡胸三明治，前端明确写&quot;预算内没有合适组合，已自动放宽&quot;。</p>
-<h2>第三轮问题：营养数据从哪来</h2>
-<p>第一版想接公开营养库，但 28 道菜要逐条映射、还要处理&quot;同菜不同做法&quot;，成本和误差都不可控。最后：</p>
-<ul>
-<li>每道菜补一个 <code>protein</code> 估算值；</li>
-<li>在 <code>data/menu.json</code> 里写明 <code>nutritionNote: &quot;protein 为估算值（g），仅用于推荐算法演示，非实验室检测数据&quot;</code>；</li>
-<li>文档里也标了。</li>
-</ul>
-<p><b>宁可承认是估算，也不把假数据包装成检测报告。</b></p>
-<h2>验收</h2>
-<table><tr><th>用例</th><th>结果</th></tr><tr><td>手算核对（女 28/165/58/轻度）</td><td>BMR 1310、TDEE 1801，与公式手算一致</td></tr><tr><td>素食过滤</td><td>三项全部素食</td></tr><tr><td>预算 ¥10</td><td>放宽后给最便宜合规组合，并标注</td></tr><tr><td>同参数两次请求</td><td>菜品 id 完全一致</td></tr><tr><td>非法参数</td><td>400 + 中文提示</td></tr></table>
+<h3>第三轮：营养数据从哪来</h3>
+<p>第一版想接公开营养库，但 28 道菜要逐条映射、还要处理&quot;同菜不同做法&quot;，成本和误差都不可控。</p>
+<p>我的决定是<b>宁可承认是估算</b>：每道菜补一个 <code>protein</code> 估算值，<code>data/menu.json</code> 里写明</p>
+<p><code>nutritionNote: &quot;protein 为估算值（g），仅用于推荐算法演示，非实验室检测数据&quot;</code>，文档里也标了。</p>
+<h2>④ 验收结果</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>手算核对（女 28/165/58/轻度）</td><td>BMR 1310、TDEE 1801，与公式手算一致</td></tr><tr><td>素食过滤</td><td>三项全部素食</td></tr><tr><td>预算 ¥10</td><td>放宽后给最便宜合规组合，并标注</td></tr><tr><td>同参数两次请求</td><td>菜品 id 完全一致</td></tr><tr><td>非法参数</td><td>400 + 中文提示</td></tr><tr><td>候选规模</td><td>674 个组合，引擎耗时 2–6 ms</td></tr></table>
 <h2>复盘</h2>
-<p>&quot;AI 推荐&quot;最容易糊弄的地方是：随便给一套，说这是模型算的。要让它站得住，得能回答三个问题——<b>输入是什么、怎么算的、为什么是这个结果</b>。所以推荐日志里把 704 个候选、6ms 耗时、选中三道菜、偏差 2% 全打出来了（见 README「运行日志」）。</p>
+<p>&quot;AI 推荐&quot;最容易糊弄的地方是：随便给一套，说这是模型算的。要让它站得住，得能回答三个问题——<b>输入是什么、怎么算的、为什么是这个结果</b>。所以推荐日志里把候选数、耗时、选中菜品、偏差全打出来了，界面上也把每一步的中间结论直接摊开给人看。</p>
 <h1>对话快照 03 · 让大模型只改语气，别动数字</h1>
-<div class='quote'>说明：对话纪要（节选）。包含一次真实调用、一次兜底测试，以及&quot;去 AI 味&quot;的具体改法。</div>
-<h2>我说的（原话）</h2>
-<div class='quote'>API key:sk-\*\*\*\*（已脱敏） 调用一下试试并且再编辑润色文档和日志 尽量去除ai痕迹</div>
-<p>两个要求：<b>真的打通大模型</b>，<b>文档别写成一嘴 AI 腔</b>。</p>
-<h2>第一步：先确认 key 能用</h2>
-<p>先不接业务，直接打 <code>POST /v1/chat/completions</code>：</p>
+<div class='quote'><b>第 3 条完整 Prompt 链。</b> 四段结构：<b>① 我提的 Prompt（原文）→ ② AI 给出的第一版做法 → ③ 我怎么引导它纠偏（四步）→ ④ 验收结果。</b>  Prompt 为当时原文引用，<code>sk-</code> 开头的 key 已脱敏。</div>
+<h2>① 我提的 Prompt</h2>
+<div class='quote'>API key: sk-\*\*\*\*（已脱敏） 调用一下试试 并且再编辑润色文档和日志 尽量去除 ai 痕迹</div>
+<p>两个要求叠在一句话里：<b>真的打通大模型</b>，<b>文档别写成一嘴 AI 腔</b>。这两件事其实是同一件事——都在问&quot;AI 的输出能不能被人拿去用&quot;。</p>
+<h2>② AI 给出的第一版做法</h2>
+<p>直接把 <code>plan.reason</code> 丢给模型：&quot;你是营养师，请润色这段话&quot;，然后把返回的文本覆盖模板文案。</p>
+<p><b>问题在这里</b>：推荐结果里全是算出来的数（BMR、目标热量、蛋白克数、偏差百分比）。模型一旦&quot;顺手改写&quot;，前面的算法就白算了——而且这种错<b>肉眼很难发现</b>，因为它读起来更顺。</p>
+<h2>③ 我怎么引导它纠偏（四步）</h2>
+<h3>第一步：先确认 key 能用，不接业务</h3>
+<p>先不碰业务代码，直接打 <code>POST /v1/chat/completions</code>：</p>
 <pre><code>HTTP 200 · model: deepseek-flash
 choices[0].message.content: 减脂期保证蛋白质摄入，是因为……</code></pre>
-<p>能通。再接进 <code>/api/recommend</code> 的 <code>useAI</code> 分支。</p>
-<h2>第二步：约束它别乱动数字</h2>
-<p>推荐结果里全是算出来的数（BMR、目标热量、蛋白克数、偏差百分比），模型一旦&quot;顺手改写&quot;，前面的算法就白算了。系统提示直接写死：</p>
+<p>能通，再往 <code>/api/recommend</code> 的 <code>useAI</code> 分支里接。<b>先把外部依赖单独验通，再合进主链路</b>——这跟快照 01 里&quot;结论下太早&quot;是同一个教训的反面用法。</p>
+<h3>第二步：把&quot;不许动数字&quot;写进系统提示</h3>
 <pre><code>你是一位耐心、鼓励型的营养师。你只能改写语气，不得修改、新增、删除任何数字或结论；
 输出 120 字以内中文，不要分点。</code></pre>
 <p>同一份数据，两次输出对比：</p>
 <pre><code>模板：……这套组合合计 590 kcal、蛋白 55 g，热量偏差 +2%，蛋白达成 153%。
 润色：……你这套组合合计 590 kcal、蛋白 55 g，热量只偏差 +2%，蛋白达成 153%，挺不错的，继续加油！</code></pre>
-<p>逐位比对：1312 / 1804 / 1443 / 91 / 40% / 577 / 36 / 590 / 55 / +2% / 153% —— 11 个数字全部一致。</p>
-<h2>第三步：不确定的情况要能兜底</h2>
+<h3>第三步：测不确定的情况</h3>
 <p>把 key 换成一个无效值再请求：</p>
 <pre><code>code=0，aiReason 为空，reason 仍是模板文案，耗时 0.3s</code></pre>
-<p>接口不报错、页面不缺内容，只是少了那句&quot;继续加油&quot;。这一点写进了 <code>prompts/05</code> 和 README 的限制表：大模型是增强项，不是依赖项。</p>
-<h2>第四步：去 AI 味</h2>
-<p>这一条比接 key 麻烦。改了三类东西：</p>
+<p>接口不报错、页面不缺内容，只是少了那句&quot;继续加油&quot;。结论写进 <code>prompts/05</code> 和 README 的限制表：<b>大模型是增强项，不是依赖项</b>。</p>
+<h3>第四步：去 AI 味（这条比接 key 麻烦）</h3>
+<p>我的追问：「文档里这几段还是 AI 腔，设问句和自我表扬太多，重写」。改了三类：</p>
 <table><tr><th>原来</th><th>改成</th><th>为什么</th></tr><tr><td>本章回答一个问题：在「代码主要由 AI 产出」的前提下……</td><td>这一章的疑问很具体：代码主要由 AI 产出时，人靠什么保证结果不走样。</td><td>设问句 + 长定语是典型的模型腔</td></tr><tr><td>几个刻意的设计：<b>蛋白过量要扣分</b>……</td><td>几处取舍：蛋白质超过目标 1.3 倍开始扣分……</td><td>&quot;刻意的设计&quot;是在自我表扬，读着假</td></tr><tr><td><b>诚实声明：</b> ……伪造的 Prompt 链在评审追问下必然崩塌</td><td><b>说明：</b> 最早的 6 次提交早于归档机制，这里也不补写。</td><td>解释&quot;我为什么诚实&quot;本身就是表演</td></tr></table>
 <p>另外把 <code>prompts/*.md</code> 的标题统一成「需求 / 拆解 / 取舍 / 接口 / 验证 / 没做的」，去掉「AI 的拆解」「协作形态：DSH Agent 会话」这类标签——<b>标签是给机器看的，记录是给人看的</b>。</p>
+<h2>④ 验收结果</h2>
+<p>逐位比对模板与润色后的文本：</p>
+<pre><code>1312 / 1804 / 1443 / 91 / 40% / 577 / 36 / 590 / 55 / +2% / 153%</code></pre>
+<p><b>11 个数字全部一致。</b> 加上坏 key 的兜底测试，这两条一起写进了自测用例。</p>
 <h2>复盘</h2>
 <p>&quot;让 AI 写得像人&quot;最容易走偏的地方，是把它改得更花哨。实际有效的只有三件事：<b>去掉自我评价、去掉设问和排比、把每句话落到具体数字和具体动作上</b>。第三点尤其重要——&quot;处理了并发问题&quot;是空话，&quot;先写菜单再写订单，最坏是少卖而不是超卖&quot;才是人写的。</p>
+<p>同一个道理反过来用也成立：<b>让 AI 别动数字，靠的不是嘱咐它，而是给它一个不许动的硬约束，再逐位比对验收。</b></p>
 <div class='part'>第二部分 迭代记录</div>
 <h1>01 · 订单落库</h1>
 <ul>
@@ -470,9 +477,11 @@ POST /api/stats/insight    （需登录）</code></pre>
 <h2>早于这套记录的部分</h2>
 <p>仓库最早的 6 次提交是存量代码按模块导入，那时还没有这套记录，所以没有对应条目，也不补写。</p>
 <h2>对话快照（snapshots/）</h2>
-<p>赛项要求提交&quot;AI 对话历史导出的 Prompt 历史快照&quot;，所以另开一个目录放<b>带真实报错与命令的对话纪要</b>：</p>
-<table><tr><th>文件</th><th>内容</th></tr><tr><td><code>snapshots/01-建仓与推送排障.md</code></td><td>建仓 400（GBK 编码）、账号 404、push 被重置，四个卡点怎么定位</td></tr><tr><td><code>snapshots/02-推荐引擎调参.md</code></td><td>第一版蛋白 173% → 加过量惩罚 → 预算无解时退化策略</td></tr><tr><td><code>snapshots/03-大模型润色的数字约束.md</code></td><td>系统提示怎么防模型改数字、坏 Key 兜底、去 AI 味的具体改法</td></tr></table>
-<p>这些是纪要（节选），不是逐字转录；原始对话截图/录屏可另行补充。</p><h1>附录　对话过程截图</h1>
+<p>赛项要求「至少 3 个核心功能迭代时与 AI 交互的<b>完整 Prompt 链</b>」，所以另开一个目录放带真实报错与命令的对话记录。</p>
+<p>三条链统一按<b>四段结构</b>组织，评审可以按顺序读：</p>
+<table><tr><th>段落</th><th>内容</th><th>为什么必须有</th></tr><tr><td>① 我提的 Prompt</td><td>当时的原话，不改写</td><td>看意图是怎么下的</td></tr><tr><td>② AI 给出的第一版方案</td><td>它第一反应做了什么</td><td>看它会不会跑偏</td></tr><tr><td>③ 我怎么引导它纠偏</td><td>追问原话 + 真实报错回显 + 改法</td><td>赛项要的「如何引导 AI 修复 Bug」就在这里</td></tr><tr><td>④ 验收结果</td><td>跑过什么、数字是多少</td><td>证明改完是通的，不是嘴上说通</td></tr></table>
+<table><tr><th>文件</th><th>① Prompt 主题</th><th>② 第一版的问题</th><th>③ 纠偏过程</th><th>④ 验收</th></tr><tr><td><code>snapshots/01-建仓与推送排障.md</code></td><td>建仓并推代码上去</td><td>报「6 个提交已推送」，实际仓库没建成</td><td>4 个卡点：GBK 400 / 404 假象 / 新号风控 / push 被重置</td><td>匿名可 clone</td></tr><tr><td><code>snapshots/02-推荐引擎调参.md</code></td><td>给减脂餐加套餐推荐</td><td>直接调大模型生成，结果不可复现</td><td>3 轮：蛋白 173% / 预算无解 / 营养数据来源</td><td>5 条用例 + 674 候选 2 ms</td></tr><tr><td><code>snapshots/03-大模型润色的数字约束.md</code></td><td>接大模型润色且去 AI 腔</td><td>直接覆盖模板文案，数字可能被改写</td><td>4 步：验 key / 写死约束 / 坏 key 兜底 / 去 AI 味</td><td>11 个数字逐位一致</td></tr></table>
+<p>Prompt 为原文引用，邮箱与密钥已打码；AI 回复保留关键段落与原样命令回显，不逐字抄录整段对话。过程截图见 <code>docs/screenshots/dialogs/</code>。</p><h1>附录　对话过程截图</h1>
 <p>以下截图取自开发时与 AI 的会话界面，按时间顺序排列，用于佐证 prompts/ 下三份对话快照记录的过程真实发生。截图未做美化，保留当时的窗口与侧栏。</p>
 <div class="fig"><img src="screenshots/dialogs/01-规则调研与赛项确认.png"><div class="cap">图 A-1　起始对话：确认赛项与规则，明确要交的是哪些材料</div></div>
 <div class="fig"><img src="screenshots/dialogs/02-评分维度与扣分项.png"><div class="cap">图 A-2　评分维度：过程可复现 25%、解题有效 25%、方法创新 20%，决定了后续所有取舍</div></div>

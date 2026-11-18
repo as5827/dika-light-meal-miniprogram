@@ -315,7 +315,7 @@ AI 的产出不直接进主干，必须过三道闸：
 
 ## 7.1 提交策略
 
-仓库 65 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，`feat` / `docs` / `ci` / `chore` 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。
+仓库 66 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，`feat` / `docs` / `ci` / `chore` 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。
 
 ## 7.2 Prompt 归档
 
@@ -378,7 +378,14 @@ node server/server.js        # 无需 npm install
 
 ## 8.4 演示数据声明
 
-仓库中的订单、经营看板与界面截图均为演示数据，由 `node scripts/seed-demo.js` 通过公开下单接口生成；顾客姓名、手机号、地址为固定样例，不含真实顾客信息，也不存在真实成交流水。清空重来：删除 `data/orders.json`，再 `git checkout -- data/menu.json` 恢复库存。
+仓库中的订单、经营看板与界面截图均为演示数据，不含真实顾客信息，也不存在真实成交流水。两个脚本分工不同：
+
+| 脚本 | 造什么 | 用途 |
+|---|---|---|
+| `node scripts/seed-demo.js 10` | 多位顾客的随机订单，撒在最近 7 天 | 把经营看板、热销榜填起来 |
+| `node scripts/demo-seed.js` | 固定一位顾客连续 7 天的记录（偏汤品与甜品） | 让点餐搭档能给出「蛋白不足 / 蔬菜偏少 / 重样 / 连续打卡」四条建议 |
+
+两者写入不同手机号，可反复执行、互不覆盖。清空重来：删除 `data/orders.json` 与 `data/butler.json`，再 `git checkout -- data/menu.json` 恢复库存。
 
 ## 8.5 验收指标
 
@@ -399,7 +406,7 @@ node server/server.js        # 无需 npm install
 
 | 赛项要求 | 对应材料 |
 |---|---|
-| 代码仓库 Public、细粒度提交 | GitHub `as5827/dika-light-meal-miniprogram`，65 次提交 |
+| 代码仓库 Public、细粒度提交 | GitHub `as5827/dika-light-meal-miniprogram`，66 次提交 |
 | Prompt 历史快照、≥3 条完整 Prompt 链 | 第 4 章；`prompts/` 与 `prompts/snapshots/`；提交包 02、03、11 号 |
 | README 10 分钟复现、依赖清单、环境变量模板 | 仓库根目录 `README.md`；`.env.example` |
 | 演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现 | 提交包 10 号 |

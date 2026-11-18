@@ -50,7 +50,7 @@ function get(pathname) {
 
 const NAMES = ['李同学', '王同学', '张同学', '赵同学', '陈同学', '周同学', '吴同学', '郑同学'];
 // 固定一位「老顾客」：点餐搭档靠同一个手机号认人，演示时要能看到记忆与主动建议
-const ME = { name: '李同学', phone: '13800001111' };
+const ME = { name: '王同学', phone: '13800002222' };
 const BUILDINGS = ['1号楼', '3号楼', '5号楼', '图书馆', '实验楼'];
 
 async function main() {

@@ -223,7 +223,7 @@ const buildInsights = (sum, target, user) => {
       level: 'warn',
       icon: 'protein',
       title: '这几天的蛋白差一截',
-      detail: `近 7 天平均每天约 ${sum.avgProtein} g，你的单餐目标是 ${t.protein} g。缺口大概是一份额外的鸡胸肉。`,
+      detail: `近 7 天平均每餐约 ${sum.avgProtein} g，你的单餐目标是 ${t.protein} g。缺口大概是一份额外的鸡胸肉。`,
       action: 'addProtein'
     });
   }
@@ -317,27 +317,39 @@ function buildVerdict(sum, target) {
   if (!sum.totalOrders) {
     return { level: 'info', text: '还没开始记录。点一份试试，我会记住口味，下次直接给建议。' };
   }
+
   const cal = target.calorie || 1;
   const pro = target.protein || 1;
-  const ratio = sum.avgCalorie / cal;
-  let level = 'good';
-  let text = '';
+  const calRatio = sum.avgCalorie / cal;
+  const proRatio = sum.avgProtein / pro;
 
-  if (ratio > 1.2) {
-    level = 'over';
-    text = `每餐平均 ${sum.avgCalorie} kcal，比目标高 ${Math.round((ratio - 1) * 100)}%，可以挑清淡一点的。`;
-  } else if (ratio >= 0.8) {
-    level = 'good';
-    text = `每餐平均 ${sum.avgCalorie} kcal，正好落在目标附近，保持住。`;
-  } else {
-    level = 'under';
-    text = `每餐平均 ${sum.avgCalorie} kcal，比目标低 ${Math.round((1 - ratio) * 100)}%，怕你吃不饱。`;
+  // 结论只讲「最该改的那件事」，其余交给下面的建议卡，避免一句话塞一堆
+  const issues = [];
+  if (proRatio < 0.85) {
+    issues.push(`蛋白只有 ${sum.avgProtein} g，离 ${pro} g 还差 ${pro - sum.avgProtein} g`);
+  }
+  if (sum.vegRatio < 20) {
+    issues.push('蔬菜也偏少');
+  }
+  if (calRatio > 1.2) {
+    issues.push(`每餐 ${sum.avgCalorie} kcal，比目标高 ${Math.round((calRatio - 1) * 100)}%`);
   }
 
-  const proRatio = sum.avgProtein / pro;
-  if (proRatio < 0.85) text += `蛋白只有 ${sum.avgProtein} g，建议加一份。`;
-  if (sum.vegRatio < 20) text += '蔬菜偏少。';
-  return { level, text };
+  if (issues.length) {
+    return {
+      level: calRatio > 1.2 ? 'over' : 'under',
+      text: '这几餐' + issues.join('，') + '。'
+    };
+  }
+
+  if (calRatio < 0.8) {
+    return { level: 'under', text: `每餐平均 ${sum.avgCalorie} kcal，比目标低 ${Math.round((1 - calRatio) * 100)}%，怕你吃不饱。` };
+  }
+
+  return {
+    level: 'good',
+    text: `每餐平均 ${sum.avgCalorie} kcal、蛋白 ${sum.avgProtein} g，都在目标附近，保持住。`
+  };
 }
 
 function greeting(sum, target) {

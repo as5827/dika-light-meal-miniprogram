@@ -1075,6 +1075,7 @@
     transition: height .5s cubic-bezier(.2, .8, .3, 1);
   }
   .butler-col .bar.has { background: #22A06B; }
+  .butler-col .bar.low { background: #A7D3BE; }
   .butler-col .bar.over { background: #F59E0B; }
   .butler-col .cv {
     position: absolute; top: -11px; left: 0; right: 0; text-align: center;
@@ -2856,7 +2857,8 @@ function butlerChart(m, target) {
   const bars = series.map((d, i) => {
     const v = perMeal[i];
     const h = v ? Math.max(2, Math.round((v / maxVal) * 100)) : 2;
-    const cls = !d.orders ? '' : (v > (target.calorie || 0) * 1.2 ? 'over' : 'has');
+    const goal = target.calorie || 1;
+    const cls = !d.orders ? '' : (v > goal * 1.2 ? 'over' : (v < goal * 0.8 ? 'low' : 'has'));
     return '<div class="butler-col"><span class="cv">' + (d.orders ? v : '') + '</span>' +
       '<span class="bar ' + cls + '" style="height:' + h + '%"></span></div>';
   }).join('');

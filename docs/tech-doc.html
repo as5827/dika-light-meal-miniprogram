@@ -145,6 +145,10 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <div class="l2">8.5 验收指标</div>
 <div class="l1">9 总结与展望</div>
 <div class="l1">附录 A 赛项材料对照</div>
+<div class="l1">附录 B 第三方资源与原创性声明</div>
+<div class="l2">B.1 使用的公开依据</div>
+<div class="l2">B.2 第三方软件</div>
+<div class="l2">B.3 原创性声明</div>
   </div>
 </div>
 <h1>1 项目概述</h1>
@@ -258,6 +262,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <p><b>主动建议。</b> 打开面板不等提问，先按规则算出该说什么，每条都带数字：蛋白缺口按「目标×0.75」判定并给出缺少的克数；近 7 天同一道菜达到 3 次提示重样；蔬菜占比低于 20% 提示加菜；连续 3 天以上有记录则给正反馈。判定全部在本地完成，模型不参与。</p>
 <p><b>对话。</b> 四类意图走规则匹配而非让模型自由生成：改忌口、改目标、复盘本周、按目标配一餐。改忌口会写入档案并在后续推荐中生效，这是「记忆」最直观的一条。配餐复用第 5.3 节的组合搜索，因此结论与直接点推荐完全一致。</p>
 <p><b>可视化。</b> 面板顶部是一枚 SVG 吉祥物（三片叶芽 + 呼吸与眨眼动画），下方依次是记忆统计卡、主动建议卡（可一键加购或追问）、对话区。小管家的回答同样走阶段事件流：读取记录 → 回顾近 7 天 → 比对目标 → 生成建议，进度直接显示在对话气泡里。</p>
+<p><b>与其他做法不同在哪。</b> 常见的健康类应用要求用户先填一套身体数据、再每日打卡，记忆由用户手工维护；本节的记忆直接来自本店的真实订单，用户不需要额外做任何事，且建议最终落成一个可点击的加购动作，而不是一份看完即弃的静态计划。</p>
 <p><b>边界。</b> 一切基于订单与档案，不采集体重秤、运动手环等外部数据；营养值仍是估算值；没有账号体系，换手机号即换记忆。这些限制写在 README 与本文第 9 章。</p>
 <h1>6 工程质量与安全</h1>
 <h2>6.1 零依赖与原子写</h2>
@@ -274,7 +279,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <h1>7 可复现性说明</h1>
 <p>赛项要求重点阐述。本章说明「凭什么相信这套代码不是一次性堆出来的」。</p>
 <h2>7.1 提交策略</h2>
-<p>仓库 62 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
+<p>仓库 63 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
 <h2>7.2 Prompt 归档</h2>
 <p><code>prompts/</code> 下每个功能一个文件，编号与提交顺序一致；<code>prompts/snapshots/</code> 另行保存三条带真实报错与命令的完整 Prompt 链，按「① 我的 Prompt → ② AI 首版方案 → ③ 如何纠偏 → ④ 验收结果」组织。</p>
 <h2>7.3 十分钟复现</h2>
@@ -303,4 +308,20 @@ node server/server.js        # 无需 npm install
 <p>本作品把一个小微轻食门店的接单流程做成了可运行的系统：菜单单一数据源、下单前完成校验、订单状态可见、经营数据可读，并在此之上做了两个可解释的 AI 能力。工程上坚持零依赖与单机可跑，使评审无需准备环境即可在十分钟内跑通。</p>
 <p>后续规划按优先级排列：补齐顾客标识以输出复购率；上线后按 8.5 的四个指标做两周实测；在资质齐备后接入微信支付与小程序上架。</p>
 <h1>附录 A 赛项材料对照</h1>
-<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，62 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr><tr><td>AI 响应状态与记忆能力</td><td>第 5.6 节（阶段流） / 第 5.7 节（健康小管家）</td></tr></table></body></html>
+<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，63 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr><tr><td>AI 响应状态与记忆能力</td><td>第 5.6 节（阶段流） / 第 5.7 节（健康小管家）</td></tr></table>
+<h1>附录 B 第三方资源与原创性声明</h1>
+<h2>B.1 使用的公开依据</h2>
+<table><tr><th>名称</th><th>用途</th><th>出处</th></tr><tr><td>Mifflin-St Jeor 公式</td><td>基础代谢估算，见 <code>server/recommender.js</code> 第 66 行</td><td>Mifflin M D, St Jeor S T, Hill L A, et al. A new predictive equation for resting energy expenditure in healthy individuals[J]. The American Journal of Clinical Nutrition, 1990, 51(2): 241-247</td></tr><tr><td>微信小程序开发文档</td><td>平台 API、组件与上架要求</td><td>developers.weixin.qq.com</td></tr><tr><td>Node.js 官方文档</td><td><code>http</code> / <code>fs</code> / <code>crypto</code> 标准库用法</td><td>nodejs.org/docs</td></tr><tr><td>DeepSeek API 文档</td><td>大模型接口，仅用于推荐理由润色与意图解析</td><td>api-docs.deepseek.com</td></tr><tr><td>赛项通知</td><td>提交要求与评审维度</td><td>2026 第九届传智杯 · AI 创新应用挑战赛通知</td></tr></table>
+<p>上述公式与官方文档属于公开通用的技术依据，本文档与代码按标准写法使用，未照搬任何示例工程。</p>
+<h2>B.2 第三方软件</h2>
+<p>全部为开发期依赖，不进入运行时：</p>
+<table><tr><th>包</th><th>版本</th><th>许可</th><th>作用</th><th>是否修改</th></tr><tr><td>typescript</td><td>5.9.3</td><td>Apache-2.0</td><td>小程序端类型检查</td><td>否</td></tr><tr><td>miniprogram-api-typings</td><td>3.12.3</td><td>MIT</td><td>小程序 API 类型声明</td><td>否</td></tr></table>
+<p><b>运行时第三方依赖为 0</b>：根目录没有 <code>package.json</code>，<code>node server/server.js</code> 直接启动；界面不引入任何 UI 组件库（Vant Weapp / TDesign / WeUI 均未使用），图表为纯 CSS 绘制。</p>
+<h2>B.3 原创性声明</h2>
+<ul>
+<li>本作品的业务代码、页面、样式、文档与 Prompt 记录，均由作者在 AI 工具辅助下从零编写；<b>未复制、未改写、未包装任何开源项目</b>。</li>
+<li>仓库中不存在从其他仓库搬运的源文件。若评审对任一文件存疑，可对照提交历史逐条追溯：每次提交对应一次对话或一个功能模块，正文写明改动点与取舍（见第 7 章）。</li>
+<li>菜品图片为程序绘制的 emoji 与内联 SVG，未使用第三方图库素材；文档与页面字体使用操作系统自带的宋体、黑体，未随包分发字体文件。</li>
+<li>同类健康管理产品仅作为了解产品形态的参照，<b>未参考其代码、界面稿、文案或数据结构</b>；第 5.7 节的记忆模型基于本店订单自行设计，不涉及任何第三方方案。</li>
+<li>代码与文档版权归作者所有；如引用或转载，请注明出处。</li>
+</ul></body></html>

@@ -707,8 +707,27 @@
   .item-row:last-child { border-bottom: none; }
   .item-name { flex: 1; }
   .item-spec { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
-  .item-qty { color: var(--ink-3); margin: 0 10px; }
-  .item-price { font-weight: 600; color: var(--ink-1); }
+  .item-qty {
+    display: flex; align-items: center; gap: 6px; margin: 0 8px;
+    color: var(--ink-3); flex-shrink: 0;
+  }
+  .qty-btn {
+    width: 24px; height: 24px; padding: 0; border-radius: 50%;
+    border: 1px solid #D7E5DC; background: #fff; color: #1E7A52;
+    font-size: 15px; line-height: 1; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .qty-btn:active { background: #EAF7F0; transform: scale(.92); }
+  .qty-btn.danger { color: #E0483D; border-color: #F3C9C4; background: #FEF3F2; }
+  .qty-num {
+    min-width: 16px; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--ink-1); font-variant-numeric: tabular-nums;
+  }
+  .item-price { font-weight: 600; color: var(--ink-1); flex-shrink: 0; min-width: 52px; text-align: right; }
+  .cart-empty-tip {
+    padding: 18px 0; text-align: center; font-size: 12px; color: var(--ink-4);
+  }
   .fee-row {
     display: flex;
     justify-content: space-between;
@@ -2077,15 +2096,24 @@ function calcFees(subtotal) {
 }
 function renderConfirm() {
   const itemsWrap = document.getElementById('confirmItems');
-  itemsWrap.innerHTML = cart.map(c => `
+  if (!cart.length) {
+    itemsWrap.innerHTML = '<div class="cart-empty-tip">购物车空了，回菜单挑两道吧</div>';
+  } else {
+    itemsWrap.innerHTML = cart.map(c => `
     <div class="item-row">
       <div class="item-name">
         ${c.name}
         ${c.specDesc ? `<div class="item-spec">${c.specDesc}</div>` : ''}
       </div>
-      <div class="item-qty">x${c.qty}</div>
+      <div class="item-qty">
+        <button class="qty-btn minus${c.qty <= 1 ? ' danger' : ''}" data-key="${c.key}" data-d="-1"
+          title="${c.qty <= 1 ? '从购物车移除' : '减少一份'}">${c.qty <= 1 ? '×' : '−'}</button>
+        <span class="qty-num">${c.qty}</span>
+        <button class="qty-btn plus" data-key="${c.key}" data-d="1" title="增加一份">+</button>
+      </div>
       <div class="item-price">¥${fenToYuan(c.qty * c.unitPrice)}</div>
     </div>`).join('');
+  }
   const subtotal = cart.reduce((s, c) => s + c.qty * c.unitPrice, 0);
   const totalCalorie = cart.reduce((s, c) => s + c.qty * c.calorie, 0);
   const fees = calcFees(subtotal);
@@ -2098,6 +2126,40 @@ function renderConfirm() {
   document.getElementById('barCalorie').textContent = '共 ' + totalCalorie + ' kcal';
   renderConfirmAddress();
 }
+// 购物车改数量 / 移除：确认页里的 − + 与 ×
+// 数量减到 0 等同于移除；单份上限 99，防止误按住加号把金额刷爆
+function changeCartQty(key, delta) {
+  const it = cart.find((c) => c.key === key);
+  if (!it) return;
+  const next = it.qty + delta;
+  if (next <= 0) {
+    removeCartItem(key);
+    return;
+  }
+  if (next > 99) {
+    showToast('单份最多 99');
+    return;
+  }
+  it.qty = next;
+  updateCart();
+  renderConfirm();
+}
+
+function removeCartItem(key) {
+  const idx = cart.findIndex((c) => c.key === key);
+  if (idx < 0) return;
+  const name = cart[idx].name;
+  cart.splice(idx, 1);
+  updateCart();
+  if (!cart.length) {
+    showToast('购物车已清空');
+    showPage('Menu');
+    return;
+  }
+  renderConfirm();
+  showToast('已移除「' + name + '」');
+}
+
 function validateOrder() {
   if (!cart.length) {
     showToast('购物车还是空的');
@@ -2122,6 +2184,12 @@ document.getElementById('checkoutBtn').addEventListener('click', () => {
   showPage('Confirm');
 });
 document.getElementById('confirmBack').addEventListener('click', () => showPage('Menu'));
+// 确认页的数量增减与移除（事件委托，重渲染后依然有效）
+document.getElementById('confirmItems').addEventListener('click', (e) => {
+  const btn = e.target.closest('.qty-btn');
+  if (!btn) return;
+  changeCartQty(btn.dataset.key, Number(btn.dataset.d));
+});
 /* ========== AI 定制套餐 ========== */
 let planOptions = null;
 let planData = null;

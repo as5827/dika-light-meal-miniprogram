@@ -1009,9 +1009,22 @@
     background: linear-gradient(135deg, #F2FBF6, #FFFFFF);
     border: 1px solid #DCEFE4; border-radius: 16px; padding: 14px; margin-bottom: 12px;
   }
-  .butler-hero-avatar { width: 72px; height: 72px; flex: 0 0 72px; }
+  .butler-hero-avatar { width: 84px; height: 84px; flex: 0 0 84px; }
   .butler-hero-text { flex: 1; min-width: 0; }
-  .butler-greet { font-size: 13.5px; font-weight: 600; color: #163A2A; line-height: 1.6; }
+  .butler-greet { font-size: 11px; color: #9CA3AF; line-height: 1.5; margin-bottom: 3px; }
+  /* 结论气泡：消费者只看这一句，其余是佐证 */
+  .butler-verdict {
+    position: relative; background: #EAF7F0; border-radius: 12px;
+    padding: 9px 12px; font-size: 13px; font-weight: 600; line-height: 1.6; color: #163A2A;
+  }
+  .butler-verdict::before {
+    content: ''; position: absolute; left: -5px; top: 13px;
+    width: 10px; height: 10px; background: #EAF7F0; transform: rotate(45deg); border-radius: 2px;
+  }
+  .butler-verdict.lv-over { background: #FEF3E2; color: #92400E; }
+  .butler-verdict.lv-over::before { background: #FEF3E2; }
+  .butler-verdict.lv-under { background: #EFF6FF; color: #1E40AF; }
+  .butler-verdict.lv-under::before { background: #EFF6FF; }
   .butler-tags { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
   .butler-tag {
     font-size: 10.5px; color: #1E7A52; background: #EAF7F0;
@@ -1401,6 +1414,7 @@
         <div class="butler-hero-avatar" id="butlerHeroAvatar"></div>
         <div class="butler-hero-text">
           <div class="butler-greet" id="butlerGreet">正在读取你的点餐记录…</div>
+          <div class="butler-verdict" id="butlerVerdict"></div>
           <div class="butler-tags" id="butlerTags"></div>
         </div>
       </div>
@@ -2823,12 +2837,9 @@ function butlerGoals(m, target) {
     const ratio = r.goal ? r.val / r.goal : 0;
     const pct = Math.max(0, Math.min(ratio, 1)) * 100;
     const cls = ratio > 1.2 ? 'over' : (ratio < 0.8 ? 'under' : '');
-    const delta = r.goal ? Math.round((ratio - 1) * 100) : 0;
-    const badge = r.val === 0 ? '' : '<i class="' + (ratio > 1.2 ? 'over' : '') + '">' +
-      (delta >= 0 ? '+' : '') + delta + '%</i>';
     return '<div class="butler-goal"><span class="lb">' + r.lb + '</span>' +
       '<span class="track"><span class="fill ' + cls + '" style="width:' + pct.toFixed(1) + '%"></span></span>' +
-      '<span class="num"><b>' + r.val + '</b>' + r.unit + ' / ' + r.goal + badge + '</span></div>';
+      '<span class="num"><b>' + r.val + '</b>' + r.unit + ' / ' + r.goal + '</span></div>';
   }).join('');
 }
 
@@ -2855,13 +2866,18 @@ function butlerChart(m, target) {
   butlerEl('butlerChart').innerHTML =
     '<div class="butler-cols">' + bars + '<i class="butler-tline" style="bottom:' + linePos.toFixed(1) + '%"></i></div>' +
     '<div class="butler-days">' + days + '</div>' +
-    '<div class="butler-sum">这 7 天有 <b>' + hitDays + '</b> 天在点餐，每餐最高 <b>' +
-    Math.max(...perMeal) + '</b> kcal，你的单餐目标是 <b>' + (target.calorie || 0) + '</b> kcal。</div>';
+    '<div class="butler-sum"><b>' + hitDays + '</b> 天有记录 · 单餐最高 <b>' +
+    Math.max(...perMeal) + '</b> kcal</div>';
 }
 
 function butlerRender(p) {
   butlerData = p;
   butlerEl('butlerGreet').textContent = p.greeting || '';
+  const v = p.verdict || { level: 'info', text: '' };
+  const vEl = butlerEl('butlerVerdict');
+  vEl.textContent = v.text || '';
+  vEl.className = 'butler-verdict lv-' + (v.level || 'info');
+  vEl.style.display = v.text ? '' : 'none';
   const tags = ['目标 ' + p.target.goalLabel, p.target.source === 'profile' ? '按你的数据算' : '通用值'];
   if (p.identity.dislikes && p.identity.dislikes.length) tags.push('忌口 ' + p.identity.dislikes.join('、'));
   butlerEl('butlerTags').innerHTML = tags.map((x, i) =>

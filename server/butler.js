@@ -306,10 +306,39 @@ const buildProfile = ({ orders, menu, phone }) => {
     },
     target,
     memory: sum,
+    verdict: buildVerdict(sum, target),
     insights,
     greeting: greeting(sum, target)
   };
 };
+
+// 一句结论：消费者不读表格，只读一句话。数字全部来自上面的统计，不额外编造
+function buildVerdict(sum, target) {
+  if (!sum.totalOrders) {
+    return { level: 'info', text: '还没开始记录。点一份试试，我会记住口味，下次直接给建议。' };
+  }
+  const cal = target.calorie || 1;
+  const pro = target.protein || 1;
+  const ratio = sum.avgCalorie / cal;
+  let level = 'good';
+  let text = '';
+
+  if (ratio > 1.2) {
+    level = 'over';
+    text = `每餐平均 ${sum.avgCalorie} kcal，比目标高 ${Math.round((ratio - 1) * 100)}%，可以挑清淡一点的。`;
+  } else if (ratio >= 0.8) {
+    level = 'good';
+    text = `每餐平均 ${sum.avgCalorie} kcal，正好落在目标附近，保持住。`;
+  } else {
+    level = 'under';
+    text = `每餐平均 ${sum.avgCalorie} kcal，比目标低 ${Math.round((1 - ratio) * 100)}%，怕你吃不饱。`;
+  }
+
+  const proRatio = sum.avgProtein / pro;
+  if (proRatio < 0.85) text += `蛋白只有 ${sum.avgProtein} g，建议加一份。`;
+  if (sum.vegRatio < 20) text += '蔬菜偏少。';
+  return { level, text };
+}
 
 function greeting(sum, target) {
   const h = new Date().getHours();

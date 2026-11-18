@@ -569,7 +569,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 健康小管家：档案（含记忆与主动建议）
+  // 点餐搭档：档案（含记忆与主动建议）
   if (req.method === 'GET' && url.startsWith('/api/butler/profile')) {
     const q = new URLSearchParams(url.split('?')[1] || '');
     const phone = butler.cleanPhone(q.get('phone'));
@@ -584,7 +584,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 健康小管家：保存用户档案（身高体重、目标、忌口）
+  // 点餐搭档：保存用户档案（身高体重、目标、忌口）
   if (req.method === 'POST' && url.startsWith('/api/butler/profile')) {
     let payload;
     try {
@@ -595,7 +595,7 @@ const server = http.createServer(async (req, res) => {
     }
     const phone = butler.cleanPhone(payload.phone);
     if (!phone) {
-      sendJson(res, 400, { code: 400, message: '缺少手机号，小管家靠它记住你' });
+      sendJson(res, 400, { code: 400, message: '缺少手机号，点餐搭档靠它记住你' });
       return;
     }
     const patch = {};
@@ -618,7 +618,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // 健康小管家：对话（分阶段事件流，与其它 AI 入口一致）
+  // 点餐搭档：对话（分阶段事件流，与其它 AI 入口一致）
   if (req.method === 'POST' && url.startsWith('/api/butler/stream')) {
     let payload;
     try {
@@ -634,13 +634,13 @@ const server = http.createServer(async (req, res) => {
       else sseSend(res, { type: 'error', code: r.body.code, message: r.body.message });
     } catch (e) {
       log.error('butler.stream', { message: e.message });
-      sseSend(res, { type: 'error', code: 500, message: '小管家开了个小差，再试一次' });
+      sseSend(res, { type: 'error', code: 500, message: '点餐搭档开了个小差，再试一次' });
     }
     res.end();
     return;
   }
 
-  // 健康小管家：对话（一次性 JSON）
+  // 点餐搭档：对话（一次性 JSON）
   if (req.method === 'POST' && url.startsWith('/api/butler/chat')) {
     let payload;
     try {

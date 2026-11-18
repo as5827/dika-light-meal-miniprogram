@@ -451,6 +451,38 @@ POST /api/stats/insight    （需登录）</code></pre>
 <li>图表固定为&quot;今日 + 8–22 点&quot;，没有做时间范围切换；</li>
 <li>模型解读没有做缓存，同一份数据重复点会重复计费。</li>
 </ul>
+<h1>09 点餐搭档：让推荐记住「你」</h1>
+<h2>需求</h2>
+<div class='quote'>「最好可以再在这个里面接入一个点餐搭档，如果多次点餐具备记忆功能，主动点进去 ai 点餐搭档对此做出建议」</div>
+<p>三个硬要求：<b>多次点餐要有记忆</b>、<b>主动给建议而不是等提问</b>、<b>界面要做好看</b>。</p>
+<h2>上下文</h2>
+<p>已有两个 AI 入口（套餐推荐、一句话点餐），都是一次性计算、不保存任何用户状态。</p>
+<p>订单里有 <code>address.phone</code>，但没有用户表；<code>data/</code> 下只有 <code>menu.json</code> 与 <code>orders.json</code>。</p>
+<h2>拆解</h2>
+<table><tr><th>要交付</th><th>判据</th></tr><tr><td>记忆</td><td>换手机号即换人；同一手机号第二次进入能看到基于历史的数字</td></tr><tr><td>主动建议</td><td>打开面板不等输入就有内容，且每条建议都能追到具体数字</td></tr><tr><td>对话</td><td>至少覆盖改忌口、改目标、复盘、配餐四类意图</td></tr><tr><td>可视化</td><td>有独立的入口与面板，吉祥物要有动效，不能是 emoji 占位</td></tr></table>
+<h2>取舍</h2>
+<table><tr><th>备选</th><th>放弃理由</th></tr><tr><td>引入向量库做「语义记忆」</td><td>20 单量级下没有召回价值，却要打破零依赖</td></tr><tr><td>让大模型记住对话历史</td><td>不可复现、每次不同；评审无法验证「它为什么这么说」</td></tr><tr><td>让用户每天打卡身高体重</td><td>多一步操作就少一半留存，且与本作品「点餐顺手用」的定位冲突</td></tr><tr><td>记忆直接复用密码学会话</td><td>会话 8 小时过期，撑不起「记住你」的语义</td></tr></table>
+<p>最终选择：<b>档案极轻（目标/身高体重/忌口），其余全部从订单现算</b>。这样记忆永远与真实行为一致，不会出现「档案说减脂、实际天天点炸物」的割裂。</p>
+<h2>关键 Prompt 与产出</h2>
+<p>给 AI 的约束（节选）：</p>
+<pre><code>【目标】点餐页加一个点餐搭档：记忆 + 主动建议 + 对话 + 一键加购
+【现状】无用户表；订单含 address.phone；已有 recommender 与 SSE 阶段流
+【约束】零第三方依赖；不改动现有接口行为；建议不得让模型参与判断
+【契约】GET /api/butler/profile?phone=  POST /api/butler/chat  POST /api/butler/stream
+【验收】selftest 仍全绿；换手机号记忆隔离；忌口写入后推荐生效</code></pre>
+<h2>验证</h2>
+<table><tr><th>用例</th><th>结果</th></tr><tr><td>12 单同一手机号</td><td>面板显示 8 单 / 每餐 686 kcal / 蛋白 49 g / 蔬菜 28%</td></tr><tr><td>「我不吃香菜」</td><td>档案写入 dislikes，后续推荐回复带「已避开香菜」</td></tr><tr><td>「今天吃什么」</td><td>返回 3 道组合 + 合计数字 + 一键加购按钮</td></tr><tr><td>换手机号</td><td>记忆归零，回到「先让我认识你」</td></tr><tr><td>回归</td><td>selftest 73 项仍全通过</td></tr></table>
+<h2>踩到的两个坑</h2>
+<ol>
+<li><b>口径错位</b>：第一版把「日均」当分母，而目标是「每餐」，导致 6 单被算成每餐 3030 kcal。改成按单量求均值。</li>
+<li><b>样式串味</b>：建议卡片的等级类名用了 <code>notice</code>，与全局横幅 <code>.notice</code>（<code>display:flex; white-space:nowrap</code>）撞车，卡片被压成一行并裁切。改成 <code>lv-notice</code> 等带命名空间的写法。</li>
+</ol>
+<h2>没做的</h2>
+<ul>
+<li>不接体重秤与运动手环，没有外部数据源；</li>
+<li>不做账号体系，手机号即身份；</li>
+<li>不复用第 5.3 节之外的营养模型，蛋白仍为估算值。</li>
+</ul>
 <div class='part'>第三部分 归档说明</div>
 <h1>prompts/ · 迭代记录</h1>
 <p>这里放每次功能迭代的过程记录。赛项要求「至少 3 个核心功能迭代的完整 Prompt 链」，所以每条都写清楚：当时提了什么要求、AI 给了什么方案、我怎么选、最后怎么验证的。</p>
@@ -472,7 +504,7 @@ POST /api/stats/insight    （需登录）</code></pre>
 <li><b>没做的</b>：这次没覆盖的部分</li>
 </ol>
 <h2>索引</h2>
-<table><tr><th>编号</th><th>功能</th><th>对应提交</th></tr><tr><td>01</td><td>订单落库</td><td><code>feat(server): 订单落库 API</code> 起共四次</td></tr><tr><td>02</td><td>后台登录与鉴权</td><td><code>feat(server): 后台会话与接口鉴权</code>、<code>feat(admin): 登录遮罩</code></td></tr><tr><td>03</td><td>订单状态驱动跟踪页</td><td><code>feat(server): 订单事件链</code>、<code>feat(preview): 跟踪页轮询真实状态</code></td></tr><tr><td>04</td><td>小程序端与双端架构</td><td><code>feat(miniprogram): 微信小程序生产端</code></td></tr><tr><td>05</td><td>AI 减脂套餐推荐</td><td><code>feat(recommend)</code>、<code>feat(ui)</code> 两次提交</td></tr><tr><td>06</td><td>运行日志与 CI</td><td><code>feat(log)</code>、<code>ci:</code> 两次提交</td></tr><tr><td>07</td><td>一句话点餐</td><td><code>feat(nl)</code>、<code>docs:</code> 两次提交</td></tr><tr><td>08</td><td>经营看板</td><td><code>feat(stats): 经营看板</code></td></tr><tr><td>09</td><td>健康小管家</td><td><code>feat(butler): 按订单记忆的健康小管家</code></td></tr></table>
+<table><tr><th>编号</th><th>功能</th><th>对应提交</th></tr><tr><td>01</td><td>订单落库</td><td><code>feat(server): 订单落库 API</code> 起共四次</td></tr><tr><td>02</td><td>后台登录与鉴权</td><td><code>feat(server): 后台会话与接口鉴权</code>、<code>feat(admin): 登录遮罩</code></td></tr><tr><td>03</td><td>订单状态驱动跟踪页</td><td><code>feat(server): 订单事件链</code>、<code>feat(preview): 跟踪页轮询真实状态</code></td></tr><tr><td>04</td><td>小程序端与双端架构</td><td><code>feat(miniprogram): 微信小程序生产端</code></td></tr><tr><td>05</td><td>AI 减脂套餐推荐</td><td><code>feat(recommend)</code>、<code>feat(ui)</code> 两次提交</td></tr><tr><td>06</td><td>运行日志与 CI</td><td><code>feat(log)</code>、<code>ci:</code> 两次提交</td></tr><tr><td>07</td><td>一句话点餐</td><td><code>feat(nl)</code>、<code>docs:</code> 两次提交</td></tr><tr><td>08</td><td>经营看板</td><td><code>feat(stats): 经营看板</code></td></tr><tr><td>09</td><td>点餐搭档</td><td><code>feat(butler): 按订单记忆的点餐搭档</code></td></tr></table>
 <p>九条迭代记录合计 14 次功能提交，与仓库的 <code>feat</code> / <code>ci</code> 提交一一对应。</p>
 <h2>早于这套记录的部分</h2>
 <p>仓库最早的 6 次提交是存量代码按模块导入，那时还没有这套记录，所以没有对应条目，也不补写。</p>

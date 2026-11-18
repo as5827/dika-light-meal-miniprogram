@@ -949,7 +949,7 @@
     .think-step.active .think-label { color: #163A2A; }
   }
 
-  /* ========== 健康小管家 ========== */
+  /* ========== 点餐搭档 ========== */
   .butler-fab {
     position: fixed; right: 16px; bottom: 96px; width: 58px; height: 58px;
     border-radius: 50%; z-index: 90; cursor: pointer;
@@ -1018,13 +1018,73 @@
     border-radius: 999px; padding: 2px 8px;
   }
   .butler-tag.warn { color: #B45309; background: #FEF3C7; }
-  .butler-mem { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
-  .butler-stat {
-    background: #fff; border-radius: 12px; padding: 11px 12px; border: 1px solid #EDF3EF;
+  .butler-card {
+    background: #fff; border-radius: 14px; padding: 13px 14px; margin-bottom: 11px;
+    border: 1px solid #EDF3EF;
   }
-  .butler-stat .k { font-size: 11px; color: #9CA3AF; }
-  .butler-stat .v { font-size: 17px; font-weight: 700; color: #163A2A; margin-top: 2px; }
-  .butler-stat .s { font-size: 10.5px; color: #B0B7B3; margin-top: 1px; }
+  .butler-card-h {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-size: 12.5px; font-weight: 700; color: #163A2A; margin-bottom: 11px;
+  }
+  .butler-card-h span { font-size: 10.5px; font-weight: 400; color: #9CA3AF; }
+
+  /* 目标达成：横条 + 数值，减脂客群最关心「离目标还差多少」 */
+  .butler-goal { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .butler-goal:last-child { margin-bottom: 0; }
+  .butler-goal .lb { width: 30px; font-size: 11.5px; color: #6B7280; flex: 0 0 30px; }
+  .butler-goal .track {
+    flex: 1; height: 9px; border-radius: 999px; background: #EEF3F0; overflow: hidden;
+  }
+  .butler-goal .fill {
+    display: block; height: 100%; border-radius: 999px; background: #22A06B;
+    transition: width .5s cubic-bezier(.2, .8, .3, 1);
+  }
+  .butler-goal .fill.under { background: #A7D3BE; }
+  .butler-goal .fill.over { background: #F59E0B; }
+  .butler-goal .num {
+    flex: 0 0 auto; min-width: 96px; text-align: right; font-size: 11.5px; color: #374151;
+    font-variant-numeric: tabular-nums;
+  }
+  .butler-goal .num b { font-weight: 700; color: #163A2A; }
+  .butler-goal .num i {
+    font-style: normal; font-size: 10px; margin-left: 3px; padding: 1px 5px;
+    border-radius: 999px; background: #EAF7F0; color: #1E7A52;
+  }
+  .butler-goal .num i.over { background: #FEF3C7; color: #B45309; }
+
+  /* 近 7 天柱状图：纯 CSS，不引图表库 */
+  .butler-cols {
+    position: relative; display: flex; align-items: flex-end; gap: 7px; height: 88px; padding-top: 12px;
+  }
+  .butler-col { flex: 1; display: flex; align-items: flex-end; height: 100%; position: relative; }
+  .butler-col .bar {
+    width: 100%; border-radius: 4px 4px 2px 2px; background: #CBE7DA; min-height: 3px;
+    transition: height .5s cubic-bezier(.2, .8, .3, 1);
+  }
+  .butler-col .bar.has { background: #22A06B; }
+  .butler-col .bar.over { background: #F59E0B; }
+  .butler-col .cv {
+    position: absolute; top: -11px; left: 0; right: 0; text-align: center;
+    font-size: 9px; color: #9CA3AF; font-variant-numeric: tabular-nums;
+  }
+  .butler-tline { position: absolute; left: 0; right: 0; border-top: 1px dashed #F0A9A9; }
+
+  .butler-days { display: flex; gap: 7px; margin-top: 6px; }
+  .butler-days span { flex: 1; text-align: center; font-size: 9.5px; color: #B0B7B3; }
+  .butler-days span.on { color: #22A06B; font-weight: 600; }
+  .butler-sum {
+    margin-top: 9px; padding-top: 8px; border-top: 1px dashed #EFF4F1;
+    font-size: 10.5px; color: #9CA3AF;
+  }
+  .butler-sum b { color: #1E7A52; font-weight: 600; }
+
+  /* 记忆小标签 */
+  .butler-memchip { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 14px; }
+  .butler-memchip span {
+    font-size: 10.5px; color: #4B5563; background: #fff; border: 1px solid #EDF3EF;
+    border-radius: 999px; padding: 4px 10px;
+  }
+  .butler-memchip b { color: #163A2A; font-weight: 700; }
   .butler-section { font-size: 12px; font-weight: 700; color: #4B5563; margin: 4px 0 8px; }
   .butler-insight {
     background: #fff; border-radius: 12px; padding: 12px 13px; margin-bottom: 9px;
@@ -1323,17 +1383,17 @@
     </div>
   </div>
 
-  <!-- ===== 健康小管家：悬浮入口 ===== -->
-  <div class="butler-fab" id="butlerFab" title="健康小管家">
+  <!-- ===== 点餐搭档：悬浮入口 ===== -->
+  <div class="butler-fab" id="butlerFab" title="点餐搭档">
     <div id="butlerFabAvatar" style="width:46px;height:46px"></div>
     <span class="badge" id="butlerBadge" style="display:none">0</span>
   </div>
 
-  <!-- ===== 健康小管家：面板 ===== -->
+  <!-- ===== 点餐搭档：面板 ===== -->
   <div class="page" id="pageButler">
     <div class="butler-header">
       <div class="nav-back" id="butlerBack">‹</div>
-      <div class="butler-header-title">健康小管家</div>
+      <div class="butler-header-title">点餐搭档</div>
       <div class="butler-header-phone" id="butlerPhone">…</div>
     </div>
     <div class="butler-scroll" id="butlerScroll">
@@ -1344,7 +1404,15 @@
           <div class="butler-tags" id="butlerTags"></div>
         </div>
       </div>
-      <div class="butler-mem" id="butlerMem"></div>
+      <div class="butler-card">
+        <div class="butler-card-h">目标达成<span>每餐均值 / 你的目标</span></div>
+        <div id="butlerGoals"></div>
+      </div>
+      <div class="butler-card">
+        <div class="butler-card-h">近 7 天每餐热量<span>虚线是单餐目标</span></div>
+        <div id="butlerChart"></div>
+      </div>
+      <div class="butler-memchip" id="butlerMem"></div>
       <div class="butler-section">我替你留意到的</div>
       <div id="butlerInsights"></div>
       <div class="butler-section">跟我说说话</div>
@@ -2601,7 +2669,7 @@ function init() {
 
 init();
 
-/* ========== 健康小管家 ========== */
+/* ========== 点餐搭档 ========== */
 const BUTLER_PHONE_KEY = 'dika_my_phone';
 const BUTLER_DEMO_PHONE = '13800001111';
 
@@ -2744,6 +2812,53 @@ function butlerSuggestion(items) {
   butlerScrollEnd();
 }
 
+// 目标达成：按「每餐均值 / 目标」画条，低于 80% 偏浅、超过 120% 转橙
+function butlerGoals(m, target) {
+  const rows = [
+    { lb: '热量', val: m.avgCalorie || 0, goal: target.calorie, unit: ' kcal' },
+    { lb: '蛋白', val: m.avgProtein || 0, goal: target.protein, unit: ' g' },
+    { lb: '蔬菜', val: m.vegRatio || 0, goal: 30, unit: '%' }
+  ];
+  butlerEl('butlerGoals').innerHTML = rows.map((r) => {
+    const ratio = r.goal ? r.val / r.goal : 0;
+    const pct = Math.max(0, Math.min(ratio, 1)) * 100;
+    const cls = ratio > 1.2 ? 'over' : (ratio < 0.8 ? 'under' : '');
+    const delta = r.goal ? Math.round((ratio - 1) * 100) : 0;
+    const badge = r.val === 0 ? '' : '<i class="' + (ratio > 1.2 ? 'over' : '') + '">' +
+      (delta >= 0 ? '+' : '') + delta + '%</i>';
+    return '<div class="butler-goal"><span class="lb">' + r.lb + '</span>' +
+      '<span class="track"><span class="fill ' + cls + '" style="width:' + pct.toFixed(1) + '%"></span></span>' +
+      '<span class="num"><b>' + r.val + '</b>' + r.unit + ' / ' + r.goal + badge + '</span></div>';
+  }).join('');
+}
+
+// 近 7 天柱状图：高度按「当周最大日」归一，虚线标出单餐目标
+function butlerChart(m, target) {
+  const series = (m && m.series) || [];
+  if (!series.length) {
+    butlerEl('butlerChart').innerHTML = '<div class="butler-sum">还没有点餐记录，点一单就开始记了。</div>';
+    return;
+  }
+  // 上层「目标达成」用的是每餐均值，这里也必须按每餐算，否则拿单餐目标比日总量会误导
+  const perMeal = series.map((d) => (d.orders ? Math.round((d.calorie || 0) / d.orders) : 0));
+  const maxVal = Math.max(target.calorie || 0, ...perMeal) * 1.12 || 1;
+  const bars = series.map((d, i) => {
+    const v = perMeal[i];
+    const h = v ? Math.max(2, Math.round((v / maxVal) * 100)) : 2;
+    const cls = !d.orders ? '' : (v > (target.calorie || 0) * 1.2 ? 'over' : 'has');
+    return '<div class="butler-col"><span class="cv">' + (d.orders ? v : '') + '</span>' +
+      '<span class="bar ' + cls + '" style="height:' + h + '%"></span></div>';
+  }).join('');
+  const days = series.map((d) => '<span class="' + (d.orders ? 'on' : '') + '">' + esc(d.label) + '</span>').join('');
+  const linePos = Math.min(100, ((target.calorie || 0) / maxVal) * 100);
+  const hitDays = series.filter((d) => d.orders).length;
+  butlerEl('butlerChart').innerHTML =
+    '<div class="butler-cols">' + bars + '<i class="butler-tline" style="bottom:' + linePos.toFixed(1) + '%"></i></div>' +
+    '<div class="butler-days">' + days + '</div>' +
+    '<div class="butler-sum">这 7 天有 <b>' + hitDays + '</b> 天在点餐，每餐最高 <b>' +
+    Math.max(...perMeal) + '</b> kcal，你的单餐目标是 <b>' + (target.calorie || 0) + '</b> kcal。</div>';
+}
+
 function butlerRender(p) {
   butlerData = p;
   butlerEl('butlerGreet').textContent = p.greeting || '';
@@ -2754,15 +2869,15 @@ function butlerRender(p) {
   ).join('');
 
   const m = p.memory || {};
-  const cells = [
-    ['本周点餐', m.weekOrders ? m.weekOrders + ' 单' : '—', m.weekQty ? m.weekQty + ' 份' : '还没有记录'],
-    ['平均每餐', m.weekOrders ? m.avgCalorie + ' kcal' : '—', '目标 ' + p.target.calorie],
-    ['平均蛋白', m.weekOrders ? m.avgProtein + ' g' : '—', '目标 ' + p.target.protein + ' g'],
-    ['蔬菜占比', m.weekOrders ? m.vegRatio + '%' : '—', (m.weekOrders && m.vegRatio < 20) ? '偏少' : '还行']
+  butlerGoals(m, p.target);
+  butlerChart(m, p.target);
+
+  const chips = [
+    '本周 <b>' + (m.weekOrders || 0) + '</b> 单 · <b>' + (m.weekQty || 0) + '</b> 份',
+    (m.top ? '最常点 <b>' + esc(m.top.name) + '</b> ' + m.top.times + ' 次' : '还没有常点的菜'),
+    (m.daysSinceLast === null || m.daysSinceLast === undefined ? '暂无记录' : (m.daysSinceLast === 0 ? '今天点过' : m.daysSinceLast + ' 天前点过'))
   ];
-  butlerEl('butlerMem').innerHTML = cells.map(([k, v, s]) =>
-    '<div class="butler-stat"><div class="k">' + k + '</div><div class="v">' + v + '</div>' +
-    '<div class="s">' + esc(s) + '</div></div>').join('');
+  butlerEl('butlerMem').innerHTML = chips.map((x) => '<span>' + x + '</span>').join('');
 
   const list = p.insights || [];
   butlerEl('butlerInsights').innerHTML = list.length
@@ -2800,7 +2915,7 @@ async function openButler() {
   showPage('Butler');
   if (!butlerGreeted) {
     butlerGreeted = true;
-    butlerBubble('ai', '我是你的健康小管家。你在这家店点过的每一餐我都记着，下次点餐前我会主动说点什么。');
+    butlerBubble('ai', '我是你的点餐搭档。你在这家店点过的每一餐我都记着，下次点餐前我会主动说点什么。');
     butlerChips(['今天吃什么', '我这周吃得怎么样', '我不吃香菜']);
   }
   await butlerLoad();
@@ -2833,12 +2948,12 @@ async function butlerSend(text) {
       const j = await r.json();
       if (j.code !== 0) throw new Error(j.message || '请求失败');
       data = j.data;
-    } catch (e2) { err = e2.message || '小管家开了个小差'; }
+    } catch (e2) { err = e2.message || '点餐搭档开了个小差'; }
   }
   tip.remove();
   butlerBusy = false;
   butlerEl('butlerSend').disabled = false;
-  if (!data) { butlerBubble('ai', err || '小管家开了个小差，再试一次？'); return; }
+  if (!data) { butlerBubble('ai', err || '点餐搭档开了个小差，再试一次？'); return; }
   butlerBubble('ai', data.reply);
   if (data.suggestion && data.suggestion.items && data.suggestion.items.length) {
     butlerSuggestion(data.suggestion.items);
@@ -2854,7 +2969,7 @@ butlerEl('butlerInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); void butlerSend(butlerEl('butlerInput').value); }
 });
 butlerEl('butlerPhone').addEventListener('click', () => {
-  const v = window.prompt('输入手机号，小管家靠它认出你（演示可用 13800001111）', butlerPhone());
+  const v = window.prompt('输入手机号，点餐搭档靠它认出你（演示可用 13800001111）', butlerPhone());
   if (!v) return;
   const p = v.replace(/\D/g, '').slice(0, 11);
   if (p.length < 11) { showToast('手机号看起来不对'); return; }

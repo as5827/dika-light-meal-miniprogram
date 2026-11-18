@@ -1,5 +1,5 @@
 /**
- * 健康小管家：把「真实订单」变成可解释的饮食记忆，并主动给建议。
+ * 点餐搭档：把「真实订单」变成可解释的饮食记忆，并主动给建议。
  *
  * 设计要点：
  * 1. 记忆来自订单与用户档案，不靠打卡，也不需要额外录入。
@@ -109,6 +109,7 @@ const summarize = (orders, menu, user) => {
   const week = mine.filter((o) => now - new Date(o.createdAt).getTime() <= 7 * day);
 
   const dishCount = new Map();
+  const dayMap = new Map();
   let calorie = 0;
   let protein = 0;
   let qty = 0;
@@ -116,18 +117,44 @@ const summarize = (orders, menu, user) => {
 
   const eat = (list) => {
     list.forEach((o) => {
+      const key = String(o.createdAt).slice(0, 10);
+      if (!dayMap.has(key)) dayMap.set(key, { calorie: 0, protein: 0, qty: 0, orders: 0 });
+      const day = dayMap.get(key);
+      day.orders += 1;
       (o.items || []).forEach((it) => {
         const d = idx.get(it.dishId) || {};
         const n = Number(it.qty) || 1;
-        calorie += (Number(d.calorie) || 0) * n;
-        protein += (Number(d.protein) || 0) * n;
+        const cal = (Number(d.calorie) || 0) * n;
+        const pro = (Number(d.protein) || 0) * n;
+        calorie += cal;
+        protein += pro;
         qty += n;
+        day.calorie += cal;
+        day.protein += pro;
+        day.qty += n;
         if (isVeg(d)) vegHits += n;
         dishCount.set(it.name, (dishCount.get(it.name) || 0) + n);
       });
     });
   };
   eat(week);
+
+  // 近 7 天逐日序列：前端据此画柱状图，健身与减脂客群更看得懂趋势而不是单个均值
+  const WEEK_LABEL = ['日', '一', '二', '三', '四', '五', '六'];
+  const series = [];
+  for (let i = 6; i >= 0; i -= 1) {
+    const d = new Date(now - i * day);
+    const key = d.toISOString().slice(0, 10);
+    const agg = dayMap.get(key) || { calorie: 0, protein: 0, qty: 0, orders: 0 };
+    series.push({
+      date: key,
+      label: WEEK_LABEL[d.getDay()],
+      calorie: Math.round(agg.calorie),
+      protein: Math.round(agg.protein),
+      qty: agg.qty,
+      orders: agg.orders
+    });
+  }
 
   const ranked = Array.from(dishCount.entries()).sort((a, b) => b[1] - a[1]);
   const top = ranked[0] ? { name: ranked[0][0], times: ranked[0][1] } : null;
@@ -154,6 +181,7 @@ const summarize = (orders, menu, user) => {
     perDayCalorie: week.length ? Math.round(calorie / Math.max(days, 1)) : 0,
     perDayProtein: week.length ? Math.round(protein / Math.max(days, 1)) : 0,
     vegRatio: qty ? Math.round((vegHits / qty) * 100) : 0,
+    series,
     top,
     lastAt,
     daysSinceLast: lastAt ? Math.floor((now - new Date(lastAt).getTime()) / day) : null
@@ -287,7 +315,7 @@ function greeting(sum, target) {
   const h = new Date().getHours();
   const when = h < 10 ? '早上好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好';
   const who = sum.name ? sum.name + '，' : '';
-  if (sum.totalOrders === 0) return `${when}${who}我是你的健康小管家，先点一份试试？`;
+  if (sum.totalOrders === 0) return `${when}${who}我是你的点餐搭档，先点一份试试？`;
   if (sum.daysSinceLast !== null && sum.daysSinceLast >= 7) return `${when}${who}${sum.daysSinceLast} 天没见了，要不要接着上次的口味来？`;
   return `${when}${who}这是你在这家店的第 ${sum.totalOrders} 单，我记着你的口味。`;
 }
@@ -409,7 +437,7 @@ async function chat({ text, orders, menu, phone }) {
 
   // 6. 兜底
   return {
-    reply: `我是点餐时顺手用的健康小管家，能帮你：按你的记录复盘、避开忌口挑菜、把一整餐配好直接加进购物车。刚才那句「${said}」我没太懂，试试下面的说法？`,
+    reply: `我是点餐时顺手用的点餐搭档，能帮你：按你的记录复盘、避开忌口挑菜、把一整餐配好直接加进购物车。刚才那句「${said}」我没太懂，试试下面的说法？`,
     next: ['今天吃什么', '我这周吃得怎么样', '我不吃香菜']
   };
 }

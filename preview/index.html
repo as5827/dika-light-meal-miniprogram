@@ -949,6 +949,147 @@
     .think-step.active .think-label { color: #163A2A; }
   }
 
+  /* ========== 健康小管家 ========== */
+  .butler-fab {
+    position: fixed; right: 16px; bottom: 96px; width: 58px; height: 58px;
+    border-radius: 50%; z-index: 90; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(160deg, #FFFFFF, #EAF7F0);
+    box-shadow: 0 8px 22px rgba(22, 58, 42, 0.22), 0 0 0 1px rgba(34, 160, 107, 0.14) inset;
+    opacity: 0; transform: translateY(10px) scale(0.9); pointer-events: none;
+    transition: opacity .22s ease, transform .22s ease;
+  }
+  .butler-fab.show { opacity: 1; transform: none; pointer-events: auto; }
+  .butler-fab:active { transform: scale(0.94); }
+  .butler-fab::after {
+    content: ''; position: absolute; inset: -7px; border-radius: 50%;
+    border: 2px solid rgba(34, 160, 107, 0.22); animation: fabPulse 2.6s ease-out infinite;
+  }
+  .butler-fab .badge {
+    position: absolute; top: -3px; right: -3px; min-width: 19px; height: 19px; padding: 0 5px;
+    border-radius: 10px; background: #F2653F; color: #fff; font-size: 11px; font-weight: 700;
+    line-height: 19px; text-align: center; box-shadow: 0 2px 6px rgba(242, 101, 63, .35);
+  }
+  @keyframes fabPulse {
+    0% { transform: scale(0.92); opacity: .75; }
+    70% { transform: scale(1.14); opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  .butler-avatar { display: block; width: 100%; height: 100%; }
+  .butler-avatar .breathe { transform-origin: 50% 62%; animation: butlerBreathe 3.4s ease-in-out infinite; }
+  .butler-avatar .blink { transform-box: fill-box; transform-origin: center; animation: butlerBlink 4.8s infinite; }
+  @keyframes butlerBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+  @keyframes butlerBlink { 0%, 92%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.12); } }
+  @media (prefers-reduced-motion: reduce) {
+    .butler-avatar .breathe, .butler-avatar .blink, .butler-fab::after { animation: none; }
+  }
+
+  #pageButler { background: var(--bg); }
+  .butler-header {
+    position: relative; z-index: 5; flex-shrink: 0;
+    background: var(--brand-deep); color: #fff; padding: 44px 16px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  /* 全局 .nav-back 是绝对定位，这里改回文档流，避免压住标题 */
+  .butler-header .nav-back {
+    position: static; top: auto; left: auto; flex: 0 0 30px;
+    width: 30px; height: 30px; color: #fff; background: rgba(255, 255, 255, 0.16);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; line-height: 1;
+  }
+  .butler-header-title { font-size: 16px; font-weight: 700; flex: 1; }
+  .butler-header-phone {
+    font-size: 11px; color: rgba(255,255,255,.72); border: 1px solid rgba(255,255,255,.3);
+    border-radius: 999px; padding: 3px 9px; cursor: pointer;
+  }
+  .butler-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 96px; -webkit-overflow-scrolling: touch; }
+  .butler-hero {
+    display: flex; gap: 12px; align-items: center;
+    background: linear-gradient(135deg, #F2FBF6, #FFFFFF);
+    border: 1px solid #DCEFE4; border-radius: 16px; padding: 14px; margin-bottom: 12px;
+  }
+  .butler-hero-avatar { width: 72px; height: 72px; flex: 0 0 72px; }
+  .butler-hero-text { flex: 1; min-width: 0; }
+  .butler-greet { font-size: 13.5px; font-weight: 600; color: #163A2A; line-height: 1.6; }
+  .butler-tags { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .butler-tag {
+    font-size: 10.5px; color: #1E7A52; background: #EAF7F0;
+    border-radius: 999px; padding: 2px 8px;
+  }
+  .butler-tag.warn { color: #B45309; background: #FEF3C7; }
+  .butler-mem { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+  .butler-stat {
+    background: #fff; border-radius: 12px; padding: 11px 12px; border: 1px solid #EDF3EF;
+  }
+  .butler-stat .k { font-size: 11px; color: #9CA3AF; }
+  .butler-stat .v { font-size: 17px; font-weight: 700; color: #163A2A; margin-top: 2px; }
+  .butler-stat .s { font-size: 10.5px; color: #B0B7B3; margin-top: 1px; }
+  .butler-section { font-size: 12px; font-weight: 700; color: #4B5563; margin: 4px 0 8px; }
+  .butler-insight {
+    background: #fff; border-radius: 12px; padding: 12px 13px; margin-bottom: 9px;
+    border-left: 3px solid #22A06B; border-top: 1px solid #EDF3EF;
+    border-right: 1px solid #EDF3EF; border-bottom: 1px solid #EDF3EF;
+  }
+  .butler-insight.lv-warn { border-left-color: #F59E0B; }
+  .butler-insight.lv-notice { border-left-color: #3B82F6; }
+  .butler-insight.lv-good { border-left-color: #22A06B; }
+  .butler-insight.lv-info { border-left-color: #9CA3AF; }
+  .butler-insight h4 { font-size: 13px; font-weight: 700; color: #163A2A; margin: 0 0 4px; }
+  .butler-insight p { font-size: 12px; color: #6B7280; line-height: 1.7; margin: 0; }
+  .butler-insight .act {
+    display: inline-block; margin-top: 8px; font-size: 11.5px; color: #22A06B;
+    font-weight: 600; background: #EAF7F0; border-radius: 999px; padding: 4px 11px; cursor: pointer;
+  }
+  .butler-chat { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+  .butler-msg { display: flex; gap: 8px; align-items: flex-start; }
+  .butler-msg .av { width: 26px; height: 26px; flex: 0 0 26px; }
+  .butler-bubble {
+    max-width: 82%; background: #fff; border-radius: 12px; padding: 9px 12px;
+    font-size: 12.5px; color: #374151; line-height: 1.72; border: 1px solid #EDF3EF;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .butler-msg.me { justify-content: flex-end; }
+  .butler-msg.me .butler-bubble { background: #22A06B; color: #fff; border-color: #22A06B; }
+  .butler-bubble.typing { color: #9CA3AF; font-style: normal; }
+  .butler-bubble .addcart {
+    display: block; margin-top: 8px; background: #EAF7F0; color: #1E7A52;
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+    text-align: center; cursor: pointer;
+  }
+  .butler-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .butler-chip {
+    font-size: 11.5px; color: #1E7A52; background: #fff; border: 1px solid #CFE9DC;
+    border-radius: 999px; padding: 5px 11px; cursor: pointer;
+  }
+  .butler-inputbar {
+    position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,.96); border-top: 1px solid #EDF3EF;
+    backdrop-filter: blur(6px);
+  }
+  .butler-inputbar input {
+    flex: 1; height: 40px; border-radius: 999px; border: 1px solid #E3E8E5;
+    padding: 0 14px; font-size: 13px; font-family: inherit; background: #F7FAF8;
+  }
+  .butler-inputbar input:focus { outline: none; border-color: #9BD7BB; background: #fff; }
+  .butler-inputbar button {
+    height: 40px; padding: 0 18px; border-radius: 999px; border: none;
+    background: #22A06B; color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+  }
+  .butler-inputbar button:disabled { opacity: .5; }
+  .butler-form { background: #fff; border-radius: 12px; padding: 12px 13px; margin-bottom: 10px; border: 1px solid #EDF3EF; }
+  .butler-form .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .butler-form label { font-size: 12px; color: #6B7280; width: 56px; }
+  .butler-form input, .butler-form select {
+    flex: 1; height: 34px; border: 1px solid #E3E8E5; border-radius: 8px;
+    padding: 0 10px; font-size: 12.5px; font-family: inherit;
+  }
+  .butler-form .save {
+    width: 100%; height: 36px; border-radius: 999px; border: none;
+    background: #22A06B; color: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+  }
+
   /* ========== 订单跟踪页 ========== */
   .tracking-header {
     background: var(--brand-deep);
@@ -1179,6 +1320,40 @@
         <div class="tip" id="cartCalorie">共 0 kcal</div>
       </div>
       <div class="checkout-btn" id="checkoutBtn">去结算</div>
+    </div>
+  </div>
+
+  <!-- ===== 健康小管家：悬浮入口 ===== -->
+  <div class="butler-fab" id="butlerFab" title="健康小管家">
+    <div id="butlerFabAvatar" style="width:46px;height:46px"></div>
+    <span class="badge" id="butlerBadge" style="display:none">0</span>
+  </div>
+
+  <!-- ===== 健康小管家：面板 ===== -->
+  <div class="page" id="pageButler">
+    <div class="butler-header">
+      <div class="nav-back" id="butlerBack">‹</div>
+      <div class="butler-header-title">健康小管家</div>
+      <div class="butler-header-phone" id="butlerPhone">…</div>
+    </div>
+    <div class="butler-scroll" id="butlerScroll">
+      <div class="butler-hero">
+        <div class="butler-hero-avatar" id="butlerHeroAvatar"></div>
+        <div class="butler-hero-text">
+          <div class="butler-greet" id="butlerGreet">正在读取你的点餐记录…</div>
+          <div class="butler-tags" id="butlerTags"></div>
+        </div>
+      </div>
+      <div class="butler-mem" id="butlerMem"></div>
+      <div class="butler-section">我替你留意到的</div>
+      <div id="butlerInsights"></div>
+      <div class="butler-section">跟我说说话</div>
+      <div class="butler-chat" id="butlerChat"></div>
+      <div class="butler-chips" id="butlerChips"></div>
+    </div>
+    <div class="butler-inputbar">
+      <input id="butlerInput" placeholder="比如：今天吃什么 / 我不吃香菜" autocomplete="off">
+      <button id="butlerSend">发送</button>
     </div>
   </div>
 
@@ -1590,6 +1765,8 @@ document.getElementById('addrClose').addEventListener('click', closeAddressSheet
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page' + name).classList.add('active');
+  const fab = document.getElementById('butlerFab');
+  if (fab) fab.classList.toggle('show', name === 'Menu');
 }
 
 /* ========== 分类 ========== */
@@ -2423,6 +2600,279 @@ function init() {
 }
 
 init();
+
+/* ========== 健康小管家 ========== */
+const BUTLER_PHONE_KEY = 'dika_my_phone';
+const BUTLER_DEMO_PHONE = '13800001111';
+
+let butlerData = null;
+let butlerBusy = false;
+let butlerGreeted = false;
+
+function butlerEl(id) { return document.getElementById(id); }
+
+function butlerSvg(suffix, cls) {
+  const gid = 'butlerGrad' + suffix;
+  return '<svg class="butler-avatar ' + (cls || '') + '" viewBox="0 0 64 64" aria-hidden="true">' +
+    '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0" stop-color="#63D8A4"/><stop offset="1" stop-color="#22A06B"/></linearGradient></defs>' +
+    '<g class="breathe">' +
+    '<rect x="9" y="15" width="46" height="40" rx="21" fill="url(#' + gid + ')"/>' +
+    '<path d="M32 16 C32 9.5 37.5 5 43.5 5 C43.5 12 37.5 16.5 32 16 Z" fill="#8AE3B4"/>' +
+    '<path d="M32 16 C32 10.5 28 6.5 23 6.5 C23 12.5 27 16.5 32 16 Z" fill="#3FBE85"/>' +
+    '<g class="blink" fill="#0E3B28"><ellipse cx="24" cy="33" rx="3.1" ry="3.7"/>' +
+    '<ellipse cx="40" cy="33" rx="3.1" ry="3.7"/></g>' +
+    '<circle cx="25.2" cy="31.6" r="1.1" fill="#fff" opacity=".92"/>' +
+    '<circle cx="41.2" cy="31.6" r="1.1" fill="#fff" opacity=".92"/>' +
+    '<ellipse cx="18" cy="40.5" rx="3.3" ry="2.1" fill="#FF9C87" opacity=".5"/>' +
+    '<ellipse cx="46" cy="40.5" rx="3.3" ry="2.1" fill="#FF9C87" opacity=".5"/>' +
+    '<path d="M28.4 40.6 q3.6 3.3 7.2 0" stroke="#0E3B28" stroke-width="1.7" fill="none" stroke-linecap="round"/>' +
+    '</g></svg>';
+}
+
+function butlerPhone() {
+  try { return localStorage.getItem(BUTLER_PHONE_KEY) || BUTLER_DEMO_PHONE; }
+  catch (e) { return BUTLER_DEMO_PHONE; }
+}
+function butlerMask(p) { return p ? p.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2') : '未绑定'; }
+function butlerActLabel(a) {
+  return ({ recommend: '看看今天吃什么', recommendAlt: '换一份试试', recommendLight: '挑能量密度低的',
+    addProtein: '帮我加一份蛋白', addVeg: '帮我加一份蔬菜', openProfile: '填写身高体重' })[a] || '去看看';
+}
+
+function butlerScrollEnd() {
+  const s = butlerEl('butlerScroll');
+  if (s) s.scrollTop = s.scrollHeight;
+}
+
+function butlerBubble(who, text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'butler-msg' + (who === 'me' ? ' me' : '');
+  wrap.innerHTML = who === 'me'
+    ? '<div class="butler-bubble">' + esc(text) + '</div>'
+    : '<div class="av">' + butlerSvg('M', '') + '</div><div class="butler-bubble">' + esc(text) + '</div>';
+  butlerEl('butlerChat').appendChild(wrap);
+  butlerScrollEnd();
+}
+
+function butlerTyping(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'butler-msg';
+  wrap.innerHTML = '<div class="av">' + butlerSvg('T', '') + '</div><div class="butler-bubble typing"></div>';
+  butlerEl('butlerChat').appendChild(wrap);
+  const b = wrap.querySelector('.butler-bubble');
+  b.textContent = text || '让我看看你的记录…';
+  butlerScrollEnd();
+  return { stage(s) { b.textContent = s; butlerScrollEnd(); }, remove() { wrap.remove(); } };
+}
+
+function butlerChips(list) {
+  const box = butlerEl('butlerChips');
+  box.innerHTML = (list || []).map((x) => '<span class="butler-chip">' + esc(x) + '</span>').join('');
+  box.querySelectorAll('.butler-chip').forEach((el) => {
+    el.addEventListener('click', () => void butlerSend(el.textContent));
+  });
+}
+
+function butlerAction(action) {
+  if (action === 'recommend' || action === 'recommendAlt' || action === 'recommendLight') {
+    void butlerSend('今天吃什么'); return;
+  }
+  if (action === 'addProtein') { butlerQuickAdd(/鸡胸|蛋白|牛肉/, '高蛋白单品'); return; }
+  if (action === 'addVeg') { butlerQuickAdd(/沙拉|时蔬|蔬菜|西兰花/, '蔬菜单品'); return; }
+  if (action === 'openProfile') { butlerProfileForm(); return; }
+}
+
+function butlerQuickAdd(re, label) {
+  const d = DISHES.find((x) => re.test(x.name) && x.stock > 0);
+  if (!d) { showToast('菜单里暂时没有合适的' + label); return; }
+  addToCart(d, [], 1, null);
+  showToast('已加入「' + d.name + '」');
+}
+
+function butlerProfileForm() {
+  if (butlerEl('butlerForm')) return;
+  const box = butlerEl('butlerInsights');
+  const div = document.createElement('div');
+  div.className = 'butler-form';
+  div.id = 'butlerForm';
+  div.innerHTML =
+    '<div class="row"><label>身高</label><input id="bfH" type="number" placeholder="165" min="120" max="220"></div>' +
+    '<div class="row"><label>体重</label><input id="bfW" type="number" placeholder="58" min="30" max="200"></div>' +
+    '<div class="row"><label>年龄</label><input id="bfA" type="number" placeholder="25" min="12" max="90"></div>' +
+    '<div class="row"><label>目标</label><select id="bfG"><option value="cut">减脂</option>' +
+    '<option value="keep">维持</option><option value="bulk">增肌</option></select></div>' +
+    '<button class="save" id="bfSave">保存，按我的数据算</button>';
+  box.insertBefore(div, box.firstChild);
+  butlerEl('bfSave').addEventListener('click', async () => {
+    const body = {
+      phone: butlerPhone(),
+      height: Number(butlerEl('bfH').value) || undefined,
+      weight: Number(butlerEl('bfW').value) || undefined,
+      age: Number(butlerEl('bfA').value) || undefined,
+      goal: butlerEl('bfG').value
+    };
+    try {
+      const r = await fetch('/api/butler/profile', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+      });
+      const j = await r.json();
+      if (j.code !== 0) throw new Error(j.message || '保存失败');
+      div.remove();
+      showToast('档案已保存，目标按你的数据重算');
+      await butlerLoad();
+    } catch (e) { showToast(e.message || '保存失败'); }
+  });
+}
+
+function butlerSuggestion(items) {
+  const sum = items.reduce((s, i) => s + (i.price || 0), 0);
+  const wrap = document.createElement('div');
+  wrap.className = 'butler-msg';
+  wrap.innerHTML = '<div class="av">' + butlerSvg('S', '') + '</div><div class="butler-bubble">' +
+    items.map((i) => esc(i.name)).join(' · ') +
+    '<span class="addcart">一键加入购物车 · ¥' + (sum / 100).toFixed(0) + '</span></div>';
+  butlerEl('butlerChat').appendChild(wrap);
+  wrap.querySelector('.addcart').addEventListener('click', () => {
+    let n = 0;
+    items.forEach((it) => {
+      const d = DISHES.find((x) => x.id === it.id);
+      if (d) { addToCart(d, [], 1, null); n += 1; }
+    });
+    showToast(n ? '已把 ' + n + ' 道菜加进购物车' : '菜品已下架');
+  });
+  butlerScrollEnd();
+}
+
+function butlerRender(p) {
+  butlerData = p;
+  butlerEl('butlerGreet').textContent = p.greeting || '';
+  const tags = ['目标 ' + p.target.goalLabel, p.target.source === 'profile' ? '按你的数据算' : '通用值'];
+  if (p.identity.dislikes && p.identity.dislikes.length) tags.push('忌口 ' + p.identity.dislikes.join('、'));
+  butlerEl('butlerTags').innerHTML = tags.map((x, i) =>
+    '<span class="butler-tag' + (i === 1 && p.target.source !== 'profile' ? ' warn' : '') + '">' + esc(x) + '</span>'
+  ).join('');
+
+  const m = p.memory || {};
+  const cells = [
+    ['本周点餐', m.weekOrders ? m.weekOrders + ' 单' : '—', m.weekQty ? m.weekQty + ' 份' : '还没有记录'],
+    ['平均每餐', m.weekOrders ? m.avgCalorie + ' kcal' : '—', '目标 ' + p.target.calorie],
+    ['平均蛋白', m.weekOrders ? m.avgProtein + ' g' : '—', '目标 ' + p.target.protein + ' g'],
+    ['蔬菜占比', m.weekOrders ? m.vegRatio + '%' : '—', (m.weekOrders && m.vegRatio < 20) ? '偏少' : '还行']
+  ];
+  butlerEl('butlerMem').innerHTML = cells.map(([k, v, s]) =>
+    '<div class="butler-stat"><div class="k">' + k + '</div><div class="v">' + v + '</div>' +
+    '<div class="s">' + esc(s) + '</div></div>').join('');
+
+  const list = p.insights || [];
+  butlerEl('butlerInsights').innerHTML = list.length
+    ? list.map((it) =>
+      '<div class="butler-insight lv-' + it.level + '"><h4>' + esc(it.title) + '</h4>' +
+      '<p>' + esc(it.detail) + '</p>' +
+      (it.action ? '<span class="act" data-act="' + esc(it.action) + '">' + esc(butlerActLabel(it.action)) + '</span>' : '') +
+      '</div>').join('')
+    : '<div class="butler-insight lv-good"><h4>暂时没有要提醒的</h4>' +
+      '<p>点几单之后，我会开始留意你的口味和营养缺口。</p></div>';
+  butlerEl('butlerInsights').querySelectorAll('.act').forEach((el) => {
+    el.addEventListener('click', () => butlerAction(el.dataset.act));
+  });
+}
+
+async function butlerLoad() {
+  const phone = butlerPhone();
+  butlerEl('butlerPhone').textContent = butlerMask(phone);
+  try {
+    const res = await fetch('/api/butler/profile?phone=' + encodeURIComponent(phone), { cache: 'no-store' });
+    const json = await res.json();
+    if (json.code !== 0) throw new Error(json.message || '读取失败');
+    butlerRender(json.data);
+    const n = (json.data.insights || []).filter((x) => x.level !== 'good').length;
+    const b = butlerEl('butlerBadge');
+    if (b) { b.textContent = n; b.style.display = n > 0 ? '' : 'none'; }
+  } catch (e) {
+    butlerEl('butlerGreet').textContent = '记录读取失败：' + (e.message || '稍后再试');
+  }
+}
+
+async function openButler() {
+  if (!butlerEl('butlerFabAvatar').innerHTML) butlerEl('butlerFabAvatar').innerHTML = butlerSvg('F', '');
+  if (!butlerEl('butlerHeroAvatar').innerHTML) butlerEl('butlerHeroAvatar').innerHTML = butlerSvg('H', '');
+  showPage('Butler');
+  if (!butlerGreeted) {
+    butlerGreeted = true;
+    butlerBubble('ai', '我是你的健康小管家。你在这家店点过的每一餐我都记着，下次点餐前我会主动说点什么。');
+    butlerChips(['今天吃什么', '我这周吃得怎么样', '我不吃香菜']);
+  }
+  await butlerLoad();
+  const sc = butlerEl('butlerScroll');
+  if (sc) sc.scrollTop = 0;
+}
+
+async function butlerSend(text) {
+  const t = String(text || '').trim();
+  if (!t || butlerBusy) return;
+  butlerBusy = true;
+  butlerEl('butlerSend').disabled = true;
+  butlerEl('butlerInput').value = '';
+  butlerBubble('me', t);
+  const tip = butlerTyping('让我看看你的记录…');
+  let data = null;
+  let err = '';
+  try {
+    await streamPost('/api/butler/stream', { phone: butlerPhone(), text: t }, (evt) => {
+      if (evt.type === 'stage') tip.stage(evt.label + (evt.detail ? '：' + evt.detail : ''));
+      else if (evt.type === 'done') data = evt.data;
+      else if (evt.type === 'error') err = evt.message;
+    });
+  } catch (e) {
+    try {
+      const r = await fetch('/api/butler/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: butlerPhone(), text: t })
+      });
+      const j = await r.json();
+      if (j.code !== 0) throw new Error(j.message || '请求失败');
+      data = j.data;
+    } catch (e2) { err = e2.message || '小管家开了个小差'; }
+  }
+  tip.remove();
+  butlerBusy = false;
+  butlerEl('butlerSend').disabled = false;
+  if (!data) { butlerBubble('ai', err || '小管家开了个小差，再试一次？'); return; }
+  butlerBubble('ai', data.reply);
+  if (data.suggestion && data.suggestion.items && data.suggestion.items.length) {
+    butlerSuggestion(data.suggestion.items);
+  }
+  if (data.next && data.next.length) butlerChips(data.next);
+  if (data.memoryUpdated || data.profile) await butlerLoad();
+}
+
+butlerEl('butlerFab').addEventListener('click', () => { void openButler(); });
+butlerEl('butlerBack').addEventListener('click', () => showPage('Menu'));
+butlerEl('butlerSend').addEventListener('click', () => { void butlerSend(butlerEl('butlerInput').value); });
+butlerEl('butlerInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); void butlerSend(butlerEl('butlerInput').value); }
+});
+butlerEl('butlerPhone').addEventListener('click', () => {
+  const v = window.prompt('输入手机号，小管家靠它认出你（演示可用 13800001111）', butlerPhone());
+  if (!v) return;
+  const p = v.replace(/\D/g, '').slice(0, 11);
+  if (p.length < 11) { showToast('手机号看起来不对'); return; }
+  try { localStorage.setItem(BUTLER_PHONE_KEY, p); } catch (e) { /* 忽略 */ }
+  butlerEl('butlerChat').innerHTML = '';
+  butlerGreeted = false;
+  void openButler();
+});
+
+// 首屏静默拉一次档案，用来点亮入口的角标
+(async () => {
+  butlerEl('butlerFabAvatar').innerHTML = butlerSvg('F', '');
+  // 菜单页在 HTML 里初始就是 active，showPage 不会被调用，这里手动点亮入口
+  const menuPage = document.getElementById('pageMenu');
+  if (menuPage && menuPage.classList.contains('active')) butlerEl('butlerFab').classList.add('show');
+  await butlerLoad();
+})();
+
 </script>
 </body>
 </html>

@@ -125,6 +125,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <div class="l2">5.4 一句话点餐</div>
 <div class="l2">5.5 经营看板</div>
 <div class="l2">5.6 AI 响应状态可视化</div>
+<div class="l2">5.7 健康小管家</div>
 <div class="l1">6 工程质量与安全</div>
 <div class="l2">6.1 零依赖与原子写</div>
 <div class="l2">6.2 输入校验与金额可信</div>
@@ -157,14 +158,14 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <li><b>进度不透明。</b> 下单后顾客反复问「好了没」，而店主一人同时接单与出餐，答不过来。</li>
 </ul>
 <h2>1.3 建设目标</h2>
-<table><tr><th>目标</th><th>验收口径</th></tr><tr><td>菜单单一数据源</td><td>后台改价即时生效，顾客端无需刷新缓存</td></tr><tr><td>下单前完成校验</td><td>估清菜品售罄置灰，金额由服务端重算</td></tr><tr><td>订单状态可见</td><td>顾客凭订单号查询，状态由服务端事件链驱动</td></tr><tr><td>经营数据可读</td><td>订单聚合成一屏看板，含热销与热量分布</td></tr><tr><td>AI 能力可用且可解释</td><td>推荐结果给出组合、偏差与理由；模型不参与计算</td></tr></table>
+<table><tr><th>目标</th><th>验收口径</th></tr><tr><td>菜单单一数据源</td><td>后台改价即时生效，顾客端无需刷新缓存</td></tr><tr><td>下单前完成校验</td><td>估清菜品售罄置灰，金额由服务端重算</td></tr><tr><td>订单状态可见</td><td>顾客凭订单号查询，状态由服务端事件链驱动</td></tr><tr><td>经营数据可读</td><td>订单聚合成一屏看板，含热销与热量分布</td></tr><tr><td>AI 能力可用且可解释</td><td>推荐结果给出组合、偏差与理由；模型不参与计算</td></tr><tr><td>点餐有记忆</td><td>同一顾客再次进入时，能看到基于历史订单的复盘与建议</td></tr></table>
 <h2>1.4 术语与缩写</h2>
 <table><tr><th>术语</th><th>说明</th></tr><tr><td>SKU</td><td>规格组合单位，同一菜品的不同份量或加料视为不同 SKU</td></tr><tr><td>估清</td><td>当日备货售罄，菜品置灰且不可下单</td></tr><tr><td>BMR / TDEE</td><td>基础代谢率 / 每日总能量消耗，单位 kcal</td></tr><tr><td>意图驱动开发</td><td>人定约束与验收，AI 在边界内产出实现</td></tr><tr><td>SSE</td><td>Server-Sent Events，服务端向浏览器单向推送事件流</td></tr></table>
 <h1>2 需求分析</h1>
 <h2>2.1 用户角色</h2>
 <table><tr><th>角色</th><th>使用场景</th><th>关键诉求</th></tr><tr><td>顾客</td><td>手机浏览器或小程序点餐</td><td>看得清价格与库存、下单快、知道做到哪了</td></tr><tr><td>商家</td><td>电脑或平板打开后台</td><td>改菜单、接单、看当天经营情况</td></tr></table>
 <h2>2.2 功能需求</h2>
-<table><tr><th>模块</th><th>功能</th><th>级别</th></tr><tr><td>菜单浏览</td><td>8 个类目、28 道菜品，分类与列表滚动双向联动，售罄置灰</td><td>P0</td></tr><tr><td>规格与购物车</td><td>多规格组、加价联动、本地持久化</td><td>P0</td></tr><tr><td>下单</td><td>服务端重算金额、校验库存、幂等下单</td><td>P0</td></tr><tr><td>订单跟踪</td><td>状态事件链 + 轮询刷新，终态停止</td><td>P0</td></tr><tr><td>商家后台</td><td>登录、菜品编辑、接单与状态流转</td><td>P0</td></tr><tr><td>AI 套餐推荐</td><td>按身体指标计算单餐目标，组合搜索给出套餐</td><td>P1</td></tr><tr><td>一句话点餐</td><td>自然语言转结构化条件并筛选</td><td>P1</td></tr><tr><td>经营看板</td><td>订单聚合成指标与图表，附解读</td><td>P1</td></tr><tr><td>AI 响应可视化</td><td>推荐与点餐的处理阶段实时呈现</td><td>P1</td></tr></table>
+<table><tr><th>模块</th><th>功能</th><th>级别</th></tr><tr><td>菜单浏览</td><td>8 个类目、28 道菜品，分类与列表滚动双向联动，售罄置灰</td><td>P0</td></tr><tr><td>规格与购物车</td><td>多规格组、加价联动、本地持久化</td><td>P0</td></tr><tr><td>下单</td><td>服务端重算金额、校验库存、幂等下单</td><td>P0</td></tr><tr><td>订单跟踪</td><td>状态事件链 + 轮询刷新，终态停止</td><td>P0</td></tr><tr><td>商家后台</td><td>登录、菜品编辑、接单与状态流转</td><td>P0</td></tr><tr><td>AI 套餐推荐</td><td>按身体指标计算单餐目标，组合搜索给出套餐</td><td>P1</td></tr><tr><td>一句话点餐</td><td>自然语言转结构化条件并筛选</td><td>P1</td></tr><tr><td>经营看板</td><td>订单聚合成指标与图表，附解读</td><td>P1</td></tr><tr><td>AI 响应可视化</td><td>推荐与点餐的处理阶段实时呈现</td><td>P1</td></tr><tr><td>健康小管家</td><td>按订单记忆口味与营养，主动给建议并一键加购</td><td>P1</td></tr></table>
 <h2>2.3 非功能需求</h2>
 <ul>
 <li><b>零第三方运行时依赖</b>：根目录无 <code>package.json</code>，<code>node server/server.js</code> 即可启动，避免评审机装不上依赖。</li>
@@ -251,6 +252,13 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <p>两个 AI 入口都不是「点了等几秒突然出一屏结果」。服务端把处理拆成阶段事件，用 SSE 边算边推：</p>
 <table><tr><th>入口</th><th>阶段</th><th>展示内容</th></tr><tr><td>套餐推荐</td><td>解析身体指标 → 筛出在售菜品 → 组合搜索与打分 → 约束校验与优选 →（可选）模型润色</td><td>BMR/TDEE/每日目标；在售与估清数量；候选数、耗时；热量偏差与蛋白达成</td></tr><tr><td>一句话点餐</td><td>解析意图 →（不可用时）规则兜底 → 本地筛选 → 条件逐级放宽</td><td>原话回显；识别出的条件；命中数；放宽项</td></tr></table>
 <p>两个设计约束：阶段中的数字全部来自真实计算，不是占位文案；前端只控制展示节奏（每阶段约 300 ms 最小间隔），否则时间轴会一闪而过。这一点在源码注释中已注明。流式不可用时前端自动退回一次性接口。</p>
+<h2>5.7 健康小管家</h2>
+<p>点餐页右下角常驻一个入口，进去是能记住你的小管家。它和「一次性推荐」的区别在于：<b>输入是真实订单，输出能直接变成购物车里的菜</b>。</p>
+<p><b>记忆。</b> 以订单手机号为键，落一份很轻的档案（目标、身高体重、忌口），其余全部从订单实时计算：本周单量、每餐平均热量与蛋白、蔬菜占比、最常点的菜、距上次点餐几天。没有打卡，也不需要额外汇入。</p>
+<p><b>主动建议。</b> 打开面板不等提问，先按规则算出该说什么，每条都带数字：蛋白缺口按「目标×0.75」判定并给出缺少的克数；近 7 天同一道菜达到 3 次提示重样；蔬菜占比低于 20% 提示加菜；连续 3 天以上有记录则给正反馈。判定全部在本地完成，模型不参与。</p>
+<p><b>对话。</b> 四类意图走规则匹配而非让模型自由生成：改忌口、改目标、复盘本周、按目标配一餐。改忌口会写入档案并在后续推荐中生效，这是「记忆」最直观的一条。配餐复用第 5.3 节的组合搜索，因此结论与直接点推荐完全一致。</p>
+<p><b>可视化。</b> 面板顶部是一枚 SVG 吉祥物（三片叶芽 + 呼吸与眨眼动画），下方依次是记忆统计卡、主动建议卡（可一键加购或追问）、对话区。小管家的回答同样走阶段事件流：读取记录 → 回顾近 7 天 → 比对目标 → 生成建议，进度直接显示在对话气泡里。</p>
+<p><b>边界。</b> 一切基于订单与档案，不采集体重秤、运动手环等外部数据；营养值仍是估算值；没有账号体系，换手机号即换记忆。这些限制写在 README 与本文第 9 章。</p>
 <h1>6 工程质量与安全</h1>
 <h2>6.1 零依赖与原子写</h2>
 <p>服务端不使用任何第三方包，全部能力手写。写文件采用「临时文件 + 重命名」的原子替换，避免进程中断留下半个 JSON：先写 <code>*.tmp</code>，<code>fsync</code> 后 <code>rename</code> 覆盖目标文件。</p>
@@ -266,7 +274,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <h1>7 可复现性说明</h1>
 <p>赛项要求重点阐述。本章说明「凭什么相信这套代码不是一次性堆出来的」。</p>
 <h2>7.1 提交策略</h2>
-<p>仓库 61 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
+<p>仓库 62 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
 <h2>7.2 Prompt 归档</h2>
 <p><code>prompts/</code> 下每个功能一个文件，编号与提交顺序一致；<code>prompts/snapshots/</code> 另行保存三条带真实报错与命令的完整 Prompt 链，按「① 我的 Prompt → ② AI 首版方案 → ③ 如何纠偏 → ④ 验收结果」组织。</p>
 <h2>7.3 十分钟复现</h2>
@@ -295,4 +303,4 @@ node server/server.js        # 无需 npm install
 <p>本作品把一个小微轻食门店的接单流程做成了可运行的系统：菜单单一数据源、下单前完成校验、订单状态可见、经营数据可读，并在此之上做了两个可解释的 AI 能力。工程上坚持零依赖与单机可跑，使评审无需准备环境即可在十分钟内跑通。</p>
 <p>后续规划按优先级排列：补齐顾客标识以输出复购率；上线后按 8.5 的四个指标做两周实测；在资质齐备后接入微信支付与小程序上架。</p>
 <h1>附录 A 赛项材料对照</h1>
-<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，61 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr></table></body></html>
+<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，62 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr><tr><td>AI 响应状态与记忆能力</td><td>第 5.6 节（阶段流） / 第 5.7 节（健康小管家）</td></tr></table></body></html>

@@ -49,6 +49,8 @@ function get(pathname) {
 }
 
 const NAMES = ['李同学', '王同学', '张同学', '赵同学', '陈同学', '周同学', '吴同学', '郑同学'];
+// 固定一位「老顾客」：健康小管家靠同一个手机号认人，演示时要能看到记忆与主动建议
+const ME = { name: '李同学', phone: '13800001111' };
 const BUILDINGS = ['1号楼', '3号楼', '5号楼', '图书馆', '实验楼'];
 
 async function main() {
@@ -72,18 +74,48 @@ async function main() {
 
     const body = {
       items: picks,
-      address: {
-        name: NAMES[i % NAMES.length],
-        phone: '138' + String(10000000 + i * 137).slice(0, 8),
-        building: BUILDINGS[i % BUILDINGS.length],
-        room: String(101 + i * 7)
-      },
+      address: i % 3 === 2
+        ? {
+            name: NAMES[i % NAMES.length],
+            phone: '138' + String(10000000 + i * 137).slice(0, 8),
+            building: BUILDINGS[i % BUILDINGS.length],
+            room: String(101 + i * 7)
+          }
+        : {
+            name: ME.name,
+            phone: ME.phone,
+            building: BUILDINGS[i % BUILDINGS.length],
+            room: String(101 + i * 7)
+          },
       remark: i % 4 === 0 ? '不要香菜' : ''
     };
 
     const res = await post('/api/orders', body);
     if (res.status === 200 && res.body.includes('"code":0')) ok += 1;
     else console.log('  第 ' + (i + 1) + ' 单失败：' + res.body.slice(0, 80));
+  }
+
+  // 把刚造的订单撒到最近 7 天里：不然所有订单都是「今天」，小管家的按天回顾与
+  // 连续打卡判断会失真，看板的今日数据也会被堆满。
+  try {
+    const fsx = require('fs');
+    const px = require('path');
+    const file = px.resolve(__dirname, '..', 'data', 'orders.json');
+    if (fsx.existsSync(file)) {
+      const list = JSON.parse(fsx.readFileSync(file, 'utf8'));
+      const nowMs = Date.now();
+      list.forEach((o, i) => {
+        const daysAgo = i % 7;
+        const at = new Date(nowMs - daysAgo * 24 * 3600 * 1000 - (i % 5) * 9 * 60 * 1000);
+        o.createdAt = at.toISOString();
+        o.updatedAt = o.createdAt;
+      });
+      list.sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+      fsx.writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
+      console.log('已把演示订单撒到最近 7 天');
+    }
+  } catch (e) {
+    console.log('撒日期失败（不影响其它功能）：' + e.message);
   }
 
   console.log('已创建 ' + ok + ' / ' + COUNT + ' 笔演示订单');

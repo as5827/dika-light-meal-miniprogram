@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const recommender = require('./recommender');
+const butler = require('./butler');
 const intent = require('./intent');
 const stats = require('./stats');
 const log = require('./logger');
@@ -347,6 +348,44 @@ async function runNlOrder(payload, emit) {
   return { status: 200, body: { code: 0, data: { source, conditions, tags, dishes, dropped: result.dropped } } };
 }
 
+async function runButlerChat(payload, emit) {
+  const say = typeof emit === 'function' ? emit : noopEmit;
+  const phone = butler.cleanPhone(payload.phone);
+  const text = asStr(payload.text, 200);
+  if (!text) {
+    return { status: 400, body: { code: 400, message: '说点什么吧，比如「今天吃什么」' } };
+  }
+
+  let menu;
+  try {
+    menu = readMenu();
+  } catch (e) {
+    return { status: 500, body: { code: 500, message: '读取菜单失败' } };
+  }
+  const orders = readOrders();
+
+  say('memory', '读取你的点餐记录', phone ? '按手机号归并历史订单与忌口' : '未提供手机号，只按本机记录');
+  const profile = butler.buildProfile({ orders, menu, phone });
+  const m = profile.memory;
+  say('recall', '回顾近 7 天',
+    m.weekOrders ? `${m.weekOrders} 单 · 平均 ${m.avgCalorie} kcal、蛋白 ${m.avgProtein} g` : '这周还没有记录');
+  say('compare', '比对目标',
+    `${profile.target.goalLabel}：每餐 ${profile.target.calorie} kcal / 蛋白 ${profile.target.protein} g`);
+
+  const ans = await butler.chat({ text, orders, menu, phone });
+  say('answer', ans.memoryUpdated ? '已更新记忆' : '基于记录作答',
+    ans.suggestion ? `建议 ${ans.suggestion.items.length} 道菜` : '');
+
+  log.info('butler.chat', {
+    phone: phone ? phone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2') : '',
+    text,
+    memoryUpdated: Boolean(ans.memoryUpdated),
+    hasSuggestion: Boolean(ans.suggestion)
+  });
+
+  return { status: 200, body: { code: 0, data: Object.assign({ profile }, ans) } };
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url || '/';
   const clientIp = (req.socket && req.socket.remoteAddress) || 'unknown';
@@ -526,6 +565,91 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const r = await runNlOrder(payload);
+    sendJson(res, r.status, r.body);
+    return;
+  }
+
+  // 健康小管家：档案（含记忆与主动建议）
+  if (req.method === 'GET' && url.startsWith('/api/butler/profile')) {
+    const q = new URLSearchParams(url.split('?')[1] || '');
+    const phone = butler.cleanPhone(q.get('phone'));
+    let menu;
+    try {
+      menu = readMenu();
+    } catch (e) {
+      sendJson(res, 500, { code: 500, message: '读取菜单失败' });
+      return;
+    }
+    sendJson(res, 200, { code: 0, data: butler.buildProfile({ orders: readOrders(), menu, phone }) });
+    return;
+  }
+
+  // 健康小管家：保存用户档案（身高体重、目标、忌口）
+  if (req.method === 'POST' && url.startsWith('/api/butler/profile')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 4 * 1024));
+    } catch (e) {
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
+      return;
+    }
+    const phone = butler.cleanPhone(payload.phone);
+    if (!phone) {
+      sendJson(res, 400, { code: 400, message: '缺少手机号，小管家靠它记住你' });
+      return;
+    }
+    const patch = {};
+    if (payload.goal) patch.goal = ['cut', 'keep', 'bulk'].includes(payload.goal) ? payload.goal : 'cut';
+    if (payload.gender) patch.gender = payload.gender === 'male' ? 'male' : 'female';
+    if (payload.activity) patch.activity = asStr(payload.activity, 12);
+    if (payload.name) patch.name = asStr(payload.name, 20);
+    const h = asInt(payload.height, 120, 220);
+    const w = asInt(payload.weight, 30, 200);
+    const a = asInt(payload.age, 12, 90);
+    if (h) patch.height = h;
+    if (w) patch.weight = w;
+    if (a) patch.age = a;
+    if (Array.isArray(payload.dislikes)) {
+      patch.dislikes = payload.dislikes.map((x) => asStr(x, 8)).filter(Boolean).slice(0, 10);
+    }
+    const saved = butler.saveUser(phone, patch);
+    log.info('butler.profile.save', { phone: phone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2'), keys: Object.keys(patch) });
+    sendJson(res, 200, { code: 0, data: saved });
+    return;
+  }
+
+  // 健康小管家：对话（分阶段事件流，与其它 AI 入口一致）
+  if (req.method === 'POST' && url.startsWith('/api/butler/stream')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 8 * 1024));
+    } catch (e) {
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
+      return;
+    }
+    sseOpen(res);
+    try {
+      const r = await runButlerChat(payload, sseEmit(res));
+      if (r.status === 200) sseSend(res, { type: 'done', data: r.body.data });
+      else sseSend(res, { type: 'error', code: r.body.code, message: r.body.message });
+    } catch (e) {
+      log.error('butler.stream', { message: e.message });
+      sseSend(res, { type: 'error', code: 500, message: '小管家开了个小差，再试一次' });
+    }
+    res.end();
+    return;
+  }
+
+  // 健康小管家：对话（一次性 JSON）
+  if (req.method === 'POST' && url.startsWith('/api/butler/chat')) {
+    let payload;
+    try {
+      payload = JSON.parse(await readBody(req, 8 * 1024));
+    } catch (e) {
+      sendJson(res, 400, { code: 400, message: '请求体不是合法 JSON' });
+      return;
+    }
+    const r = await runButlerChat(payload);
     sendJson(res, r.status, r.body);
     return;
   }

@@ -6,6 +6,7 @@ logs/
 uploads/*
 !uploads/.gitkeep
 data/orders.json
+data/butler.json
 *.tmp
 *.log
 

@@ -288,7 +288,7 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
 <h1>7 可复现性说明</h1>
 <p>赛项要求重点阐述。本章说明「凭什么相信这套代码不是一次性堆出来的」。</p>
 <h2>7.1 提交策略</h2>
-<p>仓库 66 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
+<p>仓库 67 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，<code>feat</code> / <code>docs</code> / <code>ci</code> / <code>chore</code> 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。</p>
 <h2>7.2 Prompt 归档</h2>
 <p><code>prompts/</code> 下每个功能一个文件，编号与提交顺序一致；<code>prompts/snapshots/</code> 另行保存三条带真实报错与命令的完整 Prompt 链，按「① 我的 Prompt → ② AI 首版方案 → ③ 如何纠偏 → ④ 验收结果」组织。</p>
 <h2>7.3 十分钟复现</h2>
@@ -319,7 +319,7 @@ node server/server.js        # 无需 npm install
 <p>本作品把一个小微轻食门店的接单流程做成了可运行的系统：菜单单一数据源、下单前完成校验、订单状态可见、经营数据可读，并在此之上做了两个可解释的 AI 能力。工程上坚持零依赖与单机可跑，使评审无需准备环境即可在十分钟内跑通。</p>
 <p>后续规划按优先级排列：补齐顾客标识以输出复购率；上线后按 8.5 的四个指标做两周实测；在资质齐备后接入微信支付与小程序上架。</p>
 <h1>附录 A 赛项材料对照</h1>
-<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，66 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr><tr><td>AI 响应状态与记忆能力</td><td>第 5.6 节（阶段流） / 第 5.7 节（点餐搭档）</td></tr></table>
+<table><tr><th>赛项要求</th><th>对应材料</th></tr><tr><td>代码仓库 Public、细粒度提交</td><td>GitHub <code>as5827/dika-light-meal-miniprogram</code>，67 次提交</td></tr><tr><td>Prompt 历史快照、≥3 条完整 Prompt 链</td><td>第 4 章；<code>prompts/</code> 与 <code>prompts/snapshots/</code>；提交包 02、03、11 号</td></tr><tr><td>README 10 分钟复现、依赖清单、环境变量模板</td><td>仓库根目录 <code>README.md</code>；<code>.env.example</code></td></tr><tr><td>演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现</td><td>提交包 10 号</td></tr><tr><td>技术文档 ≤30 页</td><td>本文档</td></tr><tr><td>意图控制策略 / 架构设计 / 可复现性论证</td><td>第 4 章 / 第 3 章 / 第 7 章</td></tr><tr><td>AI 响应状态与记忆能力</td><td>第 5.6 节（阶段流） / 第 5.7 节（点餐搭档）</td></tr></table>
 <h1>附录 B 第三方资源与原创性声明</h1>
 <h2>B.1 使用的公开依据</h2>
 <table><tr><th>名称</th><th>用途</th><th>出处</th></tr><tr><td>Mifflin-St Jeor 公式</td><td>基础代谢估算，见 <code>server/recommender.js</code> 第 66 行</td><td>Mifflin M D, St Jeor S T, Hill L A, et al. A new predictive equation for resting energy expenditure in healthy individuals[J]. The American Journal of Clinical Nutrition, 1990, 51(2): 241-247</td></tr><tr><td>微信小程序开发文档</td><td>平台 API、组件与上架要求</td><td>developers.weixin.qq.com</td></tr><tr><td>Node.js 官方文档</td><td><code>http</code> / <code>fs</code> / <code>crypto</code> 标准库用法</td><td>nodejs.org/docs</td></tr><tr><td>DeepSeek API 文档</td><td>大模型接口，仅用于推荐理由润色与意图解析</td><td>api-docs.deepseek.com</td></tr><tr><td>赛项通知</td><td>提交要求与评审维度</td><td>2026 第九届传智杯 · AI 创新应用挑战赛通知</td></tr></table>

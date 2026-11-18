@@ -190,6 +190,7 @@ dika-light-meal-miniprogram/
 ├── .env.example          # 环境变量模板
 ├── .gitignore
 ├── start.bat             # Windows 一键启动
+├── 准备演示数据.bat      # 写入演示订单与点餐搭档的剧本数据
 ├── start.sh              # macOS / Linux 一键启动
 └── README.md
 ```

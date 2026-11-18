@@ -315,7 +315,7 @@ AI 的产出不直接进主干，必须过三道闸：
 
 ## 7.1 提交策略
 
-仓库 66 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，`feat` / `docs` / `ci` / `chore` 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。
+仓库 67 次提交，从 6 次模块导入起步，其后按「一个功能模块 / 一次 AI 对话 = 一次提交」推进，`feat` / `docs` / `ci` / `chore` 前缀区分类型，提交信息正文写明改动点与取舍。没有「initial commit 即全部功能」的情况。
 
 ## 7.2 Prompt 归档
 
@@ -406,7 +406,7 @@ node server/server.js        # 无需 npm install
 
 | 赛项要求 | 对应材料 |
 |---|---|
-| 代码仓库 Public、细粒度提交 | GitHub `as5827/dika-light-meal-miniprogram`，66 次提交 |
+| 代码仓库 Public、细粒度提交 | GitHub `as5827/dika-light-meal-miniprogram`，67 次提交 |
 | Prompt 历史快照、≥3 条完整 Prompt 链 | 第 4 章；`prompts/` 与 `prompts/snapshots/`；提交包 02、03、11 号 |
 | README 10 分钟复现、依赖清单、环境变量模板 | 仓库根目录 `README.md`；`.env.example` |
 | 演示视频 5~8 分钟，含 ≥2 分钟 AI 协同复现 | 提交包 10 号 |

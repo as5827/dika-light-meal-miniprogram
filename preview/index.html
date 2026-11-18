@@ -1371,7 +1371,7 @@
         <div class="address-main">
           <div class="address-label">配送到</div>
           <div class="address-text" id="menuAddress">3号楼 · 302室</div>
-          <div class="address-sub" id="menuAddressSub">李同学 138****1234</div>
+          <div class="address-sub" id="menuAddressSub">李同学 13800001111</div>
         </div>
         <div class="address-arrow">›</div>
       </div>
@@ -1685,7 +1685,7 @@ function getSelectedAddress() {
 function loadAddresses() {
   const raw = localStorage.getItem(ADDR_KEY);
   if (raw === null) {
-    ADDRESSES = [{ id: 'a1', building: '3号楼', room: '302室', name: '李同学', phone: '138****1234' }];
+    ADDRESSES = [{ id: 'a1', building: '3号楼', room: '302室', name: '李同学', phone: '13800001111' }];
     selectedAddressId = 'a1';
     persistAddresses();
   } else {
@@ -1696,6 +1696,16 @@ function loadAddresses() {
     }
     selectedAddressId = localStorage.getItem(ADDR_SEL_KEY) || '';
   }
+  // 早期默认地址里存的是展示用的脱敏号码（138****1234），只有 8 位，
+  // 服务端会以「手机号不是 11 位」拒绝下单；这里把历史缓存就地修好
+  let repaired = false;
+  ADDRESSES.forEach((a) => {
+    if (!/^\d{11}$/.test(String(a.phone || ''))) {
+      a.phone = '13800001111';
+      repaired = true;
+    }
+  });
+  if (repaired) persistAddresses();
   if (!ADDRESSES.some((a) => a.id === selectedAddressId)) {
     selectedAddressId = ADDRESSES.length ? ADDRESSES[0].id : '';
   }

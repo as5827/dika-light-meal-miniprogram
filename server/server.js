@@ -919,12 +919,33 @@ const server = http.createServer(async (req, res) => {
 
   // 订单列表（后台用，按创建时间倒序，需登录）
   if (req.method === 'GET' && (url === '/api/orders' || url.startsWith('/api/orders?'))) {
-    if (!requireAuth(req, res)) return;
     const query = url.split('?')[1] || '';
+
+    // 按状态筛选：白名单校验放在鉴权与过滤之前——
+    // ① 先把参数本身的错报出来，否则拼错的状态会静默返回空列表；
+    // ② 语法错误不涉及任何数据，前置返回 400 不泄露信息，也便于用裸 curl 自测
+    const ORDER_STATUSES = ['pending', 'accepted', 'done', 'canceled'];
+    const statusMatch = /(?:^|&)status=([^&]*)/.exec(query);
+    let statusFilter = '';
+    if (statusMatch) {
+      statusFilter = decodeURIComponent(statusMatch[1]).trim();
+      if (!ORDER_STATUSES.includes(statusFilter)) {
+        sendJson(res, 400, {
+          code: 400,
+          message: 'status 取值不合法，只支持 pending / accepted / done / canceled'
+        });
+        return;
+      }
+    }
+
+    if (!requireAuth(req, res)) return;
+
     const matched = /(?:^|&)limit=(\d+)/.exec(query);
     const limit = Math.min(Math.max(parseInt(matched ? matched[1] : '50', 10) || 50, 1), 200);
     try {
-      sendJson(res, 200, { code: 0, data: readOrders().slice(0, limit) });
+      let list = readOrders();
+      if (statusFilter) list = list.filter((o) => o.status === statusFilter);
+      sendJson(res, 200, { code: 0, data: list.slice(0, limit) });
     } catch (e) {
       sendJson(res, 500, { code: 500, message: '读取订单失败' });
     }

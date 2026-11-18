@@ -424,8 +424,10 @@ strong { color: #111827; }
 <div class='quote'>它会把筛选逻辑插进路由里。注意它可能自己加一个状态白名单，也可能直接拿字符串比较。</div>
 <h3>7.5 引导一次纠偏</h3>
 <p><b>打开终端，跑这两条命令</b>：</p>
-<pre><code>node --check server/server.js
+<pre><code>cd /d D:\DarkRoom\dika-light-meal
+node --check server/server.js
 curl -s &quot;http://localhost:3000/api/orders?status=xxx&quot;</code></pre>
+<div class='quote'><b>第一行一定要先执行</b>，否则 <code>node --check</code> 会报 <code>Cannot find module</code>（因为当前目录不对）。 另外 curl 别敲成 <code>crul</code>，这个很容易打错。</div>
 <ul>
 <li>第一条：没输出就说明语法通过</li>
 <li>第二条：<b>正确的应该是返回 400</b>。如果返回了 200，说明白名单没生效</li>
